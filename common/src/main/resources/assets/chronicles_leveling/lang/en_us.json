@@ -1,0 +1,30 @@
+{
+  "_comment": "Lang keys for Chronicles: Leveling. Stat names follow attribute.<modid>.<id> so the engine wires them automatically.",
+
+  "key.categories.chronicles_leveling": "Chronicles: Leveling",
+  "key.chronicles_leveling.open_stats": "Open Stats Page",
+
+  "chronicles_leveling.tab.inventory": "Inv",
+  "chronicles_leveling.tab.stats": "Stats",
+  "chronicles_leveling.tab.attributes": "Attrs",
+
+  "chronicles_leveling.screen.stats.title": "Stats",
+  "chronicles_leveling.screen.stats.header": "Lv. %1$s — XP %2$s/%3$s — Points: %4$s",
+  "chronicles_leveling.screen.attributes.title": "Attributes",
+
+  "chronicles_leveling.nameplate.level": "[Lv. %1$s]",
+
+  "attribute.chronicles_leveling.strength": "Strength",
+  "attribute.chronicles_leveling.dexterity": "Dexterity",
+  "attribute.chronicles_leveling.constitution": "Constitution",
+  "attribute.chronicles_leveling.intelligence": "Intelligence",
+  "attribute.chronicles_leveling.wisdom": "Wisdom",
+  "attribute.chronicles_leveling.luckiness": "Luckiness",
+
+  "chronicles_leveling.stat.strength": "Strength",
+  "chronicles_leveling.stat.dexterity": "Dexterity",
+  "chronicles_leveling.stat.constitution": "Constitution",
+  "chronicles_leveling.stat.intelligence": "Intelligence",
+  "chronicles_leveling.stat.wisdom": "Wisdom",
+  "chronicles_leveling.stat.luckiness": "Luckiness"
+}
