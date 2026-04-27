@@ -15,16 +15,20 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 
 /**
- * "Levels" tab — six stat rows, each with a sprite-backed {@code +} button on
- * the left that allocates an unspent skill point.
+ * "Levels" tab — the player's character overview and stat allocation screen.
  *
- * <p>Header: scaled "Levels" title; "Lv. n" with the level-up {@code +} button
- * pinned to its right (group is centered, so the button's X is updated each
- * frame to track the level text width); a vanilla XP bar that shows progress
- * detail in a hover tooltip; and a "Points: n" line with the XP icon to its left.
+ * <p>Header: scaled player name with a divider beneath; "Lv. n" with the
+ * level-up {@code +} button pinned to its right (group is centered, so the
+ * button's X is updated each frame to track the level text width); a vanilla
+ * XP bar that shows progress detail in a hover tooltip; and a "Points: n" line
+ * with the XP icon to its left.
  *
- * <p>Stat rows are framed by thin 1px horizontal separators (1px padding above
- * and below each line) above the first row, between each pair, and below the last.
+ * <p>Body: six stat rows (Strength / Dexterity / Constitution / Intelligence /
+ * Wisdom / Luckiness). Each row has a sprite-backed {@code +} button on the
+ * left that spends an unspent skill point on that stat, the stat name, and
+ * the integer attribute value on the right. Rows are framed by 1px horizontal
+ * separators (1px padding above and below each line) above the first row,
+ * between each pair, and below the last.
  *
  * <p>Sized 176×166 to line up with the inventory texture (art originally from
  * PlayerEx, licensed MIT).
@@ -34,27 +38,28 @@ public class LevelUpScreen extends Screen {
     private static final int IMAGE_WIDTH = 176;
     private static final int IMAGE_HEIGHT = 166;
 
-    private static final int FIRST_ROW_Y = 68;
-    private static final int ROW_HEIGHT = 13;          // pitch: 11 content + 3 separator (1 empty + 1 line + 1 empty)
-    private static final int ROW_CONTENT_H = 10;
+    private static final int FIRST_ROW_Y = 67;
+    private static final int ROW_HEIGHT = 15;          // pitch: 10 content + 3 separator (1 empty + 1 line + 1 empty)
+    private static final int ROW_CONTENT_H = 12;
 
     private static final int BUTTON_X_OFFSET = 12;
     private static final int NAME_X_OFFSET = 26;
-    private static final int VALUE_RIGHT_MARGIN = 12;
+    private static final int VALUE_RIGHT_MARGIN = 13;
 
     private static final int TITLE_Y = 12;
     private static final float TITLE_SCALE = 1.2f;
-    private static final int LEVEL_LINE_Y = 26;
-    private static final int XP_BAR_Y = 38;
-    private static final int POINTS_LINE_Y = 52;
+    private static final int HEADER_LINE_Y = 24;
+    private static final int LEVEL_LINE_Y = 36;
+    private static final int XP_BAR_Y = 47;
+    private static final int POINTS_LINE_Y = 54;
 
     private static final int XP_BAR_WIDTH = 110;
     private static final int XP_BAR_HEIGHT = 5;
     private static final int LEVEL_UP_BUTTON_GAP = 4;
     private static final int POINTS_ICON_GAP = 2;
 
-    private static final int SEPARATOR_X_LEFT = 10;
-    private static final int SEPARATOR_X_RIGHT = 168;
+    private static final int SEPARATOR_X_LEFT = 9;
+    private static final int SEPARATOR_X_RIGHT = 166;
 
     private static final int TEXT_HEIGHT = 8;
 
@@ -86,8 +91,9 @@ public class LevelUpScreen extends Screen {
 
         addRenderableWidget(new ChroniclesTabBar(leftPos, topPos));
 
-        // Vertically center the 10px button on the 8px text row.
-        int levelUpY = topPos + LEVEL_LINE_Y - (ChroniclesSprites.BUTTON_H - TEXT_HEIGHT) / 2;
+        // Vertically center the 10px button on the 8px text row, then nudge 1px up
+        // so the glyph sits visually flush with the cap-height of "Lv. n".
+        int levelUpY = topPos + LEVEL_LINE_Y - (ChroniclesSprites.BUTTON_H - TEXT_HEIGHT) / 2 - 1;
         // X is set in extractRenderState because it depends on the rendered Lv. n width.
         this.levelUpButton = new PlusButton(
                 leftPos, levelUpY,
@@ -158,20 +164,20 @@ public class LevelUpScreen extends Screen {
         PlayerLevelData data = player == null ? PlayerLevelData.DEFAULT : PlayerLevelManager.get(player);
         int rung = LevelingCurve.xpToNext(data.level());
 
-        renderHeader(graphics, data, rung, mouseX, mouseY);
+        renderHeader(graphics, player, data, rung, mouseX, mouseY);
         renderSeparators(graphics);
         renderStatRows(graphics, player);
     }
 
-    private void renderHeader(GuiGraphicsExtractor graphics, PlayerLevelData data, int rung, int mouseX, int mouseY) {
-        renderTitle(graphics);
+    private void renderHeader(GuiGraphicsExtractor graphics, LocalPlayer player, PlayerLevelData data, int rung, int mouseX, int mouseY) {
+        renderTitle(graphics, player);
         renderLevelLine(graphics, data.level());
         renderXpBar(graphics, data.xp(), rung, mouseX, mouseY);
         renderPointsLine(graphics, data.unspentPoints());
     }
 
-    private void renderTitle(GuiGraphicsExtractor graphics) {
-        Component title = Component.translatable("chronicles_leveling.screen.levels.title");
+    private void renderTitle(GuiGraphicsExtractor graphics, LocalPlayer player) {
+        Component title = player != null ? player.getName() : Component.empty();
         int textW = font.width(title);
         graphics.pose().pushMatrix();
         graphics.pose().translate(leftPos + IMAGE_WIDTH / 2f, topPos + TITLE_Y);
@@ -207,32 +213,9 @@ public class LevelUpScreen extends Screen {
             }
         }
 
-        if (mouseX >= barX && mouseX < barX + XP_BAR_WIDTH
-                && mouseY >= barY && mouseY < barY + XP_BAR_HEIGHT) {
-            graphics.setTooltipForNextFrame(font, buildProgressTooltip(xp, rung), mouseX, mouseY);
+        if (ProgressTooltip.isHovered(mouseX, mouseY, barX, barY, XP_BAR_WIDTH, XP_BAR_HEIGHT)) {
+            graphics.setTooltipForNextFrame(font, ProgressTooltip.build(xp, rung), mouseX, mouseY);
         }
-    }
-
-    private static Component buildProgressTooltip(int xp, int rung) {
-        double percent = rung > 0 ? (100.0 * xp) / rung : 0.0;
-        return Component.translatable(
-                "chronicles_leveling.screen.levels.progress_tooltip",
-                formatXpAmount(xp),
-                formatXpAmount(rung),
-                String.format("%.1f", percent));
-    }
-
-    /** Formats counts of 1000+ with one decimal and a K/M/B/T suffix; values under 1000 render as-is. */
-    private static String formatXpAmount(long value) {
-        if (value < 1000) return Long.toString(value);
-        String[] suffixes = {"K", "M", "B", "T"};
-        double scaled = value / 1000.0;
-        int idx = 0;
-        while (scaled >= 1000 && idx < suffixes.length - 1) {
-            scaled /= 1000;
-            idx++;
-        }
-        return String.format("%.1f%s", scaled, suffixes[idx]);
     }
 
     private void renderPointsLine(GuiGraphicsExtractor graphics, int unspentPoints) {
@@ -262,18 +245,31 @@ public class LevelUpScreen extends Screen {
         int x0 = leftPos + SEPARATOR_X_LEFT;
         int x1 = leftPos + SEPARATOR_X_RIGHT;
 
-        // Top wrap line (1px empty above first row content)
-        drawHorizontalLine(graphics, x0, x1, topPos + FIRST_ROW_Y - 2);
+        // Divider beneath the player name title.
+        drawHorizontalLine(graphics, x0, x1, topPos + HEADER_LINE_Y);
 
-        // Line after each row: between consecutive rows for i < last, bottom wrap for i == last
+        // Top wrap line above the stat block.
+        int topRowLineY = topPos + FIRST_ROW_Y - 2;
+        drawHorizontalLine(graphics, x0, x1, topRowLineY);
+
+        // Line after each row (last iteration draws the bottom wrap).
+        int bottomRowLineY = topRowLineY;
         for (int i = 0; i < ModStats.ALL.size(); i++) {
-            int y = topPos + rowY(i) + ROW_CONTENT_H + 1;
-            drawHorizontalLine(graphics, x0, x1, y);
+            bottomRowLineY = topPos + rowY(i) + ROW_CONTENT_H + 1;
+            drawHorizontalLine(graphics, x0, x1, bottomRowLineY);
         }
+
+        // Vertical edges, top wrap to bottom wrap inclusive — frames the table.
+        drawVerticalLine(graphics, x0, topRowLineY, bottomRowLineY);
+        drawVerticalLine(graphics, x1 - 1, topRowLineY, bottomRowLineY);
     }
 
     private void drawHorizontalLine(GuiGraphicsExtractor graphics, int x0, int x1, int y) {
         graphics.fill(x0, y, x1, y + 1, COLOR_SEPARATOR);
+    }
+
+    private void drawVerticalLine(GuiGraphicsExtractor graphics, int x, int y0, int y1) {
+        graphics.fill(x, y0, x + 1, y1 + 1, COLOR_SEPARATOR);
     }
 
     private void renderStatRows(GuiGraphicsExtractor graphics, LocalPlayer player) {

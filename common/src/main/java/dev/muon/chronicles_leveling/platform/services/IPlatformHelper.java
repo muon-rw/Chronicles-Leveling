@@ -2,6 +2,11 @@ package dev.muon.chronicles_leveling.platform.services;
 
 import dev.muon.chronicles_leveling.level.PlayerLevelStore;
 import dev.muon.chronicles_leveling.network.NetworkHelper;
+import dev.muon.chronicles_leveling.skill.PlayerSkillStore;
+import net.minecraft.core.Holder;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+
+import java.util.Optional;
 
 public interface IPlatformHelper {
 
@@ -46,8 +51,27 @@ public interface IPlatformHelper {
     PlayerLevelStore getPlayerLevelStore();
 
     /**
+     * Loader-specific accessor for the player's skill levels + xp attachment.
+     * Backed by a synced AttachmentType on both loaders so the owning client
+     * always reflects the server-authoritative state.
+     */
+    PlayerSkillStore getPlayerSkillStore();
+
+    /**
      * Loader-specific networking adapter for sending packets to clients.
      * Mirrors {@code dev.muon.dynamic_difficulty.platform.NetworkHelper}.
      */
     NetworkHelper getNetworkHelper();
+
+    /**
+     * Returns the percent-display scale factor for the given attribute, if the
+     * loader natively marks it as a percentage attribute. Used as a fallback
+     * for percent rendering when Dynamic-Tooltips isn't loaded.
+     *
+     * <p>NeoForge: detects {@code net.neoforged.neoforge.common.PercentageAttribute};
+     * Fabric: returns empty (no native equivalent).
+     */
+    default Optional<Double>  percentScaleForAttribute(Holder<Attribute> holder) {
+        return Optional.empty();
+    }
 }

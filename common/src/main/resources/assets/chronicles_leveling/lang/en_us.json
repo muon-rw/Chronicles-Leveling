@@ -5,11 +5,13 @@
   "chronicles_leveling.tab.inventory": "Inv",
   "chronicles_leveling.tab.levels": "Levels",
   "chronicles_leveling.tab.attributes": "Attributes",
+  "chronicles_leveling.tab.skills": "Skills",
 
+  "chronicles_leveling.screen.skills.title": "Skills",
   "chronicles_leveling.screen.levels.title": "Levels",
   "chronicles_leveling.screen.levels.level_format": "Lv. %1$s",
   "chronicles_leveling.screen.levels.points_format": "Points: %1$s",
-  "chronicles_leveling.screen.levels.progress_tooltip": "Progress: %1$s/%2$s (%3$s%%)",
+  "chronicles_leveling.tooltip.progress": "Progress: %1$s/%2$s (%3$s%%)",
   "chronicles_leveling.screen.attributes.title": "Attributes",
   "chronicles_leveling.screen.attributes.category.melee": "Melee",
   "chronicles_leveling.screen.attributes.category.ranged": "Ranged",
@@ -23,10 +25,10 @@
   "chronicles_leveling.attribute.ranged_damage": "Ranged Damage",
   "chronicles_leveling.attribute.pull_time": "Pull Time",
   "chronicles_leveling.attribute.velocity": "Velocity",
-  "chronicles_leveling.attribute.health": "Health",
   "chronicles_leveling.attribute.max_health": "Max Health",
   "chronicles_leveling.attribute.armor": "Armor",
-  "chronicles_leveling.attribute.armor_toughness": "Armor Toughness",
+  "chronicles_leveling.attribute.armor_toughness": "Arm. Toughness",
+  "chronicles_leveling.attribute.knockback_resistance": "KB Resist",
 
   "chronicles_leveling.nameplate.level": "[Lv. %1$s]",
 
@@ -43,5 +45,18 @@
   "chronicles_leveling.stat.constitution": "Constitution",
   "chronicles_leveling.stat.intelligence": "Intelligence",
   "chronicles_leveling.stat.wisdom": "Wisdom",
-  "chronicles_leveling.stat.luckiness": "Luckiness"
+  "chronicles_leveling.stat.luckiness": "Luckiness",
+
+  "chronicles_leveling.skill.weaponry": "Weaponry",
+  "chronicles_leveling.skill.archery": "Archery",
+  "chronicles_leveling.skill.magic": "Magic",
+  "chronicles_leveling.skill.armor": "Armor",
+  "chronicles_leveling.skill.acrobatics": "Acrobatics",
+  "chronicles_leveling.skill.alchemy": "Alchemy",
+  "chronicles_leveling.skill.mining": "Mining",
+  "chronicles_leveling.skill.speech": "Speech",
+  "chronicles_leveling.skill.farming": "Farming",
+  "chronicles_leveling.skill.enchanting": "Enchanting",
+  "chronicles_leveling.skill.smithing": "Smithing",
+  "chronicles_leveling.skill.fishing": "Fishing"
 }

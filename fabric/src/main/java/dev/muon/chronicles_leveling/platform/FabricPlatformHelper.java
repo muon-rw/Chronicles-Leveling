@@ -5,11 +5,14 @@ import dev.muon.chronicles_leveling.level.PlayerLevelStoreFabric;
 import dev.muon.chronicles_leveling.network.NetworkHelper;
 import dev.muon.chronicles_leveling.network.NetworkHelperFabric;
 import dev.muon.chronicles_leveling.platform.services.IPlatformHelper;
+import dev.muon.chronicles_leveling.skill.PlayerSkillStore;
+import dev.muon.chronicles_leveling.skill.PlayerSkillStoreFabric;
 import net.fabricmc.loader.api.FabricLoader;
 
 public class FabricPlatformHelper implements IPlatformHelper {
 
     private static final PlayerLevelStore LEVEL_STORE = new PlayerLevelStoreFabric();
+    private static final PlayerSkillStore SKILL_STORE = new PlayerSkillStoreFabric();
     private static final NetworkHelper NETWORK_HELPER = new NetworkHelperFabric();
 
     @Override
@@ -30,6 +33,11 @@ public class FabricPlatformHelper implements IPlatformHelper {
     @Override
     public PlayerLevelStore getPlayerLevelStore() {
         return LEVEL_STORE;
+    }
+
+    @Override
+    public PlayerSkillStore getPlayerSkillStore() {
+        return SKILL_STORE;
     }
 
     @Override

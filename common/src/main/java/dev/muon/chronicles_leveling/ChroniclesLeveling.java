@@ -4,6 +4,7 @@ import dev.muon.chronicles_leveling.compat.DynamicDifficultyCompat;
 import dev.muon.chronicles_leveling.config.Configs;
 import dev.muon.chronicles_leveling.platform.Services;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,8 +36,23 @@ public class ChroniclesLeveling {
     public static void init() {
         Configs.register();
         DynamicDifficultyCompat.init();
+        forceClientSyncableAttributes();
 
         LOG.info("Chronicles: Leveling initialized on {} ({})",
                 Services.PLATFORM.getPlatformName(), Services.PLATFORM.getEnvironmentName());
+    }
+
+    /**
+     * Flips a few vanilla attributes that we display to {@code syncable=true} so the
+     * client actually sees their modified values. Vanilla leaves these off the sync
+     * list because gameplay only consults them server-side; the player-facing
+     * Attributes screen needs them on the client.
+     *
+     * <p>This is a global mutation of vanilla state and runs in common init so both
+     * loaders agree. Adding more attributes here is safe — the cost is one extra
+     * field per packet when the value changes.
+     */
+    private static void forceClientSyncableAttributes() {
+        Attributes.KNOCKBACK_RESISTANCE.value().setSyncable(true);
     }
 }

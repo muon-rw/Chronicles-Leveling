@@ -1,6 +1,7 @@
 package dev.muon.chronicles_leveling;
 
 import dev.muon.chronicles_leveling.level.PlayerLevelAttachmentNeoforge;
+import dev.muon.chronicles_leveling.skill.PlayerSkillAttachmentNeoforge;
 import dev.muon.chronicles_leveling.stat.ModStatsNeoforge;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
@@ -23,6 +24,7 @@ public class ChroniclesLevelingNeoforge {
     public ChroniclesLevelingNeoforge(IEventBus modBus) {
         ModStatsNeoforge.REGISTRY.register(modBus);
         PlayerLevelAttachmentNeoforge.REGISTRY.register(modBus);
+        PlayerSkillAttachmentNeoforge.REGISTRY.register(modBus);
 
         modBus.addListener(ChroniclesLevelingNeoforge::onCommonSetup);
 

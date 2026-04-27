@@ -1,6 +1,9 @@
 package dev.muon.chronicles_leveling.client.screen;
 
+import dev.muon.chronicles_leveling.ChroniclesLeveling;
 import dev.muon.chronicles_leveling.client.screen.ChroniclesSprites.IconCoord;
+import dev.muon.chronicles_leveling.compat.PercentAttributes;
+import dev.muon.chronicles_leveling.config.Configs;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
@@ -14,18 +17,25 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeMap;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 /**
- * "Attributes" tab — categorized read-only display of combat-relevant attributes,
- * grouped into Melee / Ranged / Defense / Magic cards.
+ * "Attributes" tab — categorized read-only display of attributes, grouped into
+ * Melee / Ranged / Defense / Magic cards. Each card's attribute list is
+ * configurable via {@link dev.muon.chronicles_leveling.config.ConfigClient.AttributePages}.
  *
- * <p>Rows whose attribute isn't currently registered (e.g. Combat-Attributes
- * entries on a server that doesn't have the mod) are silently skipped, and any
- * card whose rows all skip is omitted entirely.
+ * <p>Unregistered ids (e.g. Combat-Attributes entries on a server that doesn't
+ * have it loaded) are silently skipped and logged once per JVM session. Cards
+ * whose rows all skip are omitted entirely.
  *
  * <p>Same 176×166 footprint as the level-up screen.
  *
@@ -39,12 +49,15 @@ public class AttributesScreen extends Screen {
     private static final int PARCHMENT_OFFSET_Y = 5;
 
     private static final int TITLE_Y = 12;
-    private static final int TITLE_DIVIDER_GAP = 1;
-    private static final int TITLE_DIVIDER_INSET = 10;
+    private static final float TITLE_SCALE = 1.2f;
+    private static final int TITLE_DIVIDER_GAP = 2;
+    private static final int TITLE_DIVIDER_LEFT_INSET = 9;
+    private static final int TITLE_DIVIDER_RIGHT_INSET = 10;
 
     private static final int CARD_LEFT_X = 8;
     private static final int CARD_RIGHT_X = 168;
     private static final int CARD_GAP = 1;
+    private static final int CARD_COLUMN_GAP = 1;
     private static final int CARD_BORDER = 1;
     private static final int CARD_HEADER_H = 9;
     private static final int CARDS_TOP_OFFSET = 2;
@@ -64,50 +77,69 @@ public class AttributesScreen extends Screen {
     private static final int COLOR_VALUE = 0xFF8B5A2B;
     private static final int COLOR_BORDER = 0xFF8B5A2B;
 
+    /**
+     * Label overrides keyed by attribute id. Entries here use Chronicles' own
+     * lang keys (shorter / context-trimmed names like "Crit. Chance" instead of
+     * "Melee Critical Chance"). Unmapped ids fall back to the attribute's own
+     * description id, so user-added attributes still render with a sensible name.
+     */
+    private static final Map<Identifier, String> LABEL_OVERRIDES = Map.ofEntries(
+            label("minecraft", "attack_damage", "attack_damage"),
+            label("minecraft", "attack_speed", "attack_speed"),
+            label("minecraft", "max_health", "max_health"),
+            label("minecraft", "armor", "armor"),
+            label("minecraft", "armor_toughness", "armor_toughness"),
+            label("minecraft", "knockback_resistance", "knockback_resistance"),
+            label("combat_attributes", "ranged_damage", "ranged_damage"),
+            label("combat_attributes", "draw_speed", "pull_time"),
+            label("combat_attributes", "arrow_velocity", "velocity"),
+            label("combat_attributes", "melee_crit_chance", "crit_chance"),
+            label("combat_attributes", "melee_crit_damage", "crit_damage"),
+            label("combat_attributes", "ranged_crit_chance", "crit_chance"),
+            label("combat_attributes", "ranged_crit_damage", "crit_damage"),
+            label("combat_attributes", "magic_crit_chance", "crit_chance"),
+            label("combat_attributes", "magic_crit_damage", "crit_damage")
+    );
+
+    /** One log entry per missing-id per JVM session — render fires every frame. */
+    private static final Set<Identifier> LOGGED_MISSING = Collections.newSetFromMap(new ConcurrentHashMap<>());
+
+    private static final CategoryDef MELEE = new CategoryDef(
+            "chronicles_leveling.screen.attributes.category.melee",
+            new IconCoord(ChroniclesSprites.SWORD_U, ChroniclesSprites.SWORD_V),
+            () -> Configs.CLIENT.attributePages.melee.get()
+    );
+
+    private static final CategoryDef RANGED = new CategoryDef(
+            "chronicles_leveling.screen.attributes.category.ranged",
+            new IconCoord(ChroniclesSprites.BOW_U, ChroniclesSprites.BOW_V),
+            () -> Configs.CLIENT.attributePages.ranged.get()
+    );
+
+    private static final CategoryDef DEFENSE = new CategoryDef(
+            "chronicles_leveling.screen.attributes.category.defense",
+            new IconCoord(ChroniclesSprites.SHIELD_U, ChroniclesSprites.SHIELD_V),
+            () -> Configs.CLIENT.attributePages.defense.get()
+    );
+
+    private static final CategoryDef MAGIC = new CategoryDef(
+            "chronicles_leveling.screen.attributes.category.magic",
+            new IconCoord(ChroniclesSprites.MOON_U, ChroniclesSprites.MOON_V),
+            () -> Configs.CLIENT.attributePages.magic.get()
+    );
+
+    /**
+     * Two-column layout: cards in each column stack independently, so the second
+     * row's y in a given column is driven by that column's first-row card height
+     * (left and right columns can end up at different vertical positions).
+     */
+    private static final List<List<CategoryDef>> COLUMNS = List.of(
+            List.of(MELEE, DEFENSE),
+            List.of(RANGED, MAGIC)
+    );
+
     private int leftPos;
     private int topPos;
-
-    private static final List<Category> CATEGORIES = List.of(
-            new Category(
-                    "chronicles_leveling.screen.attributes.category.melee",
-                    new IconCoord(ChroniclesSprites.SWORD_U, ChroniclesSprites.SWORD_V),
-                    List.of(
-                            attr("minecraft:generic.attack_damage", "chronicles_leveling.attribute.attack_damage"),
-                            attr("minecraft:generic.attack_speed", "chronicles_leveling.attribute.attack_speed"),
-                            attr("combat_attributes:melee_crit_chance", "chronicles_leveling.attribute.crit_chance"),
-                            attr("combat_attributes:melee_crit_damage", "chronicles_leveling.attribute.crit_damage")
-                    )
-            ),
-            new Category(
-                    "chronicles_leveling.screen.attributes.category.ranged",
-                    new IconCoord(ChroniclesSprites.BOW_U, ChroniclesSprites.BOW_V),
-                    List.of(
-                            attr("combat_attributes:ranged_damage", "chronicles_leveling.attribute.ranged_damage"),
-                            attr("combat_attributes:draw_speed", "chronicles_leveling.attribute.pull_time"),
-                            attr("combat_attributes:arrow_velocity", "chronicles_leveling.attribute.velocity"),
-                            attr("combat_attributes:ranged_crit_chance", "chronicles_leveling.attribute.crit_chance"),
-                            attr("combat_attributes:ranged_crit_damage", "chronicles_leveling.attribute.crit_damage")
-                    )
-            ),
-            new Category(
-                    "chronicles_leveling.screen.attributes.category.defense",
-                    new IconCoord(ChroniclesSprites.SHIELD_U, ChroniclesSprites.SHIELD_V),
-                    List.of(
-                            health(),
-                            attr("minecraft:generic.max_health", "chronicles_leveling.attribute.max_health"),
-                            attr("minecraft:generic.armor", "chronicles_leveling.attribute.armor"),
-                            attr("minecraft:generic.armor_toughness", "chronicles_leveling.attribute.armor_toughness")
-                    )
-            ),
-            new Category(
-                    "chronicles_leveling.screen.attributes.category.magic",
-                    new IconCoord(ChroniclesSprites.MOON_U, ChroniclesSprites.MOON_V),
-                    List.of(
-                            attr("combat_attributes:magic_crit_chance", "chronicles_leveling.attribute.crit_chance"),
-                            attr("combat_attributes:magic_crit_damage", "chronicles_leveling.attribute.crit_damage")
-                    )
-            )
-    );
 
     public AttributesScreen() {
         super(Component.translatable("chronicles_leveling.screen.attributes.title"));
@@ -156,53 +188,106 @@ public class AttributesScreen extends Screen {
     private void renderTitle(GuiGraphicsExtractor graphics) {
         Component title = Component.translatable("chronicles_leveling.screen.attributes.title");
         int textW = font.width(title);
-        int textX = leftPos + (IMAGE_WIDTH - textW) / 2;
-        int textY = topPos + TITLE_Y;
-        graphics.text(font, title, textX, textY, COLOR_TITLE, false);
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(leftPos + IMAGE_WIDTH / 2f, topPos + TITLE_Y);
+        graphics.pose().scale(TITLE_SCALE, TITLE_SCALE);
+        graphics.text(font, title, -textW / 2, 0, COLOR_TITLE, false);
+        graphics.pose().popMatrix();
 
-        int dividerY = textY + TEXT_HEIGHT + TITLE_DIVIDER_GAP;
+        int dividerY = topPos + TITLE_Y + scaledTitleHeight() + TITLE_DIVIDER_GAP;
         graphics.fill(
-                leftPos + TITLE_DIVIDER_INSET, dividerY,
-                leftPos + IMAGE_WIDTH - TITLE_DIVIDER_INSET, dividerY + 1,
+                leftPos + TITLE_DIVIDER_LEFT_INSET, dividerY,
+                leftPos + IMAGE_WIDTH - TITLE_DIVIDER_RIGHT_INSET, dividerY + 1,
                 COLOR_BORDER
         );
     }
 
+    private static int scaledTitleHeight() {
+        return (int) Math.ceil(TEXT_HEIGHT * TITLE_SCALE);
+    }
+
     private void renderCards(GuiGraphicsExtractor graphics, LocalPlayer player) {
-        int dividerBottom = topPos + TITLE_Y + TEXT_HEIGHT + TITLE_DIVIDER_GAP + 1;
-        int y = dividerBottom + CARDS_TOP_OFFSET;
+        int dividerBottom = topPos + TITLE_Y + scaledTitleHeight() + TITLE_DIVIDER_GAP + 1;
+        int startY = dividerBottom + CARDS_TOP_OFFSET;
 
-        for (Category cat : CATEGORIES) {
-            List<RowSnapshot> snapshots = collectRows(cat, player);
-            if (snapshots.isEmpty()) continue;
+        int innerLeft = leftPos + CARD_LEFT_X;
+        int innerRight = leftPos + CARD_RIGHT_X;
+        int columnWidth = (innerRight - innerLeft - CARD_COLUMN_GAP) / 2;
 
-            int height = CARD_BORDER + CARD_HEADER_H + snapshots.size() * ROW_PITCH + CARD_BORDER;
-            renderCard(graphics, cat, snapshots, y, height);
-            y += height + CARD_GAP;
+        for (int col = 0; col < COLUMNS.size(); col++) {
+            int cardLeft = innerLeft + col * (columnWidth + CARD_COLUMN_GAP);
+            int cardRight = cardLeft + columnWidth;
+            int y = startY;
+
+            for (CategoryDef cat : COLUMNS.get(col)) {
+                List<RowSnapshot> snapshots = collectRows(cat, player);
+                if (snapshots.isEmpty()) continue;
+
+                int height = CARD_BORDER + CARD_HEADER_H + snapshots.size() * ROW_PITCH + CARD_BORDER;
+                renderCard(graphics, cat, snapshots, cardLeft, cardRight, y, height);
+                y += height + CARD_GAP;
+            }
         }
     }
 
-    private static List<RowSnapshot> collectRows(Category cat, LocalPlayer player) {
-        List<RowSnapshot> out = new ArrayList<>(cat.rows().size());
-        for (AttrRow row : cat.rows()) {
-            row.value(player).ifPresent(v ->
-                    out.add(new RowSnapshot(Component.translatable(row.labelKey()), v)));
+    private static List<RowSnapshot> collectRows(CategoryDef cat, LocalPlayer player) {
+        List<? extends Identifier> ids = cat.idsSource().get();
+        List<RowSnapshot> out = new ArrayList<>(ids.size());
+        for (Identifier id : ids) {
+            resolveRow(id, player).ifPresent(out::add);
         }
         return out;
     }
 
-    private void renderCard(GuiGraphicsExtractor graphics, Category cat, List<RowSnapshot> rows, int cardTop, int cardHeight) {
-        int cardLeft = leftPos + CARD_LEFT_X;
-        int cardRight = leftPos + CARD_RIGHT_X;
-        int cardWidth = cardRight - cardLeft;
+    private static Optional<RowSnapshot> resolveRow(Identifier id, LocalPlayer player) {
+        // Prefer the player's own live AttributeInstance if it's been touched
+        // (e.g. equipment modifiers applied). AttributeMap keys by holder identity,
+        // and the holder the modifier was applied with may differ from the one
+        // BuiltInRegistries returns to us — id-matching is the reliable bridge.
+        AttributeInstance instance = findInstanceById(player, id);
+        if (instance == null) {
+            ResourceKey<Attribute> key = ResourceKey.create(Registries.ATTRIBUTE, id);
+            Optional<? extends Holder<Attribute>> holder = BuiltInRegistries.ATTRIBUTE.get(key);
+            if (holder.isEmpty()) {
+                if (LOGGED_MISSING.add(id)) {
+                    ChroniclesLeveling.LOG.warn("AttributesScreen: skipping unregistered attribute {}", id);
+                }
+                return Optional.empty();
+            }
+            instance = player.getAttribute(holder.get());
+            if (instance == null) return Optional.empty();
+        }
 
-        graphics.outline(cardLeft, cardTop, cardWidth, cardHeight, COLOR_BORDER);
+        Holder<Attribute> attr = instance.getAttribute();
+        Optional<Double> percentScale = PercentAttributes.scaleFor(id, attr);
+        return Optional.of(new RowSnapshot(labelFor(id, attr), instance.getValue(), percentScale));
+    }
+
+    private static AttributeInstance findInstanceById(LocalPlayer player, Identifier id) {
+        AttributeMap map = player.getAttributes();
+        for (AttributeInstance inst : map.getSyncableAttributes()) {
+            if (inst.getAttribute().is(id)) {
+                return inst;
+            }
+        }
+        return null;
+    }
+
+    private static Component labelFor(Identifier id, Holder<Attribute> holder) {
+        String overrideKey = LABEL_OVERRIDES.get(id);
+        if (overrideKey != null) return Component.translatable(overrideKey);
+        return Component.translatable(holder.value().getDescriptionId());
+    }
+
+    private void renderCard(GuiGraphicsExtractor graphics, CategoryDef cat, List<RowSnapshot> rows,
+                            int cardLeft, int cardRight, int cardTop, int cardHeight) {
+        graphics.outline(cardLeft, cardTop, cardRight - cardLeft, cardHeight, COLOR_BORDER);
 
         renderCardHeader(graphics, cat, cardLeft, cardTop);
         renderCardRows(graphics, rows, cardLeft, cardRight, cardTop);
     }
 
-    private void renderCardHeader(GuiGraphicsExtractor graphics, Category cat, int cardLeft, int cardTop) {
+    private void renderCardHeader(GuiGraphicsExtractor graphics, CategoryDef cat, int cardLeft, int cardTop) {
         int iconX = cardLeft + HEADER_ICON_X;
         int iconY = cardTop + CARD_BORDER;
         graphics.blit(
@@ -233,7 +318,7 @@ public class AttributesScreen extends Screen {
     }
 
     private void renderScaledRow(GuiGraphicsExtractor graphics, RowSnapshot row, int nameX, int valueRightX, int y) {
-        String value = formatValue(row.value());
+        String value = formatValue(row.value(), row.percentScale());
         int valueW = font.width(value);
 
         graphics.pose().pushMatrix();
@@ -249,29 +334,24 @@ public class AttributesScreen extends Screen {
         graphics.pose().popMatrix();
     }
 
-    private static String formatValue(double value) {
+    private static String formatValue(double value, Optional<Double> percentScale) {
+        if (percentScale.isPresent()) {
+            double scaled = value * percentScale.get();
+            if (Math.abs(scaled - Math.round(scaled)) < 0.05) {
+                return Math.round(scaled) + "%";
+            }
+            return String.format("%.1f%%", scaled);
+        }
         if (Math.abs(value - Math.round(value)) < 0.001) {
             return Long.toString(Math.round(value));
         }
         return String.format("%.2f", value);
     }
 
-    private static AttrRow attr(String attrId, String labelKey) {
-        Identifier id = Identifier.tryParse(attrId);
-        ResourceKey<Attribute> key = id == null ? null : ResourceKey.create(Registries.ATTRIBUTE, id);
-        return new AttrRow(labelKey, player -> {
-            if (key == null) return Optional.empty();
-            Optional<? extends Holder<Attribute>> holder = BuiltInRegistries.ATTRIBUTE.get(key);
-            if (holder.isEmpty()) return Optional.empty();
-            AttributeInstance instance = player.getAttribute(holder.get());
-            return instance == null ? Optional.empty() : Optional.of(instance.getValue());
-        });
-    }
-
-    private static AttrRow health() {
-        return new AttrRow(
-                "chronicles_leveling.attribute.health",
-                player -> Optional.of((double) player.getHealth())
+    private static Map.Entry<Identifier, String> label(String namespace, String path, String labelKeySuffix) {
+        return Map.entry(
+                Identifier.fromNamespaceAndPath(namespace, path),
+                "chronicles_leveling.attribute." + labelKeySuffix
         );
     }
 
@@ -280,18 +360,7 @@ public class AttributesScreen extends Screen {
         return false;
     }
 
-    private record Category(String titleKey, IconCoord icon, List<AttrRow> rows) {}
+    private record CategoryDef(String titleKey, IconCoord icon, Supplier<List<? extends Identifier>> idsSource) {}
 
-    private record AttrRow(String labelKey, ValueProvider valueProvider) {
-        Optional<Double> value(LocalPlayer player) {
-            return valueProvider.get(player);
-        }
-    }
-
-    @FunctionalInterface
-    private interface ValueProvider {
-        Optional<Double> get(LocalPlayer player);
-    }
-
-    private record RowSnapshot(Component label, double value) {}
+    private record RowSnapshot(Component label, double value, Optional<Double> percentScale) {}
 }

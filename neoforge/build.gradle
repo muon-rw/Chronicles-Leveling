@@ -16,6 +16,8 @@ dependencies {
     implementation "dev.muon.dynamic_difficulty:dynamic_difficulty-neoforge:${dynamic_difficulty_version}+${minecraft_version}"
     implementation "dev.muon.combat_attributes:combat_attributes-neoforge:${combat_attributes_version}+${minecraft_version}"
 
+    // Dynamic Tooltips API (compile-only — runtime presence is detected via Services.PLATFORM.isModLoaded).
+    compileOnly "dev.muon:dynamic-tooltips:${dynamic_tooltips_version}+${minecraft_version}"
 
 }
 

@@ -3,6 +3,7 @@ package dev.muon.chronicles_leveling;
 import dev.muon.chronicles_leveling.event.PlayerStatsEventsFabric;
 import dev.muon.chronicles_leveling.level.PlayerLevelAttachmentFabric;
 import dev.muon.chronicles_leveling.network.NetworkRegistrationFabric;
+import dev.muon.chronicles_leveling.skill.PlayerSkillAttachmentFabric;
 import dev.muon.chronicles_leveling.stat.ModStatsFabric;
 import net.fabricmc.api.ModInitializer;
 
@@ -28,6 +29,7 @@ public class ChroniclesLevelingFabric implements ModInitializer {
 
         ModStatsFabric.init();
         PlayerLevelAttachmentFabric.init();
+        PlayerSkillAttachmentFabric.init();
         NetworkRegistrationFabric.initServer();
 
         PlayerStatsEventsFabric.initLifecycle();
