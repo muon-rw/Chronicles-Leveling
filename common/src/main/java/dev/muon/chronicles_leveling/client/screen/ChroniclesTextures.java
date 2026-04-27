@@ -35,6 +35,6 @@ public final class ChroniclesTextures {
 
     public static final Identifier ICON_INVENTORY = gui("inventory");
     public static final Identifier ICON_COMBAT = gui("combat");
-    public static final Identifier ICON_ATTRIBUTES = gui("attributes");
+    public static final Identifier ICON_LEVELS = gui("levels");
     public static final Identifier ICON_BLANK = gui("blank");
 }

@@ -7,35 +7,75 @@ import dev.muon.chronicles_leveling.network.NetworkDispatcher;
 import dev.muon.chronicles_leveling.stat.ModStats;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 
 /**
- * "Stats" tab — six rows, each showing the stat name, current value, and a
- * {@code +} button. Clicking {@code +} fires
- * {@link dev.muon.chronicles_leveling.network.message.AllocateStatPacket}; the
- * row updates as soon as the loader's auto-synced
- * {@link PlayerLevelData} attachment lands.
+ * "Levels" tab — six stat rows, each with a sprite-backed {@code +} button on
+ * the left that allocates an unspent skill point.
  *
- * <p>Sized 176×166 so it lines up with the inventory texture (from PlayerEx, licensed MIT)
+ * <p>Header: scaled "Levels" title; "Lv. n" with the level-up {@code +} button
+ * pinned to its right (group is centered, so the button's X is updated each
+ * frame to track the level text width); a vanilla XP bar that shows progress
+ * detail in a hover tooltip; and a "Points: n" line with the XP icon to its left.
+ *
+ * <p>Stat rows are framed by thin 1px horizontal separators (1px padding above
+ * and below each line) above the first row, between each pair, and below the last.
+ *
+ * <p>Sized 176×166 to line up with the inventory texture (art originally from
+ * PlayerEx, licensed MIT).
  */
 public class LevelUpScreen extends Screen {
 
     private static final int IMAGE_WIDTH = 176;
     private static final int IMAGE_HEIGHT = 166;
-    private static final int ROW_HEIGHT = 18;
-    private static final int FIRST_ROW_Y = 28;
-    private static final int PARCHMENT_OFFSET_X = 4;
-    private static final int PARCHMENT_OFFSET_Y = 4;
+
+    private static final int FIRST_ROW_Y = 68;
+    private static final int ROW_HEIGHT = 13;          // pitch: 11 content + 3 separator (1 empty + 1 line + 1 empty)
+    private static final int ROW_CONTENT_H = 10;
+
+    private static final int BUTTON_X_OFFSET = 12;
+    private static final int NAME_X_OFFSET = 26;
+    private static final int VALUE_RIGHT_MARGIN = 12;
+
+    private static final int TITLE_Y = 12;
+    private static final float TITLE_SCALE = 1.2f;
+    private static final int LEVEL_LINE_Y = 26;
+    private static final int XP_BAR_Y = 38;
+    private static final int POINTS_LINE_Y = 52;
+
+    private static final int XP_BAR_WIDTH = 110;
+    private static final int XP_BAR_HEIGHT = 5;
+    private static final int LEVEL_UP_BUTTON_GAP = 4;
+    private static final int POINTS_ICON_GAP = 2;
+
+    private static final int SEPARATOR_X_LEFT = 10;
+    private static final int SEPARATOR_X_RIGHT = 168;
+
+    private static final int TEXT_HEIGHT = 8;
+
+    private static final Identifier XP_BAR_BACKGROUND = Identifier.withDefaultNamespace("hud/experience_bar_background");
+    private static final Identifier XP_BAR_PROGRESS = Identifier.withDefaultNamespace("hud/experience_bar_progress");
+
+    private static final int PARCHMENT_OFFSET_X = 5;
+    private static final int PARCHMENT_OFFSET_Y = 5;
+
+    private static final int COLOR_TITLE = 0xFF3F3F3F;
+    private static final int COLOR_HEADER = 0xFF5A5A5A;
+    private static final int COLOR_NAME = 0xFF3F3F3F;
+    private static final int COLOR_VALUE = 0xFF8B5A2B;
+    private static final int COLOR_SEPARATOR = 0xFF8B7355;
 
     private int leftPos;
     private int topPos;
+    private PlusButton levelUpButton;
 
     public LevelUpScreen() {
-        super(Component.translatable("chronicles_leveling.screen.stats.title"));
+        super(Component.translatable("chronicles_leveling.screen.levels.title"));
     }
 
     @Override
@@ -46,31 +86,48 @@ public class LevelUpScreen extends Screen {
 
         addRenderableWidget(new ChroniclesTabBar(leftPos, topPos));
 
-        // Per-stat allocation rows: one "+" button each, lined up down the right.
+        // Vertically center the 10px button on the 8px text row.
+        int levelUpY = topPos + LEVEL_LINE_Y - (ChroniclesSprites.BUTTON_H - TEXT_HEIGHT) / 2;
+        // X is set in extractRenderState because it depends on the rendered Lv. n width.
+        this.levelUpButton = new PlusButton(
+                leftPos, levelUpY,
+                Component.translatable("chronicles_leveling.stat.level"),
+                this::canLevelUp,
+                NetworkDispatcher::sendLevelUp);
+        addRenderableWidget(this.levelUpButton);
+
+        int statButtonX = leftPos + BUTTON_X_OFFSET;
         for (int i = 0; i < ModStats.ALL.size(); i++) {
             ModStats.Entry stat = ModStats.ALL.get(i);
-            int rowY = topPos + FIRST_ROW_Y + i * ROW_HEIGHT;
-            int buttonX = leftPos + IMAGE_WIDTH - 24;
-
-            addRenderableWidget(Button.builder(
-                            Component.literal("+"),
-                            btn -> NetworkDispatcher.sendAllocateStat(stat.id()))
-                    .bounds(buttonX, rowY, 16, 14)
-                    .build());
+            addRenderableWidget(new PlusButton(
+                    statButtonX, rowButtonY(i),
+                    Component.translatable("chronicles_leveling.stat." + stat.id()),
+                    this::canSpendPoint,
+                    () -> NetworkDispatcher.sendAllocateStat(stat.id())));
         }
     }
 
-    /**
-     * Render order for textured screens:
-     * <ol>
-     *   <li>{@code super.extractBackground} — vanilla dim/transparent fill.</li>
-     *   <li>Our parchment + frame here, so widgets land on top of the paper.</li>
-     *   <li>{@code super.extractRenderState} (handled by the framework) — buttons,
-     *       tab bar, tooltips.</li>
-     * </ol>
-     * Blitting the panel inside {@code extractRenderState} would put it above
-     * widgets
-     */
+    private static int rowY(int rowIdx) {
+        return FIRST_ROW_Y + rowIdx * ROW_HEIGHT;
+    }
+
+    private int rowButtonY(int rowIdx) {
+        return topPos + rowY(rowIdx) + (ROW_CONTENT_H - ChroniclesSprites.BUTTON_H) / 2;
+    }
+
+    private boolean canLevelUp() {
+        var player = Minecraft.getInstance().player;
+        if (player == null) return false;
+        PlayerLevelData data = PlayerLevelManager.get(player);
+        return data.xp() >= LevelingCurve.xpToNext(data.level());
+    }
+
+    private boolean canSpendPoint() {
+        var player = Minecraft.getInstance().player;
+        if (player == null) return false;
+        return PlayerLevelManager.get(player).unspentPoints() > 0;
+    }
+
     @Override
     public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         super.extractBackground(graphics, mouseX, mouseY, partialTick);
@@ -83,8 +140,6 @@ public class LevelUpScreen extends Screen {
                 IMAGE_WIDTH, IMAGE_HEIGHT,
                 256, 256
         );
-        // gui.png contains the inventory-style frame with a transparent center;
-        // layered on top of the parchment so the border reads cleanly.
         graphics.blit(
                 RenderPipelines.GUI_TEXTURED,
                 ChroniclesTextures.GUI,
@@ -99,46 +154,150 @@ public class LevelUpScreen extends Screen {
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         super.extractRenderState(graphics, mouseX, mouseY, partialTick);
 
-        graphics.text(font,
-                Component.translatable("chronicles_leveling.screen.stats.title"),
-                leftPos + 8, topPos + 6, 0xFF3F3F3F, false);
-
-        renderHeader(graphics);
-        renderRows(graphics);
-    }
-
-    private void renderHeader(GuiGraphicsExtractor graphics) {
-        var player = Minecraft.getInstance().player;
+        LocalPlayer player = Minecraft.getInstance().player;
         PlayerLevelData data = player == null ? PlayerLevelData.DEFAULT : PlayerLevelManager.get(player);
         int rung = LevelingCurve.xpToNext(data.level());
-        Component header = Component.translatable(
-                "chronicles_leveling.screen.stats.header",
-                data.level(), data.xp(), rung, data.unspentPoints()
-        );
-        graphics.text(font, header, leftPos + 8, topPos + FIRST_ROW_Y - 10, 0xFF5A5A5A, false);
+
+        renderHeader(graphics, data, rung, mouseX, mouseY);
+        renderSeparators(graphics);
+        renderStatRows(graphics, player);
     }
 
-    private void renderRows(GuiGraphicsExtractor graphics) {
-        var player = Minecraft.getInstance().player;
-        if (player == null) return;
+    private void renderHeader(GuiGraphicsExtractor graphics, PlayerLevelData data, int rung, int mouseX, int mouseY) {
+        renderTitle(graphics);
+        renderLevelLine(graphics, data.level());
+        renderXpBar(graphics, data.xp(), rung, mouseX, mouseY);
+        renderPointsLine(graphics, data.unspentPoints());
+    }
 
+    private void renderTitle(GuiGraphicsExtractor graphics) {
+        Component title = Component.translatable("chronicles_leveling.screen.levels.title");
+        int textW = font.width(title);
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(leftPos + IMAGE_WIDTH / 2f, topPos + TITLE_Y);
+        graphics.pose().scale(TITLE_SCALE, TITLE_SCALE);
+        graphics.text(font, title, -textW / 2, 0, COLOR_TITLE, false);
+        graphics.pose().popMatrix();
+    }
+
+    private void renderLevelLine(GuiGraphicsExtractor graphics, int level) {
+        Component lvText = Component.translatable("chronicles_leveling.screen.levels.level_format", level);
+        int textW = font.width(lvText);
+        int totalW = textW + LEVEL_UP_BUTTON_GAP + ChroniclesSprites.BUTTON_W;
+        int startX = leftPos + (IMAGE_WIDTH - totalW) / 2;
+        int textY = topPos + LEVEL_LINE_Y;
+
+        graphics.text(font, lvText, startX, textY, COLOR_HEADER, false);
+        levelUpButton.setX(startX + textW + LEVEL_UP_BUTTON_GAP);
+    }
+
+    private void renderXpBar(GuiGraphicsExtractor graphics, int xp, int rung, int mouseX, int mouseY) {
+        int barX = leftPos + (IMAGE_WIDTH - XP_BAR_WIDTH) / 2;
+        int barY = topPos + XP_BAR_Y;
+
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, XP_BAR_BACKGROUND,
+                barX, barY, XP_BAR_WIDTH, XP_BAR_HEIGHT);
+
+        if (rung > 0 && xp > 0) {
+            int progressW = (int) Math.min(XP_BAR_WIDTH, ((long) XP_BAR_WIDTH * xp) / rung);
+            if (progressW > 0) {
+                graphics.blitSprite(RenderPipelines.GUI_TEXTURED, XP_BAR_PROGRESS,
+                        XP_BAR_WIDTH, XP_BAR_HEIGHT, 0, 0,
+                        barX, barY, progressW, XP_BAR_HEIGHT);
+            }
+        }
+
+        if (mouseX >= barX && mouseX < barX + XP_BAR_WIDTH
+                && mouseY >= barY && mouseY < barY + XP_BAR_HEIGHT) {
+            graphics.setTooltipForNextFrame(font, buildProgressTooltip(xp, rung), mouseX, mouseY);
+        }
+    }
+
+    private static Component buildProgressTooltip(int xp, int rung) {
+        double percent = rung > 0 ? (100.0 * xp) / rung : 0.0;
+        return Component.translatable(
+                "chronicles_leveling.screen.levels.progress_tooltip",
+                formatXpAmount(xp),
+                formatXpAmount(rung),
+                String.format("%.1f", percent));
+    }
+
+    /** Formats counts of 1000+ with one decimal and a K/M/B/T suffix; values under 1000 render as-is. */
+    private static String formatXpAmount(long value) {
+        if (value < 1000) return Long.toString(value);
+        String[] suffixes = {"K", "M", "B", "T"};
+        double scaled = value / 1000.0;
+        int idx = 0;
+        while (scaled >= 1000 && idx < suffixes.length - 1) {
+            scaled /= 1000;
+            idx++;
+        }
+        return String.format("%.1f%s", scaled, suffixes[idx]);
+    }
+
+    private void renderPointsLine(GuiGraphicsExtractor graphics, int unspentPoints) {
+        Component text = Component.translatable("chronicles_leveling.screen.levels.points_format", unspentPoints);
+        int textW = font.width(text);
+        int totalW = ChroniclesSprites.ICON_SIZE + POINTS_ICON_GAP + textW;
+        int startX = leftPos + (IMAGE_WIDTH - totalW) / 2;
+        int textY = topPos + POINTS_LINE_Y;
+        // 9px icon biased 1px above the 8px text so their bottom edges align.
+        int iconY = textY - 1;
+
+        graphics.blit(
+                RenderPipelines.GUI_TEXTURED,
+                ChroniclesTextures.GUI,
+                startX, iconY,
+                ChroniclesSprites.XP_U, ChroniclesSprites.XP_V,
+                ChroniclesSprites.ICON_SIZE, ChroniclesSprites.ICON_SIZE,
+                ChroniclesSprites.SHEET_SIZE, ChroniclesSprites.SHEET_SIZE
+        );
+
+        graphics.text(font, text,
+                startX + ChroniclesSprites.ICON_SIZE + POINTS_ICON_GAP, textY,
+                COLOR_HEADER, false);
+    }
+
+    private void renderSeparators(GuiGraphicsExtractor graphics) {
+        int x0 = leftPos + SEPARATOR_X_LEFT;
+        int x1 = leftPos + SEPARATOR_X_RIGHT;
+
+        // Top wrap line (1px empty above first row content)
+        drawHorizontalLine(graphics, x0, x1, topPos + FIRST_ROW_Y - 2);
+
+        // Line after each row: between consecutive rows for i < last, bottom wrap for i == last
+        for (int i = 0; i < ModStats.ALL.size(); i++) {
+            int y = topPos + rowY(i) + ROW_CONTENT_H + 1;
+            drawHorizontalLine(graphics, x0, x1, y);
+        }
+    }
+
+    private void drawHorizontalLine(GuiGraphicsExtractor graphics, int x0, int x1, int y) {
+        graphics.fill(x0, y, x1, y + 1, COLOR_SEPARATOR);
+    }
+
+    private void renderStatRows(GuiGraphicsExtractor graphics, LocalPlayer player) {
         for (int i = 0; i < ModStats.ALL.size(); i++) {
             ModStats.Entry stat = ModStats.ALL.get(i);
-            int rowY = topPos + FIRST_ROW_Y + i * ROW_HEIGHT;
-
-            AttributeInstance instance = player.getAttribute(ModStats.get(stat.id()));
+            AttributeInstance instance = player == null ? null : player.getAttribute(ModStats.get(stat.id()));
             int value = instance == null ? 0 : (int) Math.floor(instance.getValue());
 
-            graphics.text(font,
+            renderRow(graphics, i,
                     Component.translatable("chronicles_leveling.stat." + stat.id()),
-                    leftPos + 8, rowY + 3, 0xFF3F3F3F, false);
-
-            String valueStr = Integer.toString(value);
-            int valueW = font.width(valueStr);
-            graphics.text(font, valueStr,
-                    leftPos + IMAGE_WIDTH - 32 - valueW, rowY + 3,
-                    0xFF8B5A2B, false);
+                    Integer.toString(value));
         }
+    }
+
+    private void renderRow(GuiGraphicsExtractor graphics, int rowIdx, Component name, String value) {
+        int y = topPos + rowY(rowIdx);
+        int textY = y + (ROW_CONTENT_H - TEXT_HEIGHT) / 2;
+
+        graphics.text(font, name, leftPos + NAME_X_OFFSET, textY, COLOR_NAME, false);
+
+        int valueW = font.width(value);
+        graphics.text(font, value,
+                leftPos + IMAGE_WIDTH - VALUE_RIGHT_MARGIN - valueW, textY,
+                COLOR_VALUE, false);
     }
 
     @Override

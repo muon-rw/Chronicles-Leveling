@@ -24,8 +24,8 @@ public enum ChroniclesTab {
         var mc = Minecraft.getInstance();
         return mc.player == null ? null : new InventoryScreen(mc.player);
     }),
-    STATS("stats", LevelUpScreen.class, ChroniclesTextures.ICON_COMBAT, LevelUpScreen::new),
-    ATTRIBUTES("attributes", AttributesScreen.class, ChroniclesTextures.ICON_ATTRIBUTES, AttributesScreen::new);
+    LEVELS("levels", LevelUpScreen.class, ChroniclesTextures.ICON_LEVELS, LevelUpScreen::new),
+    ATTRIBUTES("attributes", AttributesScreen.class, ChroniclesTextures.ICON_COMBAT, AttributesScreen::new);
 
     private final String key;
     private final Class<? extends Screen> screenClass;

@@ -1,16 +1,32 @@
 {
-  "_comment": "Lang keys for Chronicles: Leveling. Stat names follow attribute.<modid>.<id> so the engine wires them automatically.",
-
   "key.categories.chronicles_leveling": "Chronicles: Leveling",
   "key.chronicles_leveling.open_stats": "Open Stats Page",
 
   "chronicles_leveling.tab.inventory": "Inv",
-  "chronicles_leveling.tab.stats": "Stats",
-  "chronicles_leveling.tab.attributes": "Attrs",
+  "chronicles_leveling.tab.levels": "Levels",
+  "chronicles_leveling.tab.attributes": "Attributes",
 
-  "chronicles_leveling.screen.stats.title": "Stats",
-  "chronicles_leveling.screen.stats.header": "Lv. %1$s — XP %2$s/%3$s — Points: %4$s",
+  "chronicles_leveling.screen.levels.title": "Levels",
+  "chronicles_leveling.screen.levels.level_format": "Lv. %1$s",
+  "chronicles_leveling.screen.levels.points_format": "Points: %1$s",
+  "chronicles_leveling.screen.levels.progress_tooltip": "Progress: %1$s/%2$s (%3$s%%)",
   "chronicles_leveling.screen.attributes.title": "Attributes",
+  "chronicles_leveling.screen.attributes.category.melee": "Melee",
+  "chronicles_leveling.screen.attributes.category.ranged": "Ranged",
+  "chronicles_leveling.screen.attributes.category.defense": "Defense",
+  "chronicles_leveling.screen.attributes.category.magic": "Magic",
+
+  "chronicles_leveling.attribute.attack_damage": "Attack Damage",
+  "chronicles_leveling.attribute.attack_speed": "Attack Speed",
+  "chronicles_leveling.attribute.crit_chance": "Crit. Chance",
+  "chronicles_leveling.attribute.crit_damage": "Crit. Damage",
+  "chronicles_leveling.attribute.ranged_damage": "Ranged Damage",
+  "chronicles_leveling.attribute.pull_time": "Pull Time",
+  "chronicles_leveling.attribute.velocity": "Velocity",
+  "chronicles_leveling.attribute.health": "Health",
+  "chronicles_leveling.attribute.max_health": "Max Health",
+  "chronicles_leveling.attribute.armor": "Armor",
+  "chronicles_leveling.attribute.armor_toughness": "Armor Toughness",
 
   "chronicles_leveling.nameplate.level": "[Lv. %1$s]",
 
@@ -21,6 +37,7 @@
   "attribute.chronicles_leveling.wisdom": "Wisdom",
   "attribute.chronicles_leveling.luckiness": "Luckiness",
 
+  "chronicles_leveling.stat.level": "Level",
   "chronicles_leveling.stat.strength": "Strength",
   "chronicles_leveling.stat.dexterity": "Dexterity",
   "chronicles_leveling.stat.constitution": "Constitution",

@@ -31,7 +31,7 @@ public final class ChroniclesKeybinds {
     /** Loader code calls this from a per-tick hook. Drains queued presses. */
     public static void tick() {
         while (OPEN_STATS.consumeClick()) {
-            ChroniclesTab.STATS.open();
+            ChroniclesTab.LEVELS.open();
         }
     }
 }

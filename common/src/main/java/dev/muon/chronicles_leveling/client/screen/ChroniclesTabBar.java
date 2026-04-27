@@ -36,8 +36,7 @@ public class ChroniclesTabBar implements Renderable, GuiEventListener, Narratabl
     private static final int TAB_WIDTH = 28;
     private static final int TAB_HEIGHT = 32;
     /**
-     * Vertical nudge applied to every tab cell. PlayerEx's art doesn't sit cell-flush
-     * with the panel top; this 3px shift lines the tab base up with the panel edge.
+     * Vertical nudge applied to every tab cell. Shift 4px down to overlay vanilla bar
      */
     private static final int TAB_VERTICAL_OFFSET = 4;
     private static final int TEXTURE_SIZE = 256;
@@ -54,7 +53,7 @@ public class ChroniclesTabBar implements Renderable, GuiEventListener, Narratabl
     /** Where the icon rides inside the cell; inactive shifts down to compensate for the hidden bottom. */
     private static final int ICON_OFFSET_X = (TAB_WIDTH - ICON_SIZE) / 2;
     private static final int ICON_OFFSET_Y_ACTIVE = 8;
-    private static final int ICON_OFFSET_Y_INACTIVE = 12;
+    private static final int ICON_OFFSET_Y_INACTIVE = 10;
 
     private final int panelLeft;
     private final int panelTop;

@@ -1,6 +1,5 @@
 package dev.muon.chronicles_leveling.level;
 
-import dev.muon.chronicles_leveling.ChroniclesLeveling;
 import dev.muon.chronicles_leveling.compat.DynamicDifficultyCompat;
 import dev.muon.chronicles_leveling.config.Configs;
 import dev.muon.chronicles_leveling.platform.Services;
@@ -18,8 +17,9 @@ import net.minecraft.world.entity.player.Player;
  *   <li>nudge Dynamic-Difficulty to refresh display levels when integrated</li>
  * </ul>
  *
- * <p>Reads are cheap — they hit the attachment directly. Writes always sync;
- * skip the network if you're calling from a hot path that mutates many players.
+ * <p>Leveling is opt-in: {@link #addXp} only banks XP; the player has to spend
+ * it via {@link #tryLevelUp} to actually rise a rung. That keeps levels and
+ * stat points in the same "click + to spend" loop on the screen.
  */
 public final class PlayerLevelManager {
 
@@ -37,45 +37,41 @@ public final class PlayerLevelManager {
         return get(player).unspentPoints();
     }
 
-    /**
-     * Writes new state. Sync to the owning client rides the loader's attachment
-     * sync — we don't fire a separate packet. DD is poked when present so its
-     * display level refreshes immediately rather than waiting on its own
-     * tick-based fallback.
-     */
     public static void set(ServerPlayer player, PlayerLevelData data) {
         Services.PLATFORM.getPlayerLevelStore().set(player, data);
         DynamicDifficultyCompat.requestPlayerLevelUpdate(player);
     }
 
     /**
-     * Adds XP, awarding stat points and rolling over remainder for each level
-     * the player crosses. Negative deltas are rejected — call {@link #set}
-     * directly if you need to wipe XP.
+     * Banks XP toward the next level. Negative deltas are rejected — call
+     * {@link #set} directly if you need to wipe XP. Does <em>not</em> auto-level
+     * the player; that's the player's choice via {@link #tryLevelUp}.
      */
     public static void addXp(ServerPlayer player, int xpDelta) {
         if (xpDelta <= 0) return;
-
         PlayerLevelData data = get(player);
-        int level = data.level();
-        int xp = data.xp() + xpDelta;
-        int unspent = data.unspentPoints();
+        set(player, data.withXp(data.xp() + xpDelta));
+    }
+
+    /**
+     * Spends the rung's XP cost, raises the level by 1, and credits {@link
+     * Configs#SYNC ConfigSync#pointsPerLevel} unspent points. No-op if the
+     * player can't afford it.
+     *
+     * @return {@code true} if a level-up actually happened
+     */
+    public static boolean tryLevelUp(ServerPlayer player) {
+        PlayerLevelData data = get(player);
+        int cost = LevelingCurve.xpToNext(data.level());
+        if (data.xp() < cost) return false;
+
         int pointsPerLevel = Configs.SYNC.pointsPerLevel.get();
-
-        int rung = LevelingCurve.xpToNext(level);
-        while (xp >= rung) {
-            xp -= rung;
-            level += 1;
-            unspent += pointsPerLevel;
-            rung = LevelingCurve.xpToNext(level);
-        }
-
-        if (level != data.level()) {
-            ChroniclesLeveling.LOG.debug("Player {} leveled up: {} -> {} (+{} unspent)",
-                    player.getName().getString(), data.level(), level, level - data.level());
-        }
-
-        set(player, new PlayerLevelData(level, xp, unspent));
+        set(player, new PlayerLevelData(
+                data.level() + 1,
+                data.xp() - cost,
+                data.unspentPoints() + pointsPerLevel
+        ));
+        return true;
     }
 
     /**

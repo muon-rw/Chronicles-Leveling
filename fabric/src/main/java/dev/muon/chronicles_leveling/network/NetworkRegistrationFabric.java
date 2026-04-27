@@ -1,6 +1,7 @@
 package dev.muon.chronicles_leveling.network;
 
 import dev.muon.chronicles_leveling.network.message.AllocateStatPacket;
+import dev.muon.chronicles_leveling.network.message.LevelUpPacket;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
@@ -17,10 +18,16 @@ public final class NetworkRegistrationFabric {
 
     public static void initServer() {
         PayloadTypeRegistry.serverboundPlay().register(AllocateStatPacket.TYPE, AllocateStatPacket.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(LevelUpPacket.TYPE, LevelUpPacket.STREAM_CODEC);
 
         ServerPlayNetworking.registerGlobalReceiver(AllocateStatPacket.TYPE,
                 (payload, context) -> context.server().execute(
                         () -> AllocateStatPacket.handleOnServer(payload, context.player())
+                )
+        );
+        ServerPlayNetworking.registerGlobalReceiver(LevelUpPacket.TYPE,
+                (payload, context) -> context.server().execute(
+                        () -> LevelUpPacket.handleOnServer(payload, context.player())
                 )
         );
     }

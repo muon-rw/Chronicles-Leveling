@@ -1,6 +1,7 @@
 package dev.muon.chronicles_leveling.network;
 
 import dev.muon.chronicles_leveling.network.message.AllocateStatPacket;
+import dev.muon.chronicles_leveling.network.message.LevelUpPacket;
 import dev.muon.chronicles_leveling.platform.Services;
 
 /**
@@ -22,5 +23,10 @@ public final class NetworkDispatcher {
     /** Client → server: "I clicked + on stat X". */
     public static void sendAllocateStat(String statId) {
         helper().sendToServer(new AllocateStatPacket(statId));
+    }
+
+    /** Client → server: "I clicked + on Level". */
+    public static void sendLevelUp() {
+        helper().sendToServer(LevelUpPacket.INSTANCE);
     }
 }

@@ -2,29 +2,27 @@ package dev.muon.chronicles_leveling.level;
 
 import dev.muon.chronicles_leveling.config.Configs;
 
+import java.util.Map;
+
 /**
- * XP-to-next-level math. Uses {@code base + slope * (level - 1)^exponent},
- * with all three values driven from {@link dev.muon.chronicles_leveling.config.ConfigSync}
- * so server ops can retune the curve without a restart.
+ * XP-cost-to-next-level math. Driven by a single configurable EvalEx-style
+ * expression on {@link dev.muon.chronicles_leveling.config.ConfigSync#xpCurveExpression}
+ * with {@code l} bound to the current level. Synced, so server ops can retune
+ * the curve without a restart.
  *
- * <p>Kept as a single static helper rather than a polymorphic strategy because
- * everything we need is captured in three numbers; if a strategy is ever
- * needed, callers should swap this whole class out, not subclass it.
+ * <p>Failure modes (parse error, evaluation error, NaN, negative) all clamp to
+ * {@code 1} so the player can never get stuck on a 0-cost rung.
  */
 public final class LevelingCurve {
 
     private LevelingCurve() {}
 
-    /**
-     * XP required to advance from {@code level} → {@code level + 1}.
-     * Always returns at least 1 so the player can never get stuck on a 0-cost rung.
-     */
+    private static final double FALLBACK_COST = 50.0;
+
     public static int xpToNext(int level) {
         if (level < 1) level = 1;
-        double base = Configs.SYNC.xpCurveBase.get();
-        double slope = Configs.SYNC.xpCurveSlope.get();
-        double exponent = Configs.SYNC.xpCurveExponent.get();
-        double rung = base + slope * Math.pow(level - 1, exponent);
-        return (int) Math.max(1, Math.round(rung));
+        double cost = Configs.SYNC.xpCurveExpression.evalSafe(
+                Map.of('l', (double) level), FALLBACK_COST);
+        return (int) Math.max(1, Math.round(cost));
     }
 }

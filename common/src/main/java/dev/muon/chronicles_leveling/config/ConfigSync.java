@@ -9,13 +9,14 @@ import me.fzzyhmstrs.fzzy_config.config.ConfigSection;
 import me.fzzyhmstrs.fzzy_config.validation.collection.ValidatedList;
 import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedAny;
 import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedBoolean;
-import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedDouble;
+import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedExpression;
 import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedInt;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Server-authoritative settings synced to clients.
@@ -49,14 +50,10 @@ public class ConfigSync extends Config {
     @Comment("Stat points the player has at level 1, before any leveling.")
     public ValidatedInt startingPoints = new ValidatedInt(0, 1000, 0);
 
-    @Comment("XP curve: rung(level) = base + slope * (level - 1)^exponent. This is the base term.")
-    public ValidatedDouble xpCurveBase = new ValidatedDouble(50.0, 1_000_000.0, 1.0);
-
-    @Comment("XP curve slope coefficient.")
-    public ValidatedDouble xpCurveSlope = new ValidatedDouble(15.0, 1_000_000.0, 0.0);
-
-    @Comment("XP curve exponent. 1.0 = linear, 1.5 ~ playerex-ish, 2.0 = quadratic.")
-    public ValidatedDouble xpCurveExponent = new ValidatedDouble(1.5, 5.0, 0.5);
+    @Comment("XP cost to advance from level l to l+1. 'l' = current level. Examples: " +
+            "'50 + 15 * (l - 1)^1.5' (default, playerex-ish), '100 * l' (linear), '50 * l^2' (quadratic).")
+    public ValidatedExpression xpCurveExpression =
+            new ValidatedExpression("50 + 15 * (l - 1)^1.5", Set.of('l'));
 
     // --- Stat modifier mappings ---
     // One section per stat; FzzyConfig generates a tidy "Stat Modifiers > Strength" tree in the GUI.

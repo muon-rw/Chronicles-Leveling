@@ -18,6 +18,8 @@ dependencies {
         exclude(group: "com.terraformersmc")
     }
 
+    compileOnly "curse.maven:playerex-409221:4608785"
+
     implementation "dev.muon:dynamic-tooltips:${dynamic_tooltips_version}+${minecraft_version}"
     implementation "dev.muon.dynamic_difficulty:dynamic_difficulty-fabric:${dynamic_difficulty_version}+${minecraft_version}"
     implementation "dev.muon.combat_attributes:combat_attributes-fabric:${combat_attributes_version}+${minecraft_version}"
