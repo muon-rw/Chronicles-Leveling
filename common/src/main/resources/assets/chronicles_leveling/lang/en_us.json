@@ -18,15 +18,9 @@
   "chronicles_leveling.screen.attributes.category.defense": "Defense",
   "chronicles_leveling.screen.attributes.category.magic": "Magic",
 
-  "chronicles_leveling.attribute.attack_damage": "Attack Damage",
-  "chronicles_leveling.attribute.attack_speed": "Attack Speed",
   "chronicles_leveling.attribute.crit_chance": "Crit. Chance",
   "chronicles_leveling.attribute.crit_damage": "Crit. Damage",
-  "chronicles_leveling.attribute.ranged_damage": "Ranged Damage",
-  "chronicles_leveling.attribute.pull_time": "Pull Time",
   "chronicles_leveling.attribute.velocity": "Velocity",
-  "chronicles_leveling.attribute.max_health": "Max Health",
-  "chronicles_leveling.attribute.armor": "Armor",
   "chronicles_leveling.attribute.armor_toughness": "Arm. Toughness",
   "chronicles_leveling.attribute.knockback_resistance": "KB Resist",
 

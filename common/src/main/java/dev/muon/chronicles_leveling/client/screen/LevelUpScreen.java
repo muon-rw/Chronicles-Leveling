@@ -17,11 +17,12 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 /**
  * "Levels" tab — the player's character overview and stat allocation screen.
  *
- * <p>Header: scaled player name with a divider beneath; "Lv. n" with the
- * level-up {@code +} button pinned to its right (group is centered, so the
- * button's X is updated each frame to track the level text width); a vanilla
- * XP bar that shows progress detail in a hover tooltip; and a "Points: n" line
- * with the XP icon to its left.
+ * <p>Header: scaled "Levels" title with a divider beneath; the player name on
+ * a regular-size line under the divider; "Lv. n" with the level-up {@code +}
+ * button pinned to its right (group is centered, so the button's X is updated
+ * each frame to track the level text width); a vanilla XP bar that shows
+ * progress detail in a hover tooltip; and a "Points: n" line with the XP icon
+ * to its left.
  *
  * <p>Body: six stat rows (Strength / Dexterity / Constitution / Intelligence /
  * Wisdom / Luckiness). Each row has a sprite-backed {@code +} button on the
@@ -38,7 +39,7 @@ public class LevelUpScreen extends Screen {
     private static final int IMAGE_WIDTH = 176;
     private static final int IMAGE_HEIGHT = 166;
 
-    private static final int FIRST_ROW_Y = 67;
+    private static final int FIRST_ROW_Y = 68;
     private static final int ROW_HEIGHT = 15;          // pitch: 10 content + 3 separator (1 empty + 1 line + 1 empty)
     private static final int ROW_CONTENT_H = 12;
 
@@ -49,25 +50,26 @@ public class LevelUpScreen extends Screen {
     private static final int TITLE_Y = 12;
     private static final float TITLE_SCALE = 1.2f;
     private static final int HEADER_LINE_Y = 24;
-    private static final int LEVEL_LINE_Y = 36;
-    private static final int XP_BAR_Y = 47;
-    private static final int POINTS_LINE_Y = 54;
+    private static final int NAME_LINE_Y = 27;
+    private static final int LEVEL_LINE_Y = 38;
+    private static final int XP_BAR_Y = 49;
+    private static final int POINTS_LINE_Y = 56;
 
-    private static final int XP_BAR_WIDTH = 110;
-    private static final int XP_BAR_HEIGHT = 5;
+    private static final int XP_BAR_WIDTH = 134;
+    private static final int XP_BAR_HEIGHT = 4;
     private static final int LEVEL_UP_BUTTON_GAP = 4;
     private static final int POINTS_ICON_GAP = 2;
 
     private static final int SEPARATOR_X_LEFT = 9;
-    private static final int SEPARATOR_X_RIGHT = 166;
+    private static final int SEPARATOR_X_RIGHT = 167;
 
     private static final int TEXT_HEIGHT = 8;
 
     private static final Identifier XP_BAR_BACKGROUND = Identifier.withDefaultNamespace("hud/experience_bar_background");
     private static final Identifier XP_BAR_PROGRESS = Identifier.withDefaultNamespace("hud/experience_bar_progress");
 
-    private static final int PARCHMENT_OFFSET_X = 5;
-    private static final int PARCHMENT_OFFSET_Y = 5;
+    private static final int PARCHMENT_OFFSET_X = 6;
+    private static final int PARCHMENT_OFFSET_Y = 6;
 
     private static final int COLOR_TITLE = 0xFF3F3F3F;
     private static final int COLOR_HEADER = 0xFF5A5A5A;
@@ -170,20 +172,29 @@ public class LevelUpScreen extends Screen {
     }
 
     private void renderHeader(GuiGraphicsExtractor graphics, LocalPlayer player, PlayerLevelData data, int rung, int mouseX, int mouseY) {
-        renderTitle(graphics, player);
+        renderTitle(graphics);
+        renderName(graphics, player);
         renderLevelLine(graphics, data.level());
         renderXpBar(graphics, data.xp(), rung, mouseX, mouseY);
         renderPointsLine(graphics, data.unspentPoints());
     }
 
-    private void renderTitle(GuiGraphicsExtractor graphics, LocalPlayer player) {
-        Component title = player != null ? player.getName() : Component.empty();
+    private void renderTitle(GuiGraphicsExtractor graphics) {
+        Component title = Component.translatable("chronicles_leveling.screen.levels.title");
         int textW = font.width(title);
         graphics.pose().pushMatrix();
         graphics.pose().translate(leftPos + IMAGE_WIDTH / 2f, topPos + TITLE_Y);
         graphics.pose().scale(TITLE_SCALE, TITLE_SCALE);
         graphics.text(font, title, -textW / 2, 0, COLOR_TITLE, false);
         graphics.pose().popMatrix();
+    }
+
+    private void renderName(GuiGraphicsExtractor graphics, LocalPlayer player) {
+        if (player == null) return;
+        Component name = player.getName();
+        int textW = font.width(name);
+        int x = leftPos + (IMAGE_WIDTH - textW) / 2;
+        graphics.text(font, name, x, topPos + NAME_LINE_Y, COLOR_NAME, false);
     }
 
     private void renderLevelLine(GuiGraphicsExtractor graphics, int level) {
@@ -245,7 +256,7 @@ public class LevelUpScreen extends Screen {
         int x0 = leftPos + SEPARATOR_X_LEFT;
         int x1 = leftPos + SEPARATOR_X_RIGHT;
 
-        // Divider beneath the player name title.
+        // Divider beneath the "Levels" title.
         drawHorizontalLine(graphics, x0, x1, topPos + HEADER_LINE_Y);
 
         // Top wrap line above the stat block.

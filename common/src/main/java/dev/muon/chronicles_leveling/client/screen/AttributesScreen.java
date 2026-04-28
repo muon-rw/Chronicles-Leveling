@@ -45,19 +45,19 @@ public class AttributesScreen extends Screen {
 
     private static final int IMAGE_WIDTH = 176;
     private static final int IMAGE_HEIGHT = 166;
-    private static final int PARCHMENT_OFFSET_X = 5;
-    private static final int PARCHMENT_OFFSET_Y = 5;
+    private static final int PARCHMENT_OFFSET_X = 6;
+    private static final int PARCHMENT_OFFSET_Y = 6;
 
     private static final int TITLE_Y = 12;
     private static final float TITLE_SCALE = 1.2f;
     private static final int TITLE_DIVIDER_GAP = 2;
     private static final int TITLE_DIVIDER_LEFT_INSET = 9;
-    private static final int TITLE_DIVIDER_RIGHT_INSET = 10;
+    private static final int TITLE_DIVIDER_RIGHT_INSET = 9;
 
     private static final int CARD_LEFT_X = 8;
     private static final int CARD_RIGHT_X = 168;
     private static final int CARD_GAP = 1;
-    private static final int CARD_COLUMN_GAP = 1;
+    private static final int CARD_COLUMN_GAP = 2;
     private static final int CARD_BORDER = 1;
     private static final int CARD_HEADER_H = 9;
     private static final int CARDS_TOP_OFFSET = 2;
@@ -84,14 +84,8 @@ public class AttributesScreen extends Screen {
      * description id, so user-added attributes still render with a sensible name.
      */
     private static final Map<Identifier, String> LABEL_OVERRIDES = Map.ofEntries(
-            label("minecraft", "attack_damage", "attack_damage"),
-            label("minecraft", "attack_speed", "attack_speed"),
-            label("minecraft", "max_health", "max_health"),
-            label("minecraft", "armor", "armor"),
             label("minecraft", "armor_toughness", "armor_toughness"),
             label("minecraft", "knockback_resistance", "knockback_resistance"),
-            label("combat_attributes", "ranged_damage", "ranged_damage"),
-            label("combat_attributes", "draw_speed", "pull_time"),
             label("combat_attributes", "arrow_velocity", "velocity"),
             label("combat_attributes", "melee_crit_chance", "crit_chance"),
             label("combat_attributes", "melee_crit_damage", "crit_damage"),

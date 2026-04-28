@@ -40,7 +40,7 @@ public class SkillsScreen extends Screen {
     private static final float TITLE_SCALE = 1.2f;
     private static final int HEADER_LINE_Y = 24;
 
-    private static final int FIRST_ROW_Y = 37;
+    private static final int FIRST_ROW_Y = 38;
     private static final int ROW_HEIGHT = 20;          // pitch: 17 content + 3 separator (1 empty + 1 line + 1 empty)
     private static final int ROW_CONTENT_H = 17;
 
@@ -53,7 +53,7 @@ public class SkillsScreen extends Screen {
     private static final float CELL_TEXT_SCALE = 0.75f;
 
     private static final int SEPARATOR_X_LEFT = 9;
-    private static final int SEPARATOR_X_RIGHT = 166;
+    private static final int SEPARATOR_X_RIGHT = 167;
     private static final int COLUMN_DIVIDER_X = 87;
 
     private static final int LEFT_CELL_X0 = 13;
@@ -61,8 +61,8 @@ public class SkillsScreen extends Screen {
     private static final int RIGHT_CELL_X0 = 91;
     private static final int RIGHT_CELL_X1 = 162;
 
-    private static final int PARCHMENT_OFFSET_X = 5;
-    private static final int PARCHMENT_OFFSET_Y = 5;
+    private static final int PARCHMENT_OFFSET_X = 6;
+    private static final int PARCHMENT_OFFSET_Y = 6;
 
     private static final int COLOR_TITLE = 0xFF3F3F3F;
     private static final int COLOR_NAME = 0xFF3F3F3F;
