@@ -2,6 +2,7 @@ package dev.muon.chronicles_leveling.client;
 
 import dev.muon.chronicles_leveling.config.Configs;
 import dev.muon.chronicles_leveling.level.PlayerLevelManager;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
@@ -9,13 +10,14 @@ import net.minecraft.world.entity.player.Player;
 /**
  * Decorator that appends a level suffix to a player's nameplate component.
  *
- * <p>Single config gate (no awareness of DD). When DD is loaded alongside, the
- * intended setup is to disable DD's player nameplate injection (DD's
- * {@code injectLevelIntoPlayers} client config) so the two don't double up;
- * the dedup logic lives outside this class on purpose.
+ * <p>CL owns player nameplate rendering on both loaders. Dynamic-Difficulty
+ * detects CL at startup and skips its own player injection (mob injection is
+ * unaffected), so the two never double up regardless of DD's
+ * {@code injectLevelIntoPlayers} setting.
  *
- * <p>Hooked from a loader-specific mixin/event — see the {@code mixin.client.*}
- * package on each loader.
+ * <p>Wired from a loader-specific event/mixin — see
+ * {@code ClientEventsNeoforge#onRenderNameTag} on NeoForge and
+ * {@code mixin.EntityRendererMixin} on Fabric.
  */
 public final class PlayerNameplateRenderer {
 
@@ -34,9 +36,29 @@ public final class PlayerNameplateRenderer {
         int level = PlayerLevelManager.getLevel(player);
         if (level <= 0) return original;
 
-        MutableComponent out = original.copy();
-        out.append(Component.literal(" "));
-        out.append(Component.translatable("chronicles_leveling.nameplate.level", level));
-        return out;
+        MutableComponent levelSuffix = Component.literal(" ")
+                .append(Component.translatable("chronicles_leveling.nameplate.level", level))
+                .withStyle(style -> style.withColor(getLevelColor(Minecraft.getInstance().player, player)));
+
+        return original.copy().append(levelSuffix);
+    }
+
+    /**
+     * Color the level suffix relative to the local viewer's level. Mirrors
+     * Dynamic-Difficulty's scheme so the visual is consistent whether DD is
+     * present or not. ARGB (0xAARRGGBB).
+     */
+    private static int getLevelColor(Player viewer, Player target) {
+        int viewerLevel = viewer != null ? PlayerLevelManager.getLevel(viewer) : 0;
+        int targetLevel = PlayerLevelManager.getLevel(target);
+        if (viewerLevel > 0) {
+            int diff = targetLevel - viewerLevel;
+            if (diff > 10) return 0xFFFF0000;
+            if (diff > -5) return 0xFFFFFF00;
+            return 0xFF00FF00;
+        }
+        if (targetLevel < 8) return 0xFF00FF00;
+        if (targetLevel <= 19) return 0xFFFFFF00;
+        return 0xFFFF0000;
     }
 }

@@ -4,7 +4,9 @@ import dev.muon.chronicles_leveling.level.PlayerLevelStore;
 import dev.muon.chronicles_leveling.network.NetworkHelper;
 import dev.muon.chronicles_leveling.skill.PlayerSkillStore;
 import net.minecraft.core.Holder;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 
 import java.util.Optional;
 
@@ -72,6 +74,26 @@ public interface IPlatformHelper {
      * Fabric: returns empty (no native equivalent).
      */
     default Optional<Double>  percentScaleForAttribute(Holder<Attribute> holder) {
+        return Optional.empty();
+    }
+
+    /**
+     * Renders a single-modifier tooltip line ("+5 Max Health") via the loader's
+     * native attribute formatter. NeoForge: routes through
+     * {@code IAttributeExtension.toComponent} so {@code PercentageAttribute} and
+     * any modded {@code Attribute} subclasses pick their own format. Fabric:
+     * returns empty (callers fall back to vanilla translation keys).
+     */
+    default Optional<Component> modifierComponent(Holder<Attribute> holder, AttributeModifier modifier) {
+        return Optional.empty();
+    }
+
+    /**
+     * Renders the "base value" tooltip line ("12.5 Max Health") via the loader's
+     * native attribute formatter. NeoForge: {@code IAttributeExtension.toBaseComponent}.
+     * Fabric: returns empty.
+     */
+    default Optional<Component> baseValueComponent(Holder<Attribute> holder, double value) {
         return Optional.empty();
     }
 }

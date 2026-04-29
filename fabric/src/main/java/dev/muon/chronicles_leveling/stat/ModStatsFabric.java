@@ -9,18 +9,22 @@ import net.minecraft.world.entity.ai.attributes.RangedAttribute;
 
 /**
  * Fabric-side registration for the six stat attributes from {@link ModStats#ALL}.
- * Pattern matches Combat-Attributes' {@code ModAttributesFabric}.
  *
- * <p>Vanilla {@link RangedAttribute} is used (rather than the diminishing
- * variant) because stat values are integer skill points, not a curve. The
- * description id is the conventional {@code attribute.<modid>.<id>} form so
- * lang entries pick up automatically.
+ * <p>Registration runs from {@code <clinit>} so the holder map is populated the
+ * first time anyone touches this class. {@link #ensureInitialized()} is a no-op
+ * trampoline that exists only to force class loading from callers that need the
+ * holders ready before they look them up — most importantly the
+ * {@code PlayerAttributesMixin}, which can fire from {@code DefaultAttributes}'s
+ * static initializer (during game bootstrap, well before {@code onInitialize})
+ * and would otherwise iterate an empty {@code ModStats.HOLDERS}.
+ *
+ * <p>Pattern lifted from {@code Combat-Attributes}' {@code ModAttributesFabric}.
+ * Vanilla {@link RangedAttribute} is used (rather than the diminishing variant)
+ * because stat values are integer skill points, not a curve.
  */
 public final class ModStatsFabric {
 
-    private ModStatsFabric() {}
-
-    public static void init() {
+    static {
         for (ModStats.Entry entry : ModStats.ALL) {
             String descriptionId = "attribute." + ChroniclesLeveling.MOD_ID + "." + entry.id();
             Attribute attribute = new RangedAttribute(
@@ -38,4 +42,15 @@ public final class ModStatsFabric {
             ModStats.put(entry.id(), holder);
         }
     }
+
+    private ModStatsFabric() {}
+
+    /**
+     * No-op trampoline. Calling it forces this class's {@code <clinit>}, which
+     * registers every stat attribute exactly once. Called from {@code
+     * ModInitializer.onInitialize} (primary path) and from
+     * {@code PlayerAttributesMixin} (defensive — the mixin can fire from
+     * {@code DefaultAttributes <clinit>} before mod init).
+     */
+    public static void ensureInitialized() {}
 }

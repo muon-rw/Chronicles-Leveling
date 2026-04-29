@@ -18,12 +18,17 @@ public final class ProgressTooltip {
 
     private ProgressTooltip() {}
 
-    /** Builds the "Progress: x/y (n.n%)" component for a given xp / xp-to-next pair. */
+    /**
+     * Builds the "Progress: x/y (n.n%)" component for a given xp / xp-to-next
+     * pair, clamping the displayed numerator + percent at the rung cap so a
+     * player whose available XP exceeds the rung cost still reads as 100%.
+     */
     public static Component build(int xp, int xpToNext) {
-        double percent = xpToNext > 0 ? (100.0 * xp) / xpToNext : 0.0;
+        int displayXp = Math.min(xp, Math.max(0, xpToNext));
+        double percent = xpToNext > 0 ? (100.0 * displayXp) / xpToNext : 0.0;
         return Component.translatable(
                 "chronicles_leveling.tooltip.progress",
-                formatAmount(xp),
+                formatAmount(displayXp),
                 formatAmount(xpToNext),
                 String.format("%.1f", percent));
     }
@@ -33,10 +38,15 @@ public final class ProgressTooltip {
      * {@code (barW, barH)}, expanded by {@link #HOVER_PADDING} pixels in every direction.
      */
     public static boolean isHovered(int mouseX, int mouseY, int barX, int barY, int barW, int barH) {
-        return mouseX >= barX - HOVER_PADDING
-                && mouseX < barX + barW + HOVER_PADDING
-                && mouseY >= barY - HOVER_PADDING
-                && mouseY < barY + barH + HOVER_PADDING;
+        return isHovered(mouseX, mouseY, barX, barY, barW, barH, HOVER_PADDING);
+    }
+
+    /** Same as the 6-arg form but with a caller-chosen padding (e.g. larger bars on the Levels screen). */
+    public static boolean isHovered(int mouseX, int mouseY, int barX, int barY, int barW, int barH, int padding) {
+        return mouseX >= barX - padding
+                && mouseX < barX + barW + padding
+                && mouseY >= barY - padding
+                && mouseY < barY + barH + padding;
     }
 
     /** Formats counts of 1000+ with one decimal and a K/M/B/T suffix; values under 1000 render as-is. */

@@ -34,7 +34,7 @@ loom {
     runs {
         configureEach {
             ideConfigGenerated(true)
-            property('fabric.log.level', 'debug')
+            // property('fabric.log.level', 'debug')
             property('mixin.debug', 'true')
             vmArg('-Xmx6G')
             vmArg('-Xms2G')

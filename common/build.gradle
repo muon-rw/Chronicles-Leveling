@@ -34,9 +34,6 @@ dependencies {
     implementation "dev.muon.dynamic_difficulty:dynamic_difficulty-common:${dynamic_difficulty_version}+${minecraft_version}"
     implementation "dev.muon.combat_attributes:combat_attributes-common:${combat_attributes_version}+${minecraft_version}"
 
-    // Dynamic Tooltips API — runtime presence is gated via Services.PLATFORM.isModLoaded.
-    compileOnly "dev.muon:dynamic-tooltips:${dynamic_tooltips_version}+${minecraft_version}"
-
 }
 
 configurations {

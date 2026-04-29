@@ -9,7 +9,7 @@ import net.minecraft.world.entity.player.Player;
 /**
  * Server-side facade for reading + writing player leveling state.
  *
- * <p>All routes that mutate level/xp/points go through this class so we have
+ * <p>All routes that mutate level/points go through this class so we have
  * exactly one place to:
  * <ul>
  *   <li>persist via the loader-specific {@link PlayerLevelStore}</li>
@@ -17,9 +17,10 @@ import net.minecraft.world.entity.player.Player;
  *   <li>nudge Dynamic-Difficulty to refresh display levels when integrated</li>
  * </ul>
  *
- * <p>Leveling is opt-in: {@link #addXp} only banks XP; the player has to spend
- * it via {@link #tryLevelUp} to actually rise a rung. That keeps levels and
- * stat points in the same "click + to spend" loop on the screen.
+ * <p>Leveling is opt-in: the player spends vanilla XP — the same pool they'd
+ * burn on enchanting — by clicking the {@code +} on the screen, which routes
+ * to {@link #tryLevelUp}. The mod doesn't bank a separate XP counter; per-skill
+ * progress is tracked separately by {@code PlayerSkillManager}.
  */
 public final class PlayerLevelManager {
 
@@ -43,18 +44,7 @@ public final class PlayerLevelManager {
     }
 
     /**
-     * Banks XP toward the next level. Negative deltas are rejected — call
-     * {@link #set} directly if you need to wipe XP. Does <em>not</em> auto-level
-     * the player; that's the player's choice via {@link #tryLevelUp}.
-     */
-    public static void addXp(ServerPlayer player, int xpDelta) {
-        if (xpDelta <= 0) return;
-        PlayerLevelData data = get(player);
-        set(player, data.withXp(data.xp() + xpDelta));
-    }
-
-    /**
-     * Spends the rung's XP cost, raises the level by 1, and credits {@link
+     * Spends the rung's vanilla-XP cost, raises the level by 1, and credits {@link
      * Configs#SYNC ConfigSync#pointsPerLevel} unspent points. No-op if the
      * player can't afford it.
      *
@@ -62,28 +52,24 @@ public final class PlayerLevelManager {
      */
     public static boolean tryLevelUp(ServerPlayer player) {
         PlayerLevelData data = get(player);
+        int maxLevel = Configs.SYNC.maxLevel.get();
+        if (maxLevel > 0 && data.level() >= maxLevel) return false;
+
         int cost = LevelingCurve.xpToNext(data.level());
-        if (data.xp() < cost) return false;
+        if (VanillaXp.availableExperiencePoints(player) < cost) return false;
+
+        // Spend the rung cost out of vanilla XP so the player's enchanting pool drops.
+        // giveExperiencePoints accepts negative deltas and drains progress + levels in
+        // the right order — the standard XP-update packet syncs the new state to the client.
+        player.giveExperiencePoints(-cost);
 
         int pointsPerLevel = Configs.SYNC.pointsPerLevel.get();
         set(player, new PlayerLevelData(
                 data.level() + 1,
-                data.xp() - cost,
-                data.unspentPoints() + pointsPerLevel
+                data.unspentPoints() + pointsPerLevel,
+                data.allocations()
         ));
         return true;
     }
 
-    /**
-     * Spends one point from the unspent pool. No-op if the player has none.
-     * The actual attribute mutation is the caller's job — this only debits the bank.
-     *
-     * @return {@code true} if a point was successfully debited
-     */
-    public static boolean trySpendPoint(ServerPlayer player) {
-        PlayerLevelData data = get(player);
-        if (data.unspentPoints() <= 0) return false;
-        set(player, data.withUnspentPoints(data.unspentPoints() - 1));
-        return true;
-    }
 }

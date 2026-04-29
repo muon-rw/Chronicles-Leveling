@@ -9,6 +9,7 @@
     "PlayerAttributesMixin"
   ],
   "client": [
+    "EntityRendererMixin"
   ],
   "server": [],
   "injectors": {

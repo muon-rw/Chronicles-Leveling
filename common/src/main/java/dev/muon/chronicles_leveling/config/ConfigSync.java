@@ -30,12 +30,15 @@ import java.util.Set;
  *   <li><b>Display</b> — defaults DD won't override (fallback nameplate, etc.).</li>
  * </ul>
  *
- * <p>Defaults give every stat one safe vanilla mapping so a brand-new install
+ * <p>Defaults give every stat one safe vanilla mapping so a brand-new installation
  * has visible feedback. Pack authors are expected to flesh them out — and to
  * remap them onto {@code Combat-Attributes} attributes once that mod is on the
  * classpath. Identifiers are stored as strings in the config and parsed at
  * read time so we don't have to register them at config-construction time
- * (when the attribute registry isn't built yet).
+ * (when the attribute registry isn't built yet).errirewedieuejueddkdcdcdcc v vecdcfdfdfg c sd7ssdxujcdx   fvololdc
+ * hi
+ * fooooooood
+ * - puppy
  */
 public class ConfigSync extends Config {
 
@@ -50,6 +53,12 @@ public class ConfigSync extends Config {
 
     @Comment("Stat points the player has at level 1, before any leveling.")
     public ValidatedInt startingPoints = new ValidatedInt(0, 1000, 0);
+
+    @Comment("Hard cap on player level. 0 to disable restrictions.")
+    public ValidatedInt maxLevel = new ValidatedInt(0, 10_000, 0);
+
+    @Comment("Hard cap on points spent in any single stat. 0 to disable restrictions.")
+    public ValidatedInt maxStatLevel = new ValidatedInt(0, 1_000, 0);
 
     @Comment("XP cost to advance from level l to l+1. 'l' = current level. Examples: " +
             "'50 + 15 * (l - 1)^1.5' (default, playerex-ish), '100 * l' (linear), '50 * l^2' (quadratic).")
@@ -74,7 +83,7 @@ public class ConfigSync extends Config {
 
     // --- Display ---
 
-    @Comment("Draw the player level above the player's nameplate. If Dynamic-Difficulty is also loaded and configured to render player levels, you'll see two — disable DD's injectLevelIntoPlayers to deduplicate.")
+    @Comment("Draw the player level above the player's nameplate. Dynamic-Difficulty (if present) defers player nameplates to Chronicles automatically, so toggling this is the single source of truth.")
     public ValidatedBoolean injectLevelIntoOwnNameplate = new ValidatedBoolean(true);
 
     /** Lookup helper so the applier doesn't need to know each field's name. */
@@ -168,42 +177,53 @@ public class ConfigSync extends Config {
             this.specs = new ValidatedAny<>(new StatModifierSpec()).toList(initial);
         }
 
-        /**
-         * Sensible-default mapping per stat onto vanilla attributes, so a fresh
-         * install has visible feedback before pack authors customize anything.
-         * Pack authors will typically delete most of these once {@code Combat-Attributes}
-         * is on the classpath and remap them to crit-chance / lifesteal / etc.
-         */
+
         public static StatModifierList defaultFor(String statId) {
             Map<String, List<StatModifierSpec>> defaults = Map.of(
                     ModStats.STRENGTH, List.of(
-                            new StatModifierSpec(idOf("attack_damage"), 0.5, AttributeModifier.Operation.ADD_VALUE)
+                            new StatModifierSpec(Identifier.parse("minecraft:attack_damage"), 0.5, AttributeModifier.Operation.ADD_VALUE),
+                            new StatModifierSpec(Identifier.parse("minecraft:block_break_speed"), 0.02, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
+                            new StatModifierSpec(Identifier.parse("combat_attributes:arrow_velocity"), 0.02, AttributeModifier.Operation.ADD_VALUE),
+                            new StatModifierSpec(Identifier.parse("combat_attributes:ranged_crit_damage"), 0.05, AttributeModifier.Operation.ADD_VALUE)
+                            // new StatModifierSpec(Identifier.parse("combat_attributes:stamina_regen"), 0.02, AttributeModifier.Operation.ADD_VALUE)
                     ),
                     ModStats.DEXTERITY, List.of(
-                            new StatModifierSpec(idOf("attack_speed"), 0.02, AttributeModifier.Operation.ADD_VALUE),
-                            new StatModifierSpec(idOf("movement_speed"), 0.005, AttributeModifier.Operation.ADD_MULTIPLIED_BASE)
+                            new StatModifierSpec(Identifier.parse("combat_attributes:ranged_damage"), 0.5, AttributeModifier.Operation.ADD_VALUE),
+                            new StatModifierSpec(Identifier.parse("minecraft:attack_speed"), 0.02, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
+                            new StatModifierSpec(Identifier.parse("combat_attributes:draw_speed"), 0.02, AttributeModifier.Operation.ADD_VALUE),
+                            new StatModifierSpec(Identifier.parse("minecraft:movement_speed"), 0.01, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
+                            new StatModifierSpec(Identifier.parse("combat_attributes:melee_crit_damage"), 0.05, AttributeModifier.Operation.ADD_VALUE)
                     ),
                     ModStats.CONSTITUTION, List.of(
-                            new StatModifierSpec(idOf("max_health"), 1.0, AttributeModifier.Operation.ADD_VALUE),
-                            new StatModifierSpec(idOf("armor_toughness"), 0.25, AttributeModifier.Operation.ADD_VALUE)
+                            // new StatModifierSpec(Identifier.parse("combat_attributes:max_stamina"), 10, AttributeModifier.Operation.ADD_VALUE),
+                            new StatModifierSpec(Identifier.parse("minecraft:max_health"), 1.0, AttributeModifier.Operation.ADD_VALUE),
+                            new StatModifierSpec(Identifier.parse("minecraft:armor"), 0.2, AttributeModifier.Operation.ADD_VALUE),
+                            new StatModifierSpec(Identifier.parse("minecraft:armor_toughness"), 0.1, AttributeModifier.Operation.ADD_VALUE),
+                            new StatModifierSpec(Identifier.parse("minecraft:knockback_resistance"), 0.01, AttributeModifier.Operation.ADD_VALUE),
+                            new StatModifierSpec(Identifier.parse("combat_attributes:magic_resistance"), 0.2, AttributeModifier.Operation.ADD_VALUE)
                     ),
                     ModStats.INTELLIGENCE, List.of(
-                            // Placeholder until Combat-Attributes' magic_damage_bonus exists.
-                            new StatModifierSpec(idOf("attack_damage"), 0.0, AttributeModifier.Operation.ADD_VALUE)
+                            new StatModifierSpec(Identifier.parse("combat_attributes:magic_power"), 0.5, AttributeModifier.Operation.ADD_VALUE),
+                            new StatModifierSpec(Identifier.parse("combat_attributes:magic_crit_damage"), 0.05, AttributeModifier.Operation.ADD_VALUE),
+                            new StatModifierSpec(Identifier.parse("combat_attributes:lifesteal"), 0.01, AttributeModifier.Operation.ADD_VALUE)
                     ),
                     ModStats.WISDOM, List.of(
-                            // Placeholder for future "spell cooldown reduction" / "mana regen".
-                            new StatModifierSpec(idOf("attack_damage"), 0.0, AttributeModifier.Operation.ADD_VALUE)
+                            new StatModifierSpec(Identifier.parse("combat_attributes:accuracy"), 0.02, AttributeModifier.Operation.ADD_VALUE),
+                            new StatModifierSpec(Identifier.parse("combat_attributes:evasion"), 0.01, AttributeModifier.Operation.ADD_VALUE),
+                            new StatModifierSpec(Identifier.parse("combat_attributes:experience_gain"), 0.02, AttributeModifier.Operation.ADD_VALUE),
+                            // new StatModifierSpec(Identifier.parse("combat_attributes:max_mana"), 10, AttributeModifier.Operation.ADD_VALUE),
+                            // new StatModifierSpec(Identifier.parse("combat_attributes:mana_regen"), 0.02, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
+                            // Maybe just a balancing placeholder until mana lands
+                            new StatModifierSpec(Identifier.parse("minecraft:entity_interaction_range"), 0.02, AttributeModifier.Operation.ADD_VALUE)
                     ),
                     ModStats.LUCKINESS, List.of(
-                            new StatModifierSpec(idOf("luck"), 0.1, AttributeModifier.Operation.ADD_VALUE)
+                            new StatModifierSpec(Identifier.parse("minecraft:luck"), 0.2, AttributeModifier.Operation.ADD_VALUE),
+                            new StatModifierSpec(Identifier.parse("combat_attributes:melee_crit_chance"), 0.01, AttributeModifier.Operation.ADD_VALUE),
+                            new StatModifierSpec(Identifier.parse("combat_attributes:ranged_crit_chance"), 0.01, AttributeModifier.Operation.ADD_VALUE),
+                            new StatModifierSpec(Identifier.parse("combat_attributes:magic_crit_chance"), 0.01, AttributeModifier.Operation.ADD_VALUE)
                     )
             );
             return new StatModifierList(defaults.getOrDefault(statId, List.of(new StatModifierSpec())));
-        }
-
-        private static Identifier idOf(String path) {
-            return Identifier.fromNamespaceAndPath("minecraft", "generic." + path);
         }
     }
 }

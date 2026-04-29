@@ -30,7 +30,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
  */
 public class StatModifierSpec implements Walkable {
 
-    @Comment("Registry id of the attribute receiving the modifier (e.g. minecraft:generic.attack_damage).")
+    @Comment("Registry id of the attribute receiving the modifier (e.g. minecraft:attack_damage).")
     public ValidatedIdentifier targetAttribute;
 
     @Comment("Modifier amount granted per point spent. Multiplied by the player's allocation.")
@@ -41,7 +41,7 @@ public class StatModifierSpec implements Walkable {
 
     public StatModifierSpec() {
         // FzzyConfig requires a no-arg ctor for deserialization.
-        this(Identifier.fromNamespaceAndPath("minecraft", "generic.attack_damage"),
+        this(Identifier.fromNamespaceAndPath("minecraft", "attack_damage"),
                 0.0, AttributeModifier.Operation.ADD_VALUE);
     }
 

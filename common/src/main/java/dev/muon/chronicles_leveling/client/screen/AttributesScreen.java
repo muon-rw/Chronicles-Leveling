@@ -2,8 +2,9 @@ package dev.muon.chronicles_leveling.client.screen;
 
 import dev.muon.chronicles_leveling.ChroniclesLeveling;
 import dev.muon.chronicles_leveling.client.screen.ChroniclesSprites.IconCoord;
-import dev.muon.chronicles_leveling.compat.PercentAttributes;
 import dev.muon.chronicles_leveling.config.Configs;
+import dev.muon.chronicles_leveling.platform.Services;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
@@ -12,12 +13,14 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeMap;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,7 +59,7 @@ public class AttributesScreen extends Screen {
 
     private static final int CARD_LEFT_X = 8;
     private static final int CARD_RIGHT_X = 168;
-    private static final int CARD_GAP = 1;
+    private static final int CARD_GAP = 2;
     private static final int CARD_COLUMN_GAP = 2;
     private static final int CARD_BORDER = 1;
     private static final int CARD_HEADER_H = 9;
@@ -86,6 +89,8 @@ public class AttributesScreen extends Screen {
     private static final Map<Identifier, String> LABEL_OVERRIDES = Map.ofEntries(
             label("minecraft", "armor_toughness", "armor_toughness"),
             label("minecraft", "knockback_resistance", "knockback_resistance"),
+            label("minecraft", "block_interaction_range", "block_reach"),
+            label("minecraft", "entity_interaction_range", "attack_range"),
             label("combat_attributes", "arrow_velocity", "velocity"),
             label("combat_attributes", "melee_crit_chance", "crit_chance"),
             label("combat_attributes", "melee_crit_damage", "crit_damage"),
@@ -122,6 +127,12 @@ public class AttributesScreen extends Screen {
             () -> Configs.CLIENT.attributePages.magic.get()
     );
 
+    private static final CategoryDef MISC = new CategoryDef(
+            "chronicles_leveling.screen.attributes.category.misc",
+            new IconCoord(ChroniclesSprites.PICKAXE_U, ChroniclesSprites.PICKAXE_V),
+            () -> Configs.CLIENT.attributePages.misc.get()
+    );
+
     /**
      * Two-column layout: cards in each column stack independently, so the second
      * row's y in a given column is driven by that column's first-row card height
@@ -129,7 +140,7 @@ public class AttributesScreen extends Screen {
      */
     private static final List<List<CategoryDef>> COLUMNS = List.of(
             List.of(MELEE, DEFENSE),
-            List.of(RANGED, MAGIC)
+            List.of(RANGED, MAGIC, MISC)
     );
 
     private int leftPos;
@@ -176,7 +187,7 @@ public class AttributesScreen extends Screen {
         renderTitle(graphics);
 
         LocalPlayer player = Minecraft.getInstance().player;
-        if (player != null) renderCards(graphics, player);
+        if (player != null) renderCards(graphics, player, mouseX, mouseY);
     }
 
     private void renderTitle(GuiGraphicsExtractor graphics) {
@@ -200,7 +211,7 @@ public class AttributesScreen extends Screen {
         return (int) Math.ceil(TEXT_HEIGHT * TITLE_SCALE);
     }
 
-    private void renderCards(GuiGraphicsExtractor graphics, LocalPlayer player) {
+    private void renderCards(GuiGraphicsExtractor graphics, LocalPlayer player, int mouseX, int mouseY) {
         int dividerBottom = topPos + TITLE_Y + scaledTitleHeight() + TITLE_DIVIDER_GAP + 1;
         int startY = dividerBottom + CARDS_TOP_OFFSET;
 
@@ -218,7 +229,7 @@ public class AttributesScreen extends Screen {
                 if (snapshots.isEmpty()) continue;
 
                 int height = CARD_BORDER + CARD_HEADER_H + snapshots.size() * ROW_PITCH + CARD_BORDER;
-                renderCard(graphics, cat, snapshots, cardLeft, cardRight, y, height);
+                renderCard(graphics, cat, snapshots, cardLeft, cardRight, y, height, mouseX, mouseY);
                 y += height + CARD_GAP;
             }
         }
@@ -253,8 +264,13 @@ public class AttributesScreen extends Screen {
         }
 
         Holder<Attribute> attr = instance.getAttribute();
-        Optional<Double> percentScale = PercentAttributes.scaleFor(id, attr);
-        return Optional.of(new RowSnapshot(labelFor(id, attr), instance.getValue(), percentScale));
+        Optional<Double> percentScale = Services.PLATFORM.percentScaleForAttribute(attr);
+        Component fullName = Component.translatable(attr.value().getDescriptionId());
+        return Optional.of(new RowSnapshot(
+                id, labelFor(id, attr), fullName,
+                instance.getValue(), percentScale,
+                attr, instance.getBaseValue(),
+                new ArrayList<>(instance.getModifiers())));
     }
 
     private static AttributeInstance findInstanceById(LocalPlayer player, Identifier id) {
@@ -274,11 +290,12 @@ public class AttributesScreen extends Screen {
     }
 
     private void renderCard(GuiGraphicsExtractor graphics, CategoryDef cat, List<RowSnapshot> rows,
-                            int cardLeft, int cardRight, int cardTop, int cardHeight) {
+                            int cardLeft, int cardRight, int cardTop, int cardHeight,
+                            int mouseX, int mouseY) {
         graphics.outline(cardLeft, cardTop, cardRight - cardLeft, cardHeight, COLOR_BORDER);
 
         renderCardHeader(graphics, cat, cardLeft, cardTop);
-        renderCardRows(graphics, rows, cardLeft, cardRight, cardTop);
+        renderCardRows(graphics, rows, cardLeft, cardRight, cardTop, mouseX, mouseY);
     }
 
     private void renderCardHeader(GuiGraphicsExtractor graphics, CategoryDef cat, int cardLeft, int cardTop) {
@@ -300,15 +317,71 @@ public class AttributesScreen extends Screen {
         graphics.text(font, title, titleX, titleY, COLOR_NAME, false);
     }
 
-    private void renderCardRows(GuiGraphicsExtractor graphics, List<RowSnapshot> rows, int cardLeft, int cardRight, int cardTop) {
+    private void renderCardRows(GuiGraphicsExtractor graphics, List<RowSnapshot> rows, int cardLeft, int cardRight, int cardTop,
+                                int mouseX, int mouseY) {
         int nameX = cardLeft + NAME_INSET;
         int valueRightX = cardRight - VALUE_INSET;
         int rowY = cardTop + CARD_BORDER + CARD_HEADER_H;
+        int hoverX = cardLeft + CARD_BORDER;
+        int hoverW = cardRight - cardLeft - 2 * CARD_BORDER;
 
         for (RowSnapshot row : rows) {
             renderScaledRow(graphics, row, nameX, valueRightX, rowY);
+            if (isHovered(mouseX, mouseY, hoverX, rowY, hoverW, ROW_PITCH)) {
+                int valueScreenW = scaledValueWidth(row);
+                int valueLeft = valueRightX - valueScreenW;
+                if (mouseX >= valueLeft) {
+                    graphics.setComponentTooltipForNextFrame(font,
+                            AttributeLineRenderer.valueBreakdown(row.attribute(), row.baseValue(), row.modifiers(), row.percentScale()),
+                            mouseX, mouseY);
+                } else {
+                    descriptionFor(row.id()).ifPresent(desc ->
+                            graphics.setComponentTooltipForNextFrame(font,
+                                    List.of(row.fullName(), desc),
+                                    mouseX, mouseY));
+                }
+            }
             rowY += ROW_PITCH;
         }
+    }
+
+    private int scaledValueWidth(RowSnapshot row) {
+        String value = formatValue(row.value(), row.percentScale());
+        return (int) Math.ceil(font.width(value) * ROW_SCALE);
+    }
+
+    private static boolean isHovered(int mouseX, int mouseY, int x, int y, int w, int h) {
+        return mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
+    }
+
+    /**
+     * Best-effort lookup across known attribute-description key conventions.
+     * Stops at the first key that's actually present in the active language so we
+     * never render a raw {@code attribute.foo.bar.desc} string. Returns empty
+     * when no convention has a translation, suppressing the tooltip entirely.
+     *
+     * <ul>
+     *   <li>Chronicles / Combat-Attributes: {@code attribute.<ns>.<path>.desc}</li>
+     *   <li>Additional Entity Attributes:  {@code attribute.name.<ns>.<path>.desc}</li>
+     *   <li>Spell Engine:                  {@code description.attribute.name.<ns>.<path>}</li>
+     * </ul>
+     */
+    private static Optional<Component> descriptionFor(Identifier id) {
+        String ns = id.getNamespace();
+        String path = id.getPath();
+        String[] keys = {
+                "attribute." + ns + "." + path + ".desc",
+                "attribute.name." + ns + "." + path + ".desc",
+                "description.attribute.name." + ns + "." + path
+        };
+        Language lang = Language.getInstance();
+        for (String key : keys) {
+            if (lang.has(key)) {
+                return Optional.of(Component.translatable(key)
+                        .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+            }
+        }
+        return Optional.empty();
     }
 
     private void renderScaledRow(GuiGraphicsExtractor graphics, RowSnapshot row, int nameX, int valueRightX, int y) {
@@ -356,5 +429,14 @@ public class AttributesScreen extends Screen {
 
     private record CategoryDef(String titleKey, IconCoord icon, Supplier<List<? extends Identifier>> idsSource) {}
 
-    private record RowSnapshot(Component label, double value, Optional<Double> percentScale) {}
+    private record RowSnapshot(
+            Identifier id,
+            Component label,
+            Component fullName,
+            double value,
+            Optional<Double> percentScale,
+            Holder<Attribute> attribute,
+            double baseValue,
+            List<AttributeModifier> modifiers
+    ) {}
 }

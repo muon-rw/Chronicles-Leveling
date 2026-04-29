@@ -1,11 +1,13 @@
 package dev.muon.chronicles_leveling;
 
+import dev.muon.chronicles_leveling.command.ChroniclesCommands;
 import dev.muon.chronicles_leveling.event.PlayerStatsEventsFabric;
 import dev.muon.chronicles_leveling.level.PlayerLevelAttachmentFabric;
 import dev.muon.chronicles_leveling.network.NetworkRegistrationFabric;
 import dev.muon.chronicles_leveling.skill.PlayerSkillAttachmentFabric;
 import dev.muon.chronicles_leveling.stat.ModStatsFabric;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 
 /**
  * Fabric mod entrypoint. Order matters here:
@@ -27,11 +29,14 @@ public class ChroniclesLevelingFabric implements ModInitializer {
     public void onInitialize() {
         ChroniclesLeveling.init();
 
-        ModStatsFabric.init();
+        ModStatsFabric.ensureInitialized();
         PlayerLevelAttachmentFabric.init();
         PlayerSkillAttachmentFabric.init();
         NetworkRegistrationFabric.initServer();
 
         PlayerStatsEventsFabric.initLifecycle();
+
+        CommandRegistrationCallback.EVENT.register((dispatcher, registry, env) ->
+                ChroniclesCommands.register(dispatcher));
     }
 }

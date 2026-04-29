@@ -47,8 +47,8 @@ public class SkillsScreen extends Screen {
     // Inside-cell offsets (relative to the cell's top y / left x).
     private static final int CELL_NAME_X = 1;
     private static final int CELL_NAME_TOP = 3;
-    private static final int CELL_BAR_TOP = 11;
-    private static final int CELL_BAR_HEIGHT = 3;
+    private static final int CELL_BAR_TOP = 13;
+    private static final int CELL_BAR_HEIGHT = 2;
 
     private static final float CELL_TEXT_SCALE = 0.75f;
 

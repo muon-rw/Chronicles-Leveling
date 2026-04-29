@@ -63,13 +63,24 @@ public class ConfigClient extends Config {
                 "minecraft:max_health",
                 "minecraft:armor",
                 "minecraft:armor_toughness",
-                "minecraft:knockback_resistance"
+                "minecraft:knockback_resistance",
+                "combat_attributes:evasion"
         );
 
         @Comment("Attributes shown under the Magic category, in order.")
         public ValidatedList<Identifier> magic = list(
                 "combat_attributes:magic_crit_chance",
                 "combat_attributes:magic_crit_damage"
+        );
+
+        @Comment("Attributes shown under the Misc category, in order.")
+        public ValidatedList<Identifier> misc = list(
+                "minecraft:luck",
+                "minecraft:movement_speed",
+                "minecraft:jump_strength",
+                "minecraft:block_interaction_range",
+                "minecraft:entity_interaction_range",
+                "combat_attributes:life_steal"
         );
 
         private static ValidatedList<Identifier> list(String... initial) {
