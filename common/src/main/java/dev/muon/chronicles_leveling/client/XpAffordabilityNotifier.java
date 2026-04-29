@@ -52,6 +52,6 @@ public final class XpAffordabilityNotifier {
     }
 
     private static void playLevelUpSound() {
-        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(ModSounds.LEVEL_UP, 1.0f));
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(ModSounds.LEVEL_UP.value(), 1.0f));
     }
 }

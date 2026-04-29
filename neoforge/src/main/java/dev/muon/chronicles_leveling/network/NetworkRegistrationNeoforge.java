@@ -3,6 +3,7 @@ package dev.muon.chronicles_leveling.network;
 import dev.muon.chronicles_leveling.ChroniclesLeveling;
 import dev.muon.chronicles_leveling.network.message.AllocateStatPacket;
 import dev.muon.chronicles_leveling.network.message.LevelUpPacket;
+import dev.muon.chronicles_leveling.network.message.ResetStatPacket;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
@@ -34,6 +35,13 @@ public final class NetworkRegistrationNeoforge {
                 LevelUpPacket.TYPE,
                 LevelUpPacket.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> LevelUpPacket.handleOnServer(
+                        payload,
+                        (net.minecraft.server.level.ServerPlayer) context.player()))
+        );
+        registrar.playToServer(
+                ResetStatPacket.TYPE,
+                ResetStatPacket.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> ResetStatPacket.handleOnServer(
                         payload,
                         (net.minecraft.server.level.ServerPlayer) context.player()))
         );

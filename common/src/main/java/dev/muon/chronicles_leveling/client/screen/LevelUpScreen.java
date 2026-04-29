@@ -8,11 +8,15 @@ import dev.muon.chronicles_leveling.level.PlayerLevelManager;
 import dev.muon.chronicles_leveling.level.VanillaXp;
 import dev.muon.chronicles_leveling.network.NetworkDispatcher;
 import dev.muon.chronicles_leveling.stat.ModStats;
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.muon.chronicles_leveling.stat.StatModifierSpec;
 import net.minecraft.ChatFormatting;
+import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.core.Holder;
@@ -22,9 +26,13 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -94,12 +102,48 @@ public class LevelUpScreen extends Screen {
     private static final int COLOR_VALUE = 0xFF8B5A2B;
     private static final int COLOR_SEPARATOR = 0xFF8B7355;
 
+    /** Reset-mode banner geometry (overlays the regular header). */
+    private static final int RESET_BANNER_X = SEPARATOR_X_LEFT;
+    private static final int RESET_BANNER_Y = 10;
+    private static final int RESET_BANNER_W = SEPARATOR_X_RIGHT - SEPARATOR_X_LEFT;
+    private static final int RESET_BANNER_PADDING_X = 4;
+    private static final int RESET_BANNER_PADDING_Y = 4;
+    private static final int RESET_BANNER_INNER_W = RESET_BANNER_W - RESET_BANNER_PADDING_X * 2;
+    private static final int RESET_BANNER_LINE_GAP = 1;
+    private static final int COLOR_BANNER_BG = 0xF0100010;       // vanilla tooltip dark
+    private static final int COLOR_BANNER_BORDER_TOP = 0xFF5000FF; // vanilla tooltip purple
+
+    /** Period (ms) of the reset-mode hover flash; on for the first half, off for the second. */
+    private static final int HOVER_FLASH_PERIOD_MS = 600;
+    private static final int COLOR_HOVER_FLASH = 0xFFFFFFFF;
+    private static final int COLOR_SELECTED = 0xFF3CB454;
+
     private int leftPos;
     private int topPos;
     private PlusButton levelUpButton;
 
+    @Nullable
+    private final ResetContext resetContext;
+    @Nullable
+    private String selectedStat;
+    /** Stat id under the mouse this frame in reset mode (whole row, not just the button). */
+    @Nullable
+    private String hoveredStat;
+
     public LevelUpScreen() {
+        this(null);
+    }
+
+    public LevelUpScreen(@Nullable ResetContext resetContext) {
         super(Component.translatable("chronicles_leveling.screen.levels.title"));
+        this.resetContext = resetContext;
+    }
+
+    /** Carries the orb's hand from the item's {@code use} site into the screen. */
+    public record ResetContext(InteractionHand hand) {}
+
+    private boolean inResetMode() {
+        return resetContext != null;
     }
 
     @Override
@@ -107,6 +151,25 @@ public class LevelUpScreen extends Screen {
         super.init();
         this.leftPos = (this.width - IMAGE_WIDTH) / 2;
         this.topPos = (this.height - IMAGE_HEIGHT) / 2;
+
+        if (inResetMode()) {
+            // Reset mode is modal: no tab navigation, no plus buttons. Each stat gets a
+            // minus button instead — disabled when there's nothing to refund, and
+            // pinned to the hovered visual whenever its row is selected OR its row is
+            // under the mouse (so hovering anywhere on the line lights the button up).
+            int minusX = leftPos + BUTTON_X_OFFSET;
+            for (int i = 0; i < ModStats.ALL.size(); i++) {
+                ModStats.Entry stat = ModStats.ALL.get(i);
+                String statId = stat.id();
+                addRenderableWidget(new MinusButton(
+                        minusX, rowButtonY(i),
+                        Component.translatable("chronicles_leveling.stat." + statId),
+                        () -> resetEligible(statId),
+                        () -> statId.equals(this.selectedStat) || statId.equals(this.hoveredStat),
+                        () -> this.selectedStat = statId));
+            }
+            return;
+        }
 
         addRenderableWidget(new ChroniclesTabBar(leftPos, topPos));
 
@@ -194,6 +257,22 @@ public class LevelUpScreen extends Screen {
 
         LocalPlayer player = Minecraft.getInstance().player;
         PlayerLevelData data = player == null ? PlayerLevelData.DEFAULT : PlayerLevelManager.get(player);
+
+        if (inResetMode()) {
+            // Refresh the per-frame "row under mouse" before any renderer reads it,
+            // so the MinusButton's forceHoveredCheck and the row outline see the same
+            // value computed from the same mouse position.
+            this.hoveredStat = statRowAt(mouseX, mouseY);
+
+            // Separators first so the banner draws on top of the title-divider line
+            // (which would otherwise cut across the banner). Stat rows last so their
+            // hover/selection outlines layer over the table edges.
+            renderSeparators(graphics);
+            renderResetBanner(graphics, data);
+            renderStatRows(graphics, player, mouseX, mouseY);
+            return;
+        }
+
         int rung = LevelingCurve.xpToNext(data.level());
         int availableXp = player == null ? 0 : VanillaXp.availableExperiencePoints(player);
 
@@ -369,6 +448,13 @@ public class LevelUpScreen extends Screen {
         int valueLeft = leftPos + IMAGE_WIDTH - VALUE_RIGHT_MARGIN - valueW;
         graphics.text(font, value, valueLeft, textY, COLOR_VALUE, false);
 
+        if (inResetMode()) {
+            // Row outline echoes the MinusButton's state at row scale: solid green when
+            // selected, pulsing white when hovered + eligible.
+            renderResetRowOverlay(graphics, statId, y, mouseX, mouseY);
+            return;
+        }
+
         // Stat name/value text area — excluding the +button column on the left so that
         // hovering the button shows the button-specific tooltip instead. Mirrors the
         // AttributesScreen split: hovering the value column yields a base + modifier
@@ -395,6 +481,144 @@ public class LevelUpScreen extends Screen {
                 graphics.setComponentTooltipForNextFrame(font, lines, mouseX, mouseY);
             }
         }
+    }
+
+    private void renderResetRowOverlay(GuiGraphicsExtractor graphics, String statId, int rowTopY, int mouseX, int mouseY) {
+        int x = leftPos + SEPARATOR_X_LEFT + 1;
+        int y = rowTopY;
+        int w = SEPARATOR_X_RIGHT - SEPARATOR_X_LEFT - 2;
+        int h = ROW_CONTENT_H;
+
+        boolean selected = statId.equals(selectedStat);
+        boolean hovered = statId.equals(hoveredStat);
+
+        if (selected) {
+            // 2px wide to help visibility against similar color parchment).
+            drawThickOutline(graphics, x, y, w, h, COLOR_SELECTED);
+        } else if (hovered && resetEligible(statId)) {
+            // Pulsing white outline. First half of the period: visible; second half: invisible.
+            // Util.getMillis() ticks for the whole client so all six rows blink in phase.
+            if ((Util.getMillis() / (HOVER_FLASH_PERIOD_MS / 2)) % 2 == 0) {
+                drawThickOutline(graphics, x, y, w, h, COLOR_HOVER_FLASH);
+            }
+        }
+    }
+
+    /**
+     * 2px outline. The 1px {@link GuiGraphicsExtractor#outline} variant reads as
+     * translucent against the parchment; doubling the stroke gives a flat, opaque
+     * edge without changing colors.
+     */
+    private static void drawThickOutline(GuiGraphicsExtractor graphics, int x, int y, int w, int h, int color) {
+        graphics.outline(x, y, w, h, color);
+        if (w > 2 && h > 2) {
+            graphics.outline(x + 1, y + 1, w - 2, h - 2, color);
+        }
+    }
+
+    private boolean resetEligible(String statId) {
+        var player = Minecraft.getInstance().player;
+        if (player == null) return false;
+        return PlayerLevelManager.get(player).allocation(statId) > 0;
+    }
+
+    private void renderResetBanner(GuiGraphicsExtractor graphics, PlayerLevelData data) {
+        List<FormattedCharSequence> lines = buildResetBannerLines(data);
+        int contentH = lines.size() * font.lineHeight + Math.max(0, lines.size() - 1) * RESET_BANNER_LINE_GAP;
+        int boxH = contentH + RESET_BANNER_PADDING_Y * 2;
+        int boxX = leftPos + RESET_BANNER_X;
+        int boxY = topPos + RESET_BANNER_Y;
+
+        // Tooltip-styled panel: dark fill plus a 1px purple top/bottom and matching sides.
+        // Tighter than TooltipRenderUtil so it fits between the table separators without
+        // bleeding outside the parchment.
+        graphics.fill(boxX, boxY, boxX + RESET_BANNER_W, boxY + boxH, COLOR_BANNER_BG);
+        graphics.outline(boxX, boxY, RESET_BANNER_W, boxH, COLOR_BANNER_BORDER_TOP);
+
+        int textX = boxX + RESET_BANNER_PADDING_X;
+        int textY = boxY + RESET_BANNER_PADDING_Y;
+        for (FormattedCharSequence line : lines) {
+            int lineW = font.width(line);
+            int centeredX = textX + (RESET_BANNER_INNER_W - lineW) / 2;
+            graphics.text(font, line, centeredX, textY, 0xFFFFFFFF, true);
+            textY += font.lineHeight + RESET_BANNER_LINE_GAP;
+        }
+    }
+
+    private List<FormattedCharSequence> buildResetBannerLines(PlayerLevelData data) {
+        List<Component> components = new ArrayList<>();
+        if (selectedStat == null) {
+            components.add(Component.translatable("chronicles_leveling.screen.levels.reset.prompt")
+                    .withStyle(ChatFormatting.WHITE));
+            components.add(Component.translatable("chronicles_leveling.screen.levels.reset.cancel")
+                    .withStyle(ChatFormatting.GRAY));
+        } else {
+            int refund = data.allocation(selectedStat);
+            Component statName = Component.translatable("chronicles_leveling.stat." + selectedStat);
+            components.add(Component.translatable(
+                            "chronicles_leveling.screen.levels.reset.confirm_prompt", statName, refund)
+                    .withStyle(ChatFormatting.WHITE));
+            components.add(Component.empty());
+            components.add(Component.translatable("chronicles_leveling.screen.levels.reset.confirm")
+                    .withStyle(ChatFormatting.GREEN));
+            components.add(Component.translatable("chronicles_leveling.screen.levels.reset.cancel")
+                    .withStyle(ChatFormatting.GRAY));
+        }
+        List<FormattedCharSequence> out = new ArrayList<>();
+        for (Component component : components) {
+            out.addAll(font.split(component, RESET_BANNER_INNER_W));
+        }
+        return out;
+    }
+
+    @Override
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        // Whole-row click in reset mode: select via clicking anywhere on the line, not
+        // just the MinusButton. Super runs first so a direct button hit still routes
+        // through the widget pipeline (and gets the click feedback) rather than being
+        // shadowed by this fallback.
+        if (inResetMode() && event.button() == InputConstants.MOUSE_BUTTON_LEFT
+                && !super.mouseClicked(event, doubleClick)) {
+            String hit = statRowAt((int) event.x(), (int) event.y());
+            if (hit != null && resetEligible(hit)) {
+                this.selectedStat = hit;
+                return true;
+            }
+            return false;
+        }
+        return super.mouseClicked(event, doubleClick);
+    }
+
+    @Override
+    public boolean keyPressed(KeyEvent event) {
+        if (inResetMode() && (event.key() == InputConstants.KEY_RETURN || event.key() == GLFW.GLFW_KEY_KP_ENTER)) {
+            if (selectedStat != null && resetEligible(selectedStat)) {
+                NetworkDispatcher.sendResetStat(selectedStat, resetContext.hand());
+                this.onClose();
+                return true;
+            }
+        }
+        return super.keyPressed(event);
+    }
+
+
+    /**
+     * Resolves the stat id of the row under the mouse, or {@code null} if the mouse
+     * isn't over any row. Bounds match {@link #renderResetRowOverlay} exactly so
+     * "row I'm hovering" and "row outline / button highlight target" are always
+     * the same row.
+     */
+    @Nullable
+    private String statRowAt(int mouseX, int mouseY) {
+        int x = leftPos + SEPARATOR_X_LEFT + 1;
+        int w = SEPARATOR_X_RIGHT - SEPARATOR_X_LEFT - 2;
+        for (int i = 0; i < ModStats.ALL.size(); i++) {
+            int y = topPos + rowY(i);
+            if (mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + ROW_CONTENT_H) {
+                return ModStats.ALL.get(i).id();
+            }
+        }
+        return null;
     }
 
     private static boolean isHovered(int mouseX, int mouseY, int x, int y, int w, int h) {

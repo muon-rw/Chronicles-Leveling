@@ -2,7 +2,9 @@ package dev.muon.chronicles_leveling.network;
 
 import dev.muon.chronicles_leveling.network.message.AllocateStatPacket;
 import dev.muon.chronicles_leveling.network.message.LevelUpPacket;
+import dev.muon.chronicles_leveling.network.message.ResetStatPacket;
 import dev.muon.chronicles_leveling.platform.Services;
+import net.minecraft.world.InteractionHand;
 
 /**
  * Common-side packet entry points. Internal callers go through here so we have
@@ -28,5 +30,10 @@ public final class NetworkDispatcher {
     /** Client → server: "I clicked + on Level". */
     public static void sendLevelUp() {
         helper().sendToServer(LevelUpPacket.INSTANCE);
+    }
+
+    /** Client → server: "I confirmed a reset of stat X using the orb in this hand". */
+    public static void sendResetStat(String statId, InteractionHand hand) {
+        helper().sendToServer(new ResetStatPacket(statId, hand));
     }
 }

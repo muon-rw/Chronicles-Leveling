@@ -1,7 +1,9 @@
 package dev.muon.chronicles_leveling;
 
+import dev.muon.chronicles_leveling.item.ModItemsNeoforge;
 import dev.muon.chronicles_leveling.level.PlayerLevelAttachmentNeoforge;
 import dev.muon.chronicles_leveling.skill.PlayerSkillAttachmentNeoforge;
+import dev.muon.chronicles_leveling.sounds.ModSoundsNeoforge;
 import dev.muon.chronicles_leveling.stat.ModStatsNeoforge;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
@@ -23,6 +25,8 @@ public class ChroniclesLevelingNeoforge {
 
     public ChroniclesLevelingNeoforge(IEventBus modBus) {
         ModStatsNeoforge.REGISTRY.register(modBus);
+        ModItemsNeoforge.REGISTRY.register(modBus);
+        ModSoundsNeoforge.REGISTRY.register(modBus);
         PlayerLevelAttachmentNeoforge.REGISTRY.register(modBus);
         PlayerSkillAttachmentNeoforge.REGISTRY.register(modBus);
 
@@ -33,6 +37,10 @@ public class ChroniclesLevelingNeoforge {
 
     private static void onCommonSetup(FMLCommonSetupEvent event) {
         // Deferred registries have fired by this point — safe to publish holders to common.
-        event.enqueueWork(ModStatsNeoforge::init);
+        event.enqueueWork(() -> {
+            ModStatsNeoforge.init();
+            ModItemsNeoforge.init();
+            ModSoundsNeoforge.init();
+        });
     }
 }

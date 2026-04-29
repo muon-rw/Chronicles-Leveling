@@ -125,5 +125,26 @@
   "chronicles_leveling.command.level.reset_stat": "Reset %2$s for %1$s player(s); refunded %3$s points",
   "chronicles_leveling.command.points.get": "%1$s: %2$s unspent points",
   "chronicles_leveling.command.points.set": "Set unspent points to %2$s for %1$s player(s)",
-  "chronicles_leveling.command.points.add": "Adjusted unspent points by %2$s for %1$s player(s)"
+  "chronicles_leveling.command.points.add": "Adjusted unspent points by %2$s for %1$s player(s)",
+
+  "item.chronicles_leveling.lesser_orb_of_regret": "Lesser Orb of Regret",
+  "item.chronicles_leveling.lesser_orb_of_regret.tooltip.line1": "Right-click to reset one stat and refund its points.",
+  "item.chronicles_leveling.lesser_orb_of_regret.tooltip.line2": "Consumed on confirm.",
+
+  "item.chronicles_leveling.greater_orb_of_regret": "Greater Orb of Regret",
+  "item.chronicles_leveling.greater_orb_of_regret.tooltip.line1": "Right-click to reset every stat and refund all points.",
+  "item.chronicles_leveling.greater_orb_of_regret.tooltip.line2": "Use twice within 5 seconds to confirm.",
+  "item.chronicles_leveling.greater_orb_of_regret.confirm_prompt": "Resetting all stats will grant you %1$s points. Use again to confirm.",
+  "item.chronicles_leveling.greater_orb_of_regret.nothing_to_reset": "No stats to reset.",
+  "item.chronicles_leveling.greater_orb_of_regret.success": "Reset all stats; refunded %1$s points.",
+
+  "item.chronicles_leveling.tome": "Tome of Insight",
+  "item.chronicles_leveling.tome.tooltip.line1": "Grants 1 character level and 1 stat point.",
+  "item.chronicles_leveling.tome.success": "Reached level %1$s. +1 stat point.",
+  "item.chronicles_leveling.tome.max_level": "Already at max level (%1$s).",
+
+  "chronicles_leveling.screen.levels.reset.prompt": "Select a stat to reset.",
+  "chronicles_leveling.screen.levels.reset.cancel": "ESC to cancel",
+  "chronicles_leveling.screen.levels.reset.confirm_prompt": "Resetting %1$s will grant you %2$s stat points.",
+  "chronicles_leveling.screen.levels.reset.confirm": "ENTER to confirm"
 }

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "chronicles_leveling:item/greater_orb_of_regret"
+  }
+}
