@@ -51,7 +51,7 @@ public record ResetStatPacket(String statId, InteractionHand hand) implements Cu
     public static void handleOnServer(ResetStatPacket packet, ServerPlayer player) {
         String statId = packet.statId();
         if (!ModStats.isRegistered(statId)) {
-            ChroniclesLeveling.LOG.debug("Player {} requested reset of unknown stat '{}', ignoring",
+            ChroniclesLeveling.LOG.info("Player {} requested reset of unknown stat '{}', ignoring",
                     player.getName().getString(), statId);
             return;
         }
@@ -60,7 +60,7 @@ public record ResetStatPacket(String statId, InteractionHand hand) implements Cu
         if (ModItems.LESSER_ORB_OF_REGRET == null
                 || held.isEmpty()
                 || !held.is(ModItems.LESSER_ORB_OF_REGRET.value())) {
-            ChroniclesLeveling.LOG.debug("Player {} reset request rejected: not holding an orb in {}",
+            ChroniclesLeveling.LOG.warn("Player {} reset request rejected: not holding an orb in {}",
                     player.getName().getString(), packet.hand());
             return;
         }
