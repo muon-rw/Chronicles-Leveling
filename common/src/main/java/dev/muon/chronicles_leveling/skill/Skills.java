@@ -5,8 +5,9 @@ import java.util.Set;
 
 /**
  * Canonical list of action-trained skills. Fixed at compile time — pack
- * authors customize the XP curve per skill via {@code ConfigSync.skillCurves},
- * but the set of skill ids itself is not configurable.
+ * authors customize each skill via its own file under
+ * {@code config/chronicles_leveling/skills/<id>.toml}, but the set of skill
+ * ids itself is not configurable.
  *
  * <p>{@link #LEFT_COL} and {@link #RIGHT_COL} are the screen layout order
  * (same index in both = same row); {@link #ALL} is a flat lookup set used

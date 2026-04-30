@@ -27,7 +27,7 @@ import net.minecraft.resources.Identifier;
  *
  * <p>Skill data is read live from {@link PlayerSkillManager} (synced via the
  * loader's attachment system) and the per-skill XP curve from
- * {@link SkillCurve} (fed by {@code ConfigSync.skillCurves}, also synced).
+ * {@link SkillCurve} (fed by per-skill {@code SkillConfig}s, also synced).
  *
  * <p>Sized 176×166 to line up with the inventory texture.
  */

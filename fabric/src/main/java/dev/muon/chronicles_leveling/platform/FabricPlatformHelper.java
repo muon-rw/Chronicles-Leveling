@@ -7,6 +7,10 @@ import dev.muon.chronicles_leveling.network.NetworkHelperFabric;
 import dev.muon.chronicles_leveling.platform.services.IPlatformHelper;
 import dev.muon.chronicles_leveling.skill.PlayerSkillStore;
 import dev.muon.chronicles_leveling.skill.PlayerSkillStoreFabric;
+import dev.muon.chronicles_leveling.skill.xp.BrewingStationStore;
+import dev.muon.chronicles_leveling.skill.xp.BrewingStationStoreFabric;
+import dev.muon.chronicles_leveling.skill.xp.SpawnerOriginStore;
+import dev.muon.chronicles_leveling.skill.xp.SpawnerOriginStoreFabric;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
@@ -19,6 +23,8 @@ public class FabricPlatformHelper implements IPlatformHelper {
 
     private static final PlayerLevelStore LEVEL_STORE = new PlayerLevelStoreFabric();
     private static final PlayerSkillStore SKILL_STORE = new PlayerSkillStoreFabric();
+    private static final BrewingStationStore BREWING_STORE = new BrewingStationStoreFabric();
+    private static final SpawnerOriginStore SPAWNER_ORIGIN_STORE = new SpawnerOriginStoreFabric();
     private static final NetworkHelper NETWORK_HELPER = new NetworkHelperFabric();
 
     // Mod ID has no underscore — matches Combat-Attributes' own check.
@@ -48,6 +54,16 @@ public class FabricPlatformHelper implements IPlatformHelper {
     @Override
     public PlayerSkillStore getPlayerSkillStore() {
         return SKILL_STORE;
+    }
+
+    @Override
+    public BrewingStationStore getBrewingStationStore() {
+        return BREWING_STORE;
+    }
+
+    @Override
+    public SpawnerOriginStore getSpawnerOriginStore() {
+        return SPAWNER_ORIGIN_STORE;
     }
 
     @Override

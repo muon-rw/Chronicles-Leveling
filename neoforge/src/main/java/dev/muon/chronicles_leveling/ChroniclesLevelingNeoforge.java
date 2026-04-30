@@ -1,8 +1,7 @@
 package dev.muon.chronicles_leveling;
 
+import dev.muon.chronicles_leveling.attachment.NeoforgeAttachments;
 import dev.muon.chronicles_leveling.item.ModItemsNeoforge;
-import dev.muon.chronicles_leveling.level.PlayerLevelAttachmentNeoforge;
-import dev.muon.chronicles_leveling.skill.PlayerSkillAttachmentNeoforge;
 import dev.muon.chronicles_leveling.sounds.ModSoundsNeoforge;
 import dev.muon.chronicles_leveling.stat.ModStatsNeoforge;
 import net.neoforged.bus.api.IEventBus;
@@ -27,8 +26,7 @@ public class ChroniclesLevelingNeoforge {
         ModStatsNeoforge.REGISTRY.register(modBus);
         ModItemsNeoforge.REGISTRY.register(modBus);
         ModSoundsNeoforge.REGISTRY.register(modBus);
-        PlayerLevelAttachmentNeoforge.REGISTRY.register(modBus);
-        PlayerSkillAttachmentNeoforge.REGISTRY.register(modBus);
+        NeoforgeAttachments.REGISTRY.register(modBus);
 
         modBus.addListener(ChroniclesLevelingNeoforge::onCommonSetup);
 

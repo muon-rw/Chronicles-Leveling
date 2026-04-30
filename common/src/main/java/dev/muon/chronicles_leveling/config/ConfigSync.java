@@ -1,7 +1,6 @@
 package dev.muon.chronicles_leveling.config;
 
 import dev.muon.chronicles_leveling.ChroniclesLeveling;
-import dev.muon.chronicles_leveling.skill.Skills;
 import dev.muon.chronicles_leveling.stat.ModStats;
 import dev.muon.chronicles_leveling.stat.StatModifierSpec;
 import me.fzzyhmstrs.fzzy_config.annotations.Comment;
@@ -11,6 +10,8 @@ import me.fzzyhmstrs.fzzy_config.validation.collection.ValidatedList;
 import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedAny;
 import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedBoolean;
 import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedExpression;
+import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedString;
+import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedDouble;
 import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedInt;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -75,11 +76,14 @@ public class ConfigSync extends Config {
     public StatModifierList wisdom       = StatModifierList.defaultFor(ModStats.WISDOM);
     public StatModifierList luckiness    = StatModifierList.defaultFor(ModStats.LUCKINESS);
 
-    // --- Skill XP curves ---
-    // One ValidatedExpression per skill, grouped under a section so FzzyConfig renders
-    // a "Skill Curves" subtree. 'l' = current skill level.
+    // --- Skill XP gain ---
 
-    public SkillCurves skillCurves = new SkillCurves();
+    @Comment("Entity ids that grant no skill XP when damaged or killed (e.g. minecraft:armor_stand). Format: 'namespace:path'.")
+    public ValidatedList<String> entitySkillXpBlacklist =
+            new ValidatedString("").toList(List.of());
+
+    @Comment("Multiplier applied to skill XP earned against entities spawned by a mob spawner. 1.0 for no modification; 0.0 disables farming spawners entirely.")
+    public ValidatedDouble spawnerMobSkillXpMultiplier = new ValidatedDouble(0.1, 1.0, 0.0);
 
     // --- Display ---
 
@@ -97,65 +101,6 @@ public class ConfigSync extends Config {
             case ModStats.LUCKINESS    -> luckiness.specs;
             default -> List.of();
         };
-    }
-
-    /**
-     * Per-skill XP-to-next-level expressions. {@code l} is bound to the
-     * current skill level when evaluated. The default formula is the same
-     * across all skills so a fresh install has consistent pacing — pack
-     * authors are expected to retune individual skills as they design the
-     * trainers that grant XP into them.
-     */
-    public static class SkillCurves extends ConfigSection {
-
-        private static final String DEFAULT_FORMULA = "100 + 25 * (l - 1)^1.5";
-
-        @Comment("XP required to advance from level l to l+1 in Weaponry.")
-        public ValidatedExpression weaponry   = curve();
-        @Comment("XP required to advance from level l to l+1 in Archery.")
-        public ValidatedExpression archery    = curve();
-        @Comment("XP required to advance from level l to l+1 in Magic.")
-        public ValidatedExpression magic      = curve();
-        @Comment("XP required to advance from level l to l+1 in Armor.")
-        public ValidatedExpression armor      = curve();
-        @Comment("XP required to advance from level l to l+1 in Acrobatics.")
-        public ValidatedExpression acrobatics = curve();
-        @Comment("XP required to advance from level l to l+1 in Alchemy.")
-        public ValidatedExpression alchemy    = curve();
-        @Comment("XP required to advance from level l to l+1 in Mining.")
-        public ValidatedExpression mining     = curve();
-        @Comment("XP required to advance from level l to l+1 in Speech.")
-        public ValidatedExpression speech     = curve();
-        @Comment("XP required to advance from level l to l+1 in Farming.")
-        public ValidatedExpression farming    = curve();
-        @Comment("XP required to advance from level l to l+1 in Enchanting.")
-        public ValidatedExpression enchanting = curve();
-        @Comment("XP required to advance from level l to l+1 in Smithing.")
-        public ValidatedExpression smithing   = curve();
-        @Comment("XP required to advance from level l to l+1 in Fishing.")
-        public ValidatedExpression fishing    = curve();
-
-        private static ValidatedExpression curve() {
-            return new ValidatedExpression(DEFAULT_FORMULA, Set.of('l'));
-        }
-
-        public ValidatedExpression curveFor(String skillId) {
-            return switch (skillId) {
-                case Skills.WEAPONRY   -> weaponry;
-                case Skills.ARCHERY    -> archery;
-                case Skills.MAGIC      -> magic;
-                case Skills.ARMOR      -> armor;
-                case Skills.ACROBATICS -> acrobatics;
-                case Skills.ALCHEMY    -> alchemy;
-                case Skills.MINING     -> mining;
-                case Skills.SPEECH     -> speech;
-                case Skills.FARMING    -> farming;
-                case Skills.ENCHANTING -> enchanting;
-                case Skills.SMITHING   -> smithing;
-                case Skills.FISHING    -> fishing;
-                default -> null;
-            };
-        }
     }
 
     /**

@@ -12,7 +12,9 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
 /**
- * NeoForge-side player lifecycle hooks for leveling. Mirrors the Fabric file.
+ * NeoForge-side player lifecycle hooks for stat allocation. Mirrors
+ * {@link PlayerStatsEventsFabric}; skill-XP routing lives in
+ * {@link SkillXpEventsNeoforge}.
  *
  * <p>Listens on the GAME bus (vs. MOD bus) since these are per-player events
  * fired during runtime, not during mod init.

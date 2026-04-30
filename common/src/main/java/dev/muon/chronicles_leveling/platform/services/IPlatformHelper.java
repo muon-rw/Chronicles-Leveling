@@ -3,6 +3,8 @@ package dev.muon.chronicles_leveling.platform.services;
 import dev.muon.chronicles_leveling.level.PlayerLevelStore;
 import dev.muon.chronicles_leveling.network.NetworkHelper;
 import dev.muon.chronicles_leveling.skill.PlayerSkillStore;
+import dev.muon.chronicles_leveling.skill.xp.BrewingStationStore;
+import dev.muon.chronicles_leveling.skill.xp.SpawnerOriginStore;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -58,6 +60,21 @@ public interface IPlatformHelper {
      * always reflects the server-authoritative state.
      */
     PlayerSkillStore getPlayerSkillStore();
+
+    /**
+     * Loader-specific accessor for the brewing-stand BE attachment that holds
+     * per-slot freshly-brewed flags for the alchemy XP grant. Persistent only
+     * — never synced; clients don't need this state.
+     */
+    BrewingStationStore getBrewingStationStore();
+
+    /**
+     * Loader-specific accessor for the per-entity spawner-origin attachment
+     * used by the skill XP router's spawner multiplier. Persistent only —
+     * not synced; flag survives chunk unloads and server restarts so a mob
+     * spawned by a spawner is still flagged when later killed.
+     */
+    SpawnerOriginStore getSpawnerOriginStore();
 
     /**
      * Loader-specific networking adapter for sending packets to clients.

@@ -6,7 +6,9 @@
   "refmap": "${mod_id}.refmap.json",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "PlayerAttributesMixin"
+    "PlayerAttributesMixin",
+    "PlayerJumpMixin",
+    "SpawnerOriginMixin"
   ],
   "client": [
     "EntityRendererMixin"

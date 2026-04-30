@@ -7,6 +7,10 @@ import dev.muon.chronicles_leveling.network.NetworkHelperNeoforge;
 import dev.muon.chronicles_leveling.platform.services.IPlatformHelper;
 import dev.muon.chronicles_leveling.skill.PlayerSkillStore;
 import dev.muon.chronicles_leveling.skill.PlayerSkillStoreNeoforge;
+import dev.muon.chronicles_leveling.skill.xp.BrewingStationStore;
+import dev.muon.chronicles_leveling.skill.xp.BrewingStationStoreNeoforge;
+import dev.muon.chronicles_leveling.skill.xp.SpawnerOriginStore;
+import dev.muon.chronicles_leveling.skill.xp.SpawnerOriginStoreNeoforge;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
@@ -25,6 +29,8 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
 
     private static final PlayerLevelStore LEVEL_STORE = new PlayerLevelStoreNeoforge();
     private static final PlayerSkillStore SKILL_STORE = new PlayerSkillStoreNeoforge();
+    private static final BrewingStationStore BREWING_STORE = new BrewingStationStoreNeoforge();
+    private static final SpawnerOriginStore SPAWNER_ORIGIN_STORE = new SpawnerOriginStoreNeoforge();
     private static final NetworkHelper NETWORK_HELPER = new NetworkHelperNeoforge();
 
     /**
@@ -70,6 +76,16 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
     @Override
     public PlayerSkillStore getPlayerSkillStore() {
         return SKILL_STORE;
+    }
+
+    @Override
+    public BrewingStationStore getBrewingStationStore() {
+        return BREWING_STORE;
+    }
+
+    @Override
+    public SpawnerOriginStore getSpawnerOriginStore() {
+        return SPAWNER_ORIGIN_STORE;
     }
 
     @Override

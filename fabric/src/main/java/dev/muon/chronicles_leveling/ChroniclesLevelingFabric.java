@@ -1,11 +1,11 @@
 package dev.muon.chronicles_leveling;
 
+import dev.muon.chronicles_leveling.attachment.FabricAttachments;
 import dev.muon.chronicles_leveling.command.ChroniclesCommands;
 import dev.muon.chronicles_leveling.event.PlayerStatsEventsFabric;
+import dev.muon.chronicles_leveling.event.SkillXpEventsFabric;
 import dev.muon.chronicles_leveling.item.ModItemsFabric;
-import dev.muon.chronicles_leveling.level.PlayerLevelAttachmentFabric;
 import dev.muon.chronicles_leveling.network.NetworkRegistrationFabric;
-import dev.muon.chronicles_leveling.skill.PlayerSkillAttachmentFabric;
 import dev.muon.chronicles_leveling.sounds.ModSoundsFabric;
 import dev.muon.chronicles_leveling.stat.ModStatsFabric;
 import net.fabricmc.api.ModInitializer;
@@ -32,13 +32,13 @@ public class ChroniclesLevelingFabric implements ModInitializer {
         ChroniclesLeveling.init();
 
         ModStatsFabric.ensureInitialized();
-        PlayerLevelAttachmentFabric.init();
-        PlayerSkillAttachmentFabric.init();
+        FabricAttachments.init();
         ModSoundsFabric.init();
         ModItemsFabric.init();
         NetworkRegistrationFabric.initServer();
 
         PlayerStatsEventsFabric.initLifecycle();
+        SkillXpEventsFabric.initLifecycle();
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registry, env) ->
                 ChroniclesCommands.register(dispatcher));

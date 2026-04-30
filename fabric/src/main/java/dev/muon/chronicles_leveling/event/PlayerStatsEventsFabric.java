@@ -10,7 +10,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.level.ServerPlayer;
 
 /**
- * Fabric-side player lifecycle hooks for leveling.
+ * Fabric-side player lifecycle hooks for stat allocation.
  *
  * <p>Two things to wire on this loader:
  * <ol>
@@ -23,8 +23,8 @@ import net.minecraft.server.level.ServerPlayer;
  *       starts with a fresh attribute map.</li>
  * </ol>
  *
- * <p>Player-attribute attachment itself is handled by the
- * {@code PlayerAttributesMixin} in this module, not here.
+ * <p>Player-attribute attachment itself is handled by {@code PlayerAttributesMixin}.
+ * Skill-XP routing lives in {@link SkillXpEventsFabric}.
  */
 public final class PlayerStatsEventsFabric {
 
