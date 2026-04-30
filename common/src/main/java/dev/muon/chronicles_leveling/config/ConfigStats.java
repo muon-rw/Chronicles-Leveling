@@ -10,8 +10,6 @@ import me.fzzyhmstrs.fzzy_config.validation.collection.ValidatedList;
 import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedAny;
 import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedBoolean;
 import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedExpression;
-import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedString;
-import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedDouble;
 import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedInt;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -21,9 +19,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Server-authoritative settings synced to clients.
- *
- * <p>Three groups:
+ * Server-authoritative stat-allocation settings synced to clients. Three groups:
  * <ul>
  *   <li><b>Curve</b> — XP-per-level math + how many stat points each level grants.</li>
  *   <li><b>Stat modifiers</b> — per-stat list of "this stat adds X to attribute Y per
@@ -40,11 +36,14 @@ import java.util.Set;
  * hi
  * fooooooood
  * - puppy
+ *
+ * <p>Skill-XP-gain settings live on {@link ConfigSkills} alongside the per-skill
+ * curves so a pack author has one file per concern.
  */
-public class ConfigSync extends Config {
+public class ConfigStats extends Config {
 
-    public ConfigSync() {
-        super(Identifier.fromNamespaceAndPath(ChroniclesLeveling.MOD_ID, "sync"));
+    public ConfigStats() {
+        super(Identifier.fromNamespaceAndPath(ChroniclesLeveling.MOD_ID, "stats"));
     }
 
     // --- Curve ---
@@ -75,15 +74,6 @@ public class ConfigSync extends Config {
     public StatModifierList intelligence = StatModifierList.defaultFor(ModStats.INTELLIGENCE);
     public StatModifierList wisdom       = StatModifierList.defaultFor(ModStats.WISDOM);
     public StatModifierList luckiness    = StatModifierList.defaultFor(ModStats.LUCKINESS);
-
-    // --- Skill XP gain ---
-
-    @Comment("Entity ids that grant no skill XP when damaged or killed (e.g. minecraft:armor_stand). Format: 'namespace:path'.")
-    public ValidatedList<String> entitySkillXpBlacklist =
-            new ValidatedString("").toList(List.of());
-
-    @Comment("Multiplier applied to skill XP earned against entities spawned by a mob spawner. 1.0 for no modification; 0.0 disables farming spawners entirely.")
-    public ValidatedDouble spawnerMobSkillXpMultiplier = new ValidatedDouble(0.1, 1.0, 0.0);
 
     // --- Display ---
 

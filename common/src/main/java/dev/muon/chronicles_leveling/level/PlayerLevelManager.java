@@ -45,14 +45,14 @@ public final class PlayerLevelManager {
 
     /**
      * Spends the rung's vanilla-XP cost, raises the level by 1, and credits {@link
-     * Configs#SYNC ConfigSync#pointsPerLevel} unspent points. No-op if the
+     * Configs#STATS ConfigStats#pointsPerLevel} unspent points. No-op if the
      * player can't afford it.
      *
      * @return {@code true} if a level-up actually happened
      */
     public static boolean tryLevelUp(ServerPlayer player) {
         PlayerLevelData data = get(player);
-        int maxLevel = Configs.SYNC.maxLevel.get();
+        int maxLevel = Configs.STATS.maxLevel.get();
         if (maxLevel > 0 && data.level() >= maxLevel) return false;
 
         int cost = LevelingCurve.xpToNext(data.level());
@@ -63,7 +63,7 @@ public final class PlayerLevelManager {
         // the right order — the standard XP-update packet syncs the new state to the client.
         player.giveExperiencePoints(-cost);
 
-        int pointsPerLevel = Configs.SYNC.pointsPerLevel.get();
+        int pointsPerLevel = Configs.STATS.pointsPerLevel.get();
         set(player, new PlayerLevelData(
                 data.level() + 1,
                 data.unspentPoints() + pointsPerLevel,

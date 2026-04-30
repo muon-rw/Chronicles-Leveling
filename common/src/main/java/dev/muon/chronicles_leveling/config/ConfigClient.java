@@ -15,9 +15,7 @@ import java.util.Objects;
 
 /**
  * Client-only preferences. Loaded on the client and never synced from the server.
- *
- * @see ConfigServer for server-only, non-synced settings
- * @see ConfigSync   for server-authoritative settings that sync to clients
+ * @see ConfigStats   for server-authoritative settings that sync to clients
  */
 public class ConfigClient extends Config {
 

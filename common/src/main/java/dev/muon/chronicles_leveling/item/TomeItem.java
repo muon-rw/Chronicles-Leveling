@@ -1,5 +1,6 @@
 package dev.muon.chronicles_leveling.item;
 
+import dev.muon.chronicles_leveling.config.ConfigStats;
 import dev.muon.chronicles_leveling.config.Configs;
 import dev.muon.chronicles_leveling.level.PlayerLevelData;
 import dev.muon.chronicles_leveling.level.PlayerLevelManager;
@@ -25,7 +26,7 @@ import java.util.function.Consumer;
  * use. No XP cost, no curve, no confirmation — direct admin-style progression
  * the player can stack and chew through whenever they want.
  *
- * <p>Respects {@link dev.muon.chronicles_leveling.config.ConfigSync#maxLevel}:
+ * <p>Respects {@link ConfigStats#maxLevel}:
  * at or above the cap the use is rejected with an action-bar message and the
  * tome is not consumed.
  */
@@ -43,7 +44,7 @@ public class TomeItem extends Item {
         }
 
         PlayerLevelData data = PlayerLevelManager.get(serverPlayer);
-        int maxLevel = Configs.SYNC.maxLevel.get();
+        int maxLevel = Configs.STATS.maxLevel.get();
         if (maxLevel > 0 && data.level() >= maxLevel) {
             serverPlayer.sendOverlayMessage(
                     Component.translatable("item.chronicles_leveling.tome.max_level", maxLevel)

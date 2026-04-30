@@ -46,7 +46,7 @@ public final class XpAffordabilityNotifier {
 
     private static boolean computeAffordable(LocalPlayer player) {
         PlayerLevelData data = PlayerLevelManager.get(player);
-        int maxLevel = Configs.SYNC.maxLevel.get();
+        int maxLevel = Configs.STATS.maxLevel.get();
         if (maxLevel > 0 && data.level() >= maxLevel) return false;
         return VanillaXp.availableExperiencePoints(player) >= LevelingCurve.xpToNext(data.level());
     }

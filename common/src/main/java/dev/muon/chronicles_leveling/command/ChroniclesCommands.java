@@ -7,6 +7,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
+import dev.muon.chronicles_leveling.config.ConfigStats;
 import dev.muon.chronicles_leveling.config.Configs;
 import dev.muon.chronicles_leveling.level.PlayerLevelData;
 import dev.muon.chronicles_leveling.level.PlayerLevelManager;
@@ -60,7 +61,7 @@ import java.util.Collection;
  * <p><b>Reset semantics:</b>
  * <ul>
  *   <li>{@code reset &lt;targets&gt;} — wipe to {@link PlayerLevelData#DEFAULT}
- *       and grant {@link dev.muon.chronicles_leveling.config.ConfigSync#startingPoints}.
+ *       and grant {@link ConfigStats#startingPoints}.
  *       Mirrors first-time login.</li>
  *   <li>{@code reset &lt;targets&gt; &lt;stat&gt;} — refund the stat's current
  *       allocation back into {@code unspentPoints} and clear that allocation.
@@ -218,7 +219,7 @@ public final class ChroniclesCommands {
 
     private static int resetAll(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         Collection<ServerPlayer> targets = EntityArgument.getPlayers(ctx, "targets");
-        int starting = Configs.SYNC.startingPoints.get();
+        int starting = Configs.STATS.startingPoints.get();
 
         for (ServerPlayer target : targets) {
             PlayerLevelManager.set(target, PlayerLevelData.DEFAULT.withUnspentPoints(starting));

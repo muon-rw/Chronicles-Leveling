@@ -24,7 +24,7 @@ public final class PlayerNameplateRenderer {
     private PlayerNameplateRenderer() {}
 
     public static boolean shouldDecorate() {
-        return Configs.SYNC.injectLevelIntoOwnNameplate.get();
+        return Configs.STATS.injectLevelIntoOwnNameplate.get();
     }
 
     /**

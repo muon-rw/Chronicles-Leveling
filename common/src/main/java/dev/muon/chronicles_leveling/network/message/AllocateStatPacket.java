@@ -58,7 +58,7 @@ public record AllocateStatPacket(String statId) implements CustomPacketPayload {
 
         // maxStatLevel caps only the player's own allocation; external sources stack via
         // attribute modifiers and are intentionally uncapped.
-        int maxStatLevel = Configs.SYNC.maxStatLevel.get();
+        int maxStatLevel = Configs.STATS.maxStatLevel.get();
         if (maxStatLevel > 0 && current >= maxStatLevel) return;
 
         if (data.unspentPoints() <= 0) return;

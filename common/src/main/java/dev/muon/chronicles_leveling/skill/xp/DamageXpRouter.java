@@ -35,7 +35,7 @@ import java.util.Map;
  * → archery; otherwise → weaponry. {@code #c:is_magic} doesn't ship in vanilla
  * but is a stable cross-mod tag in the Common namespace.
  *
- * <p>The blacklist + spawner multiplier from {@code ConfigSync} apply to the
+ * <p>The blacklist + spawner multiplier from {@code ConfigSkills} apply to the
  * "dealt" path only — taking damage from a spawner-spawned skeleton should
  * still train armor at full rate.
  */
@@ -75,7 +75,7 @@ public final class DamageXpRouter {
 
     private static void handleDealt(ServerPlayer attacker, LivingEntity victim, DamageSource source, float amount) {
         Identifier victimId = EntityType.getKey(victim.getType());
-        if (victimId != null && Configs.SYNC.entitySkillXpBlacklist.get().contains(victimId.toString())) {
+        if (victimId != null && Configs.SKILLS.entityXpBlacklist.get().contains(victimId.toString())) {
             return;
         }
 
@@ -86,29 +86,29 @@ public final class DamageXpRouter {
         ValidatedExpression formula;
         if (magic) {
             skillId = Skills.MAGIC;
-            formula = Configs.MAGIC.xpPerDamage;
+            formula = Configs.SKILLS.magic.xpPerDamage;
         } else if (projectile) {
             skillId = Skills.ARCHERY;
-            formula = Configs.ARCHERY.xpPerDamage;
+            formula = Configs.SKILLS.archery.xpPerDamage;
         } else {
             skillId = Skills.WEAPONRY;
-            formula = Configs.WEAPONRY.xpPerDamage;
+            formula = Configs.SKILLS.weaponry.xpPerDamage;
         }
 
         double xp = formula.evalSafe(Map.of('d', (double) amount), 0.0);
         if (Services.PLATFORM.getSpawnerOriginStore().isFromSpawner(victim)) {
-            xp *= Configs.SYNC.spawnerMobSkillXpMultiplier.get();
+            xp *= Configs.SKILLS.spawnerMobMultiplier.get();
         }
         grant(attacker, skillId, xp);
     }
 
     private static void handleTaken(ServerPlayer victim, DamageSource source, float amount) {
         // Armor: every hit trains, including fall, magic, projectile, etc.
-        double armorXp = Configs.ARMOR.xpPerDamageTaken.evalSafe(Map.of('d', (double) amount), 0.0);
+        double armorXp = Configs.SKILLS.armor.xpPerDamageTaken.evalSafe(Map.of('d', (double) amount), 0.0);
         grant(victim, Skills.ARMOR, armorXp);
 
         if (source.is(DamageTypeTags.IS_FALL)) {
-            double acroXp = Configs.ACROBATICS.xpPerFallDamage.evalSafe(
+            double acroXp = Configs.SKILLS.acrobatics.xpPerFallDamage.evalSafe(
                     Map.of('d', (double) amount), 0.0);
             grant(victim, Skills.ACROBATICS, acroXp);
         }

@@ -85,7 +85,7 @@ public final class StatModifierApplier {
         // stat boosts should pump downstream attributes too.
         int spent = (int) Math.floor(statInstance.getValue());
 
-        List<StatModifierSpec> specs = Configs.SYNC.getStatModifierSpecs(stat.id());
+        List<StatModifierSpec> specs = Configs.STATS.getStatModifierSpecs(stat.id());
         for (StatModifierSpec spec : specs) {
             applySecondary(player, stat.id(), spec, spent);
         }

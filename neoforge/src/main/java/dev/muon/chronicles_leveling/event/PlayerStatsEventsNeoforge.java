@@ -46,7 +46,7 @@ public final class PlayerStatsEventsNeoforge {
     private static void grantStartingPointsIfNew(ServerPlayer player) {
         var store = Services.PLATFORM.getPlayerLevelStore();
         if (store.has(player)) return;
-        int starting = Configs.SYNC.startingPoints.get();
+        int starting = Configs.STATS.startingPoints.get();
         PlayerLevelManager.set(player, PlayerLevelData.DEFAULT.withUnspentPoints(starting));
     }
 }

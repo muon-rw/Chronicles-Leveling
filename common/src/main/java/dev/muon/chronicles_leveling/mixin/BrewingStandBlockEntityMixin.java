@@ -27,8 +27,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * scoped to a single {@code doBrew} invocation — no static map, no orphaning
  * if any other mixin cancels {@code doBrew} between HEAD and RETURN.
  *
- * <p>{@code doBrew} is package-private on {@code BrewingStandBlockEntity}; the
- * AP can't resolve a remap entry, hence {@code remap = false}.
  */
 @Mixin(BrewingStandBlockEntity.class)
 public class BrewingStandBlockEntityMixin {

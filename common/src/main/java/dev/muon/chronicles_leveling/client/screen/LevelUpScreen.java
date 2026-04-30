@@ -207,7 +207,7 @@ public class LevelUpScreen extends Screen {
         var player = Minecraft.getInstance().player;
         if (player == null) return false;
         PlayerLevelData data = PlayerLevelManager.get(player);
-        int maxLevel = Configs.SYNC.maxLevel.get();
+        int maxLevel = Configs.STATS.maxLevel.get();
         if (maxLevel > 0 && data.level() >= maxLevel) return false;
         return VanillaXp.availableExperiencePoints(player) >= LevelingCurve.xpToNext(data.level());
     }
@@ -220,7 +220,7 @@ public class LevelUpScreen extends Screen {
 
     private boolean canSpendOn(String statId) {
         if (!canSpendPoint()) return false;
-        int maxStatLevel = Configs.SYNC.maxStatLevel.get();
+        int maxStatLevel = Configs.STATS.maxStatLevel.get();
         if (maxStatLevel <= 0) return true;
         var player = Minecraft.getInstance().player;
         if (player == null) return false;
@@ -632,7 +632,7 @@ public class LevelUpScreen extends Screen {
         lines.add(Component.empty());
         lines.add(Component.translatable("chronicles_leveling.tooltip.levels.description.each")
                 .withStyle(ChatFormatting.GRAY));
-        int maxLevel = Configs.SYNC.maxLevel.get();
+        int maxLevel = Configs.STATS.maxLevel.get();
         if (maxLevel > 0) {
             lines.add(Component.translatable("chronicles_leveling.tooltip.levels.max_level", maxLevel)
                     .withStyle(ChatFormatting.GRAY));
@@ -641,7 +641,7 @@ public class LevelUpScreen extends Screen {
     }
 
     private List<Component> buildLevelUpButtonTooltip(LocalPlayer player, PlayerLevelData data, int rung, int availableXp) {
-        int maxLevel = Configs.SYNC.maxLevel.get();
+        int maxLevel = Configs.STATS.maxLevel.get();
         if (maxLevel > 0 && data.level() >= maxLevel) return List.of();
 
         // Cost expressed in vanilla XP-levels, computed from the actual piecewise curve.
@@ -682,7 +682,7 @@ public class LevelUpScreen extends Screen {
 
     private List<Component> buildStatTooltip(String statId, Component statName) {
         List<Component> lines = new ArrayList<>();
-        int maxStatLevel = Configs.SYNC.maxStatLevel.get();
+        int maxStatLevel = Configs.STATS.maxStatLevel.get();
         if (maxStatLevel > 0) {
             lines.add(Component.translatable("chronicles_leveling.tooltip.stat.max_level", maxStatLevel)
                     .withStyle(ChatFormatting.GRAY));
@@ -691,7 +691,7 @@ public class LevelUpScreen extends Screen {
                 .withStyle(ChatFormatting.GRAY));
 
         boolean anyShown = false;
-        for (StatModifierSpec spec : Configs.SYNC.getStatModifierSpecs(statId)) {
+        for (StatModifierSpec spec : Configs.STATS.getStatModifierSpecs(statId)) {
             if (spec.amountPerPoint.get() == 0.0) continue;
             lines.add(formatModifierLine(spec));
             anyShown = true;
@@ -705,7 +705,7 @@ public class LevelUpScreen extends Screen {
 
     private List<Component> buildStatButtonTooltip(String statId, AttributeInstance instance, Component statName, int displayValue) {
         var player = Minecraft.getInstance().player;
-        int maxStatLevel = Configs.SYNC.maxStatLevel.get();
+        int maxStatLevel = Configs.STATS.maxStatLevel.get();
         if (player != null && maxStatLevel > 0
                 && PlayerLevelManager.get(player).allocation(statId) >= maxStatLevel) {
             return List.of();

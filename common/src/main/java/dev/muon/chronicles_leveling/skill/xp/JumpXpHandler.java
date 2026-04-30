@@ -15,7 +15,7 @@ public final class JumpXpHandler {
     private JumpXpHandler() {}
 
     public static void onJump(ServerPlayer player) {
-        double xp = Configs.ACROBATICS.xpPerJump.get();
+        double xp = Configs.SKILLS.acrobatics.xpPerJump.get();
         if (xp <= 0) return;
         PlayerSkillManager.grantXp(player, Skills.ACROBATICS, (int) Math.round(xp));
     }

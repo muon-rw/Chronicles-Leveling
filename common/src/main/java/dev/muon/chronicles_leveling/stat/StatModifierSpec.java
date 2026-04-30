@@ -1,5 +1,6 @@
 package dev.muon.chronicles_leveling.stat;
 
+import dev.muon.chronicles_leveling.config.ConfigStats;
 import me.fzzyhmstrs.fzzy_config.annotations.Comment;
 import me.fzzyhmstrs.fzzy_config.util.Walkable;
 import me.fzzyhmstrs.fzzy_config.validation.minecraft.ValidatedIdentifier;
@@ -26,7 +27,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
  * </ul>
  *
  * <p>Note this is a section, not a top-level config — it's meant to be embedded
- * inside lists keyed per stat in {@link dev.muon.chronicles_leveling.config.ConfigSync}.
+ * inside lists keyed per stat in {@link ConfigStats}.
  */
 public class StatModifierSpec implements Walkable {
 

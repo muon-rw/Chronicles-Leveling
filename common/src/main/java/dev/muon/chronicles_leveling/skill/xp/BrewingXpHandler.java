@@ -1,7 +1,7 @@
 package dev.muon.chronicles_leveling.skill.xp;
 
+import dev.muon.chronicles_leveling.config.ConfigSkills;
 import dev.muon.chronicles_leveling.config.Configs;
-import dev.muon.chronicles_leveling.config.skill.AlchemyRecipeXp;
 import dev.muon.chronicles_leveling.skill.PlayerSkillManager;
 import dev.muon.chronicles_leveling.skill.Skills;
 import net.minecraft.core.Holder;
@@ -48,9 +48,10 @@ public final class BrewingXpHandler {
                 .map(BuiltInRegistries.POTION::getKey)
                 .orElse(null);
 
-        double base = Configs.ALCHEMY.defaultBaseXp.get();
+        ConfigSkills.Alchemy cfg = Configs.SKILLS.alchemy;
+        double base = cfg.defaultBaseXp.get();
         if (potionId != null) {
-            for (AlchemyRecipeXp entry : Configs.ALCHEMY.recipes.get()) {
+            for (ConfigSkills.RecipeXp entry : cfg.recipes.get()) {
                 if (potionId.equals(entry.recipe.get())) {
                     base = entry.baseXp.get();
                     break;
@@ -63,8 +64,7 @@ public final class BrewingXpHandler {
             amplifier = Math.max(amplifier, eff.getAmplifier());
         }
 
-        double mult = Configs.ALCHEMY.amplifierMultiplier.evalSafe(
-                Map.of('a', (double) amplifier), 1.0);
+        double mult = cfg.amplifierMultiplier.evalSafe(Map.of('a', (double) amplifier), 1.0);
         return Math.max(0.0, base * mult);
     }
 }
