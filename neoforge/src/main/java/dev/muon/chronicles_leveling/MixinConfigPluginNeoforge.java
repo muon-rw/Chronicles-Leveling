@@ -1,7 +1,9 @@
 package dev.muon.chronicles_leveling;
 
 import com.bawnorton.mixinsquared.adjuster.MixinAnnotationAdjusterRegistrar;
+import dev.muon.chronicles_leveling.config.DevConfigWiper;
 import net.neoforged.fml.ModList;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.fml.loading.LoadingModList;
 import net.neoforged.fml.loading.moddiscovery.ModInfo;
@@ -21,6 +23,12 @@ public class MixinConfigPluginNeoforge implements IMixinConfigPlugin {
 
     @Override
     public void onLoad(String mixinPackage) {
+        // Earliest hook we own — runs before any @Mod constructor, so sibling
+        // muon-mods can't read stale toml before we delete it.
+        if (!FMLEnvironment.isProduction()) {
+            DevConfigWiper.wipe();
+        }
+
         // To set these up, view the MixinSquared wiki:
         // https://github.com/Bawnorton/MixinSquared/wiki
         // MixinAnnotationAdjusterRegistrar.register(new ChroniclesLevelingMixinAdjuster());

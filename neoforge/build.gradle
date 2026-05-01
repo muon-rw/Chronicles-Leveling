@@ -4,6 +4,15 @@ plugins {
     id 'dev.mixinmcp.decompile'
 }
 
+// Loom provides `localRuntime` out of the box; MDG does not, so wire it up here.
+// Deps in `localRuntime` are on the dev runtime classpath but aren't exposed in
+// `runtimeElements`, so they don't propagate transitively to maven consumers.
+configurations {
+    localRuntime
+    runtimeClasspath.extendsFrom(localRuntime)
+    testRuntimeClasspath.extendsFrom(localRuntime)
+}
+
 dependencies {
     implementation("me.fzzyhmstrs:fzzy_config:${fzzy_config}+neoforge")
 
@@ -15,6 +24,7 @@ dependencies {
     // Dynamic Difficulty
     implementation "dev.muon.dynamic_difficulty:dynamic_difficulty-neoforge:${dynamic_difficulty_version}+${minecraft_version}"
     implementation "dev.muon.combat_attributes:combat_attributes-neoforge:${combat_attributes_version}+${minecraft_version}"
+    runtimeOnly "dev.muon.dynamic_resource_bars:dynamic_resource_bars-neoforge:${dynamic_resource_bars_version}+${minecraft_version}"
 
 }
 

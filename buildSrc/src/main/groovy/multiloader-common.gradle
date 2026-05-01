@@ -27,7 +27,6 @@ java {
 
 repositories {
     mavenCentral()
-    mavenLocal()
     exclusiveContent {
         forRepository {
             maven {
@@ -57,13 +56,31 @@ repositories {
     }
     maven {url = 'https://maven.blamejared.com'}
     maven {url = 'https://maven.fzzyhmstrs.me/'}
-    maven {url = 'https://maven.muon.rip/releases/'}
+    maven {
+        url = 'https://maven.muon.rip/snapshots/'
+        content { includeGroupAndSubgroups 'dev.muon' }
+    }
+    maven {
+        url = 'https://maven.muon.rip/releases/'
+        content { includeGroupAndSubgroups 'dev.muon' }
+    }
     maven {url = 'https://maven.fabricmc.net/'} // Required by Fzzy even in common
 
     // MixinSquared
     maven { url = "https://maven.bawnorton.com/releases" }
     // MixinSquared backup
     // maven { url = "https://maven.enjarai.dev/mirrors" }
+
+    // mavenLocal is intentionally last so remote snapshots win on a same-version
+    // coord — useful when bouncing between machines via the snapshots repo.
+    mavenLocal()
+}
+
+// Re-check -SNAPSHOT metadata on every build (default TTL is 24h). Only affects
+// changing modules; release coords stay fully cached. Pair with the snapshots repo
+// content filter above so this only impacts dev.muon resolution.
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 }
 
 sourcesJar {

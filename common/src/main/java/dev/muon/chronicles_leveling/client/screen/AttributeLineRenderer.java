@@ -144,37 +144,59 @@ public final class AttributeLineRenderer {
     }
 
     /**
-     * Builds the three-line "diminishing returns" footer for any attribute backed by
-     * a Combat Attributes {@link DiminishingAttribute}: a header, a per-source soft
-     * cap line, and (probabilistic mode only) a stacking note. Probabilistic attributes
-     * combine sources via {@code 1 - Π(1-p)}, so two 40% sources give 64% rather than
-     * 80%; soft-cap attributes sum across operation slots, so the third line would lie
+     * Builds the "diminishing returns" footer for any attribute backed by a Combat
+     * Attributes {@link DiminishingAttribute}: a header, a per-source soft cap line,
+     * and (for non-additive modes) a stacking note. Probabilistic attributes combine
+     * sources via {@code 1 - Π(1-p)}; multiplicative attributes combine via
+     * {@code Π(1 - softCapped(-x))}, so two 30% reductions give 51% off rather than
+     * 60%. Soft-cap attributes sum across operation slots, so the third line would lie
      * about them and is skipped.
      *
      * <p>Picks percent vs flat formatting from the same {@code percentScale} the row
      * uses to display its current value, so the unit shown in the footer matches the
-     * unit in the value column above it. Probabilistic caps are absolute probabilities
-     * (no leading "+"); soft-cap caps are additive bonuses above base, so they get a
-     * "+" prefix to make the additive nature legible.
+     * unit in the value column above it. Cap-prefix conventions:
+     * <ul>
+     *   <li>SOFT_CAP — additive bonus above base, "{@code +}" prefix.</li>
+     *   <li>PROBABILISTIC — absolute probability, no prefix.</li>
+     *   <li>MULTIPLICATIVE — magnitude of the buff side; for NEGATIVE-sentiment attrs
+     *       (e.g. mana_cost) buffs are reductions, so the cap renders with a
+     *       "{@code -}" prefix to read as "max savings per source".</li>
+     * </ul>
      */
     private static List<Component> diminishingNotice(Holder<Attribute> holder, Optional<Double> percentScale) {
         if (!(holder.value() instanceof DiminishingAttribute dim)) return List.of();
         double cap = dim.softCap();
-        boolean probabilistic = dim.isProbabilistic();
-        String prefix = probabilistic ? "" : "+";
+        String prefix = capPrefix(holder.value(), dim);
         String formatted = percentScale.isPresent()
                 ? prefix + FORMAT.format(cap * percentScale.get()) + "%"
                 : prefix + FORMAT.format(cap);
+        boolean nonAdditive = dim.isProbabilistic() || dim.isMultiplicative();
         List<Component> footer = new ArrayList<>(3);
         footer.add(Component.translatable("chronicles_leveling.attributes.diminishing_one")
                 .withStyle(ChatFormatting.WHITE));
         footer.add(Component.translatable("chronicles_leveling.attributes.diminishing_two", formatted)
                 .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
-        if (probabilistic) {
+        if (nonAdditive) {
             footer.add(Component.translatable("chronicles_leveling.attributes.diminishing_three")
                     .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
         }
         return footer;
+    }
+
+    private static String capPrefix(Attribute attribute, DiminishingAttribute dim) {
+        if (dim.isProbabilistic()) return "";
+        if (dim.isMultiplicative()) return isNegativeSentiment(attribute) ? "-" : "+";
+        return "+";
+    }
+
+    /**
+     * Probes attribute sentiment via the public {@link Attribute#getStyle} API rather
+     * than reflecting on the private {@code sentiment} field. POSITIVE → BLUE on
+     * increase, NEGATIVE → RED on increase, NEUTRAL → GRAY — so {@code RED} on
+     * {@code getStyle(true)} uniquely identifies NEGATIVE.
+     */
+    private static boolean isNegativeSentiment(Attribute attribute) {
+        return attribute.getStyle(true) == ChatFormatting.RED;
     }
 
     private static Component vanillaModifierFallback(Attribute attribute, AttributeModifier modifier) {

@@ -120,7 +120,7 @@ public class ConfigStats extends Config {
                             new StatModifierSpec(Identifier.parse("minecraft:block_break_speed"), 0.02, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
                             new StatModifierSpec(Identifier.parse("combat_attributes:arrow_velocity"), 0.02, AttributeModifier.Operation.ADD_VALUE),
                             new StatModifierSpec(Identifier.parse("combat_attributes:ranged_crit_damage"), 0.05, AttributeModifier.Operation.ADD_VALUE),
-                            new StatModifierSpec(Identifier.parse("combat_attributes:max_stamina"), 10, AttributeModifier.Operation.ADD_VALUE)
+                            new StatModifierSpec(Identifier.parse("combat_attributes:max_stamina"), 5, AttributeModifier.Operation.ADD_VALUE)
                     ),
                     ModStats.DEXTERITY, List.of(
                             new StatModifierSpec(Identifier.parse("combat_attributes:ranged_damage"), 0.5, AttributeModifier.Operation.ADD_VALUE),
@@ -128,25 +128,27 @@ public class ConfigStats extends Config {
                             new StatModifierSpec(Identifier.parse("combat_attributes:draw_speed"), 0.02, AttributeModifier.Operation.ADD_VALUE),
                             new StatModifierSpec(Identifier.parse("minecraft:movement_speed"), 0.01, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
                             new StatModifierSpec(Identifier.parse("combat_attributes:melee_crit_damage"), 0.05, AttributeModifier.Operation.ADD_VALUE),
-                            new StatModifierSpec(Identifier.parse("combat_attributes:stamina_regen"), 0.02, AttributeModifier.Operation.ADD_VALUE)
+                            new StatModifierSpec(Identifier.parse("combat_attributes:stamina_regen"), 0.02, AttributeModifier.Operation.ADD_MULTIPLIED_BASE)
                     ),
                     ModStats.CONSTITUTION, List.of(
                             new StatModifierSpec(Identifier.parse("minecraft:max_health"), 1.0, AttributeModifier.Operation.ADD_VALUE),
                             new StatModifierSpec(Identifier.parse("minecraft:armor"), 0.2, AttributeModifier.Operation.ADD_VALUE),
+                            new StatModifierSpec(Identifier.parse("combat_attributes:magic_defense"), 0.2, AttributeModifier.Operation.ADD_VALUE),
                             new StatModifierSpec(Identifier.parse("minecraft:armor_toughness"), 0.1, AttributeModifier.Operation.ADD_VALUE),
-                            new StatModifierSpec(Identifier.parse("minecraft:knockback_resistance"), 0.01, AttributeModifier.Operation.ADD_VALUE),
-                            new StatModifierSpec(Identifier.parse("combat_attributes:magic_resistance"), 0.2, AttributeModifier.Operation.ADD_VALUE)
+                            new StatModifierSpec(Identifier.parse("minecraft:knockback_resistance"), 0.01, AttributeModifier.Operation.ADD_VALUE)
                     ),
                     ModStats.INTELLIGENCE, List.of(
                             new StatModifierSpec(Identifier.parse("combat_attributes:magic_power"), 0.5, AttributeModifier.Operation.ADD_VALUE),
                             new StatModifierSpec(Identifier.parse("combat_attributes:magic_crit_damage"), 0.05, AttributeModifier.Operation.ADD_VALUE),
                             new StatModifierSpec(Identifier.parse("combat_attributes:lifesteal"), 0.01, AttributeModifier.Operation.ADD_VALUE),
-                            new StatModifierSpec(Identifier.parse("combat_attributes:max_mana"), 10, AttributeModifier.Operation.ADD_VALUE)
+                            new StatModifierSpec(Identifier.parse("combat_attributes:max_mana"), 5, AttributeModifier.Operation.ADD_VALUE),
+                            new StatModifierSpec(Identifier.parse("combat_attributes:stamina_cost"), -0.02, AttributeModifier.Operation.ADD_VALUE)
                     ),
                     ModStats.WISDOM, List.of(
                             new StatModifierSpec(Identifier.parse("combat_attributes:mana_regen"), 0.02, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
+                            new StatModifierSpec(Identifier.parse("combat_attributes:mana_cost"), -0.01, AttributeModifier.Operation.ADD_VALUE),
                             new StatModifierSpec(Identifier.parse("combat_attributes:experience_gain"), 0.02, AttributeModifier.Operation.ADD_VALUE),
-                            new StatModifierSpec(Identifier.parse("combat_attributes:evasion"), 0.02, AttributeModifier.Operation.ADD_VALUE),
+                            new StatModifierSpec(Identifier.parse("combat_attributes:evasion"), 0.01, AttributeModifier.Operation.ADD_VALUE),
                             new StatModifierSpec(Identifier.parse("combat_attributes:accuracy"), 0.02, AttributeModifier.Operation.ADD_VALUE)
                     ),
                     ModStats.LUCKINESS, List.of(

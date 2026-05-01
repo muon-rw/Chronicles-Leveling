@@ -97,7 +97,12 @@ public class AttributesScreen extends Screen {
             label("combat_attributes", "ranged_crit_chance", "crit_chance"),
             label("combat_attributes", "ranged_crit_damage", "crit_damage"),
             label("combat_attributes", "magic_crit_chance", "crit_chance"),
-            label("combat_attributes", "magic_crit_damage", "crit_damage")
+            label("combat_attributes", "magic_crit_damage", "crit_damage"),
+            label("combat_attributes", "max_mana", "max_mana"),
+            label("combat_attributes", "mana_regen", "mana_regen"),
+            label("combat_attributes", "max_stamina", "max_stamina"),
+            label("combat_attributes", "stamina_regen", "stamina_regen"),
+            label("combat_attributes", "experience_gain", "experience_gain")
     );
 
     /** One log entry per missing-id per JVM session — render fires every frame. */
@@ -121,6 +126,12 @@ public class AttributesScreen extends Screen {
             () -> Configs.CLIENT.attributePages.defense.get()
     );
 
+    private static final CategoryDef MOBILITY = new CategoryDef(
+            "chronicles_leveling.screen.attributes.category.mobility",
+            new IconCoord(ChroniclesSprites.SPEED_U, ChroniclesSprites.SPEED_V),
+            () -> Configs.CLIENT.attributePages.mobility.get()
+    );
+
     private static final CategoryDef MAGIC = new CategoryDef(
             "chronicles_leveling.screen.attributes.category.magic",
             new IconCoord(ChroniclesSprites.MOON_U, ChroniclesSprites.MOON_V),
@@ -139,7 +150,7 @@ public class AttributesScreen extends Screen {
      * (left and right columns can end up at different vertical positions).
      */
     private static final List<List<CategoryDef>> COLUMNS = List.of(
-            List.of(MELEE, DEFENSE),
+            List.of(MELEE, DEFENSE, MOBILITY),
             List.of(RANGED, MAGIC, MISC)
     );
 

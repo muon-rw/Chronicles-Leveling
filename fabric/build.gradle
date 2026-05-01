@@ -23,6 +23,7 @@ dependencies {
     implementation "dev.muon:dynamic-tooltips:${dynamic_tooltips_version}+${minecraft_version}"
     implementation "dev.muon.dynamic_difficulty:dynamic_difficulty-fabric:${dynamic_difficulty_version}+${minecraft_version}"
     implementation "dev.muon.combat_attributes:combat_attributes-fabric:${combat_attributes_version}+${minecraft_version}"
+    runtimeOnly "dev.muon.dynamic_resource_bars:dynamic_resource_bars-neoforge:${dynamic_resource_bars_version}+${minecraft_version}"
 
 }
 

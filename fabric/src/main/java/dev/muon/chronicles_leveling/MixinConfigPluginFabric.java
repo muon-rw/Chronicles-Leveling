@@ -1,6 +1,7 @@
 package dev.muon.chronicles_leveling;
 
 import com.bawnorton.mixinsquared.adjuster.MixinAnnotationAdjusterRegistrar;
+import dev.muon.chronicles_leveling.config.DevConfigWiper;
 import net.fabricmc.loader.api.FabricLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,6 +19,12 @@ public class MixinConfigPluginFabric implements IMixinConfigPlugin {
 
     @Override
     public void onLoad(String mixinPackage) {
+        // Earliest hook we own — runs before any mod's onInitialize, so sibling
+        // muon-mods can't read stale toml before we delete it.
+        if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+            DevConfigWiper.wipe();
+        }
+
         // To set these up, view the MixinSquared wiki:
         // https://github.com/Bawnorton/MixinSquared/wiki
         // MixinAnnotationAdjusterRegistrar.register(new ChroniclesLevelingMixinAdjuster());

@@ -62,23 +62,36 @@ public class ConfigClient extends Config {
                 "minecraft:armor",
                 "minecraft:armor_toughness",
                 "minecraft:knockback_resistance",
+                "combat_attributes:magic_defense",
                 "combat_attributes:evasion"
         );
 
         @Comment("Attributes shown under the Magic category, in order.")
         public ValidatedList<Identifier> magic = list(
+                "combat_attributes:magic_power",
                 "combat_attributes:magic_crit_chance",
-                "combat_attributes:magic_crit_damage"
+                "combat_attributes:magic_crit_damage",
+                "combat_attributes:max_mana",
+                "combat_attributes:mana_regen",
+                "combat_attributes:mana_cost"
+        );
+
+        @Comment("Attributes shown under the Mobility category, in order.")
+        public ValidatedList<Identifier> mobility = list(
+                "combat_attributes:max_stamina",
+                "combat_attributes:stamina_regen",
+                "combat_attributes:stamina_cost",
+                "minecraft:movement_speed",
+                "minecraft:jump_strength"
         );
 
         @Comment("Attributes shown under the Misc category, in order.")
         public ValidatedList<Identifier> misc = list(
                 "minecraft:luck",
-                "minecraft:movement_speed",
-                "minecraft:jump_strength",
                 "minecraft:block_interaction_range",
                 "minecraft:entity_interaction_range",
-                "combat_attributes:life_steal"
+                "combat_attributes:life_steal",
+                "combat_attributes:experience_gain"
         );
 
         private static ValidatedList<Identifier> list(String... initial) {
