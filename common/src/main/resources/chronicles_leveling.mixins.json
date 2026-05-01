@@ -6,7 +6,9 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "BrewingStandBlockEntityMixin",
-    "BrewingStandSlotMixin"
+    "BrewingStandSlotMixin",
+    "EnchantmentMenuMixin",
+    "HoeItemMixin"
   ],
   "client": [
     "InventoryScreenMixin"

@@ -60,5 +60,11 @@ public final class PlayerSkillManager {
         setSkill(player, skillId, new PlayerSkillData.SkillEntry(level, (int) xp));
     }
 
+    /** Round-and-grant convenience for handlers that compute XP as a {@code double}. */
+    public static void grantXp(ServerPlayer player, String skillId, double amount) {
+        if (amount <= 0) return;
+        grantXp(player, skillId, (int) Math.round(amount));
+    }
+
     private static final int MAX_LEVELS_PER_GRANT = 1000;
 }

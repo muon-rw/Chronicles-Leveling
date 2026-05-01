@@ -58,12 +58,12 @@ public class ConfigSkills extends Config {
     public Acrobatics acrobatics = new Acrobatics();
     public Alchemy alchemy = new Alchemy();
 
-    public Skill mining = new Skill();
-    public Skill speech = new Skill();
-    public Skill farming = new Skill();
-    public Skill enchanting = new Skill();
-    public Skill smithing = new Skill();
-    public Skill fishing = new Skill();
+    public Mining mining = new Mining();
+    public Speech speech = new Speech();
+    public Farming farming = new Farming();
+    public Enchanting enchanting = new Enchanting();
+    public Smithing smithing = new Smithing();
+    public Fishing fishing = new Fishing();
 
     /**
      * Returns the {@link Skill} section for a known skill id, or {@code null}
@@ -170,5 +170,132 @@ public class ConfigSkills extends Config {
             this.recipe = new ValidatedIdentifier(recipe);
             this.baseXp = new ValidatedDouble(baseXp, 100_000.0, 0.0);
         }
+    }
+
+    /** XP from breaking blocks. */
+    public static class Mining extends Skill {
+        @Comment("XP per block break. 'h' = block hardness (>= 0). Tweak the coefficient to control overall pacing.")
+        public ValidatedExpression xpPerHardness = new ValidatedExpression("0.5 + h", Set.of('h'));
+
+        @Comment("Multiplier applied to XP when the broken block is in the #c:ores tag and was NOT mined with Silk Touch. Ore breaks should out-pace generic stone.")
+        public ValidatedDouble oreMultiplier = new ValidatedDouble(3.0, 100.0, 0.0);
+
+        @Comment("Multiplier applied when an ore is broken with Silk Touch. 0.0 = no XP, 1.0 = same as a non-silk ore break, etc. Defaults to 0 so silk-stockpiling doesn't double-dip with the eventual smelt.")
+        public ValidatedDouble silkTouchOreMultiplier = new ValidatedDouble(0.0, 100.0, 0.0);
+
+        @Comment("Per-tier multipliers for ore/stone scaling. The first matching tag (top-down) wins. Default tags cover vanilla 1.21 mining tiers; pack authors can prepend custom tags (e.g. modded netherite-plus tiers) for higher-tier modded ores.")
+        public ValidatedList<TierBonus> tierBonuses = new ValidatedAny<>(new TierBonus()).toList(List.of(
+                new TierBonus(Identifier.fromNamespaceAndPath("minecraft", "incorrect_for_diamond_tool"), 5.0),
+                new TierBonus(Identifier.fromNamespaceAndPath("minecraft", "needs_diamond_tool"), 3.0),
+                new TierBonus(Identifier.fromNamespaceAndPath("minecraft", "needs_iron_tool"), 2.0),
+                new TierBonus(Identifier.fromNamespaceAndPath("minecraft", "needs_stone_tool"), 1.25)
+        ));
+    }
+
+    /** One row mapping a block tag to a tier multiplier; first match wins, so list stricter tags first. */
+    public static class TierBonus implements Walkable {
+
+        @Comment("Block tag id (e.g. minecraft:needs_iron_tool, c:ores/netherite_plus). Match is exact, so list both vanilla and modded tags as needed.")
+        public ValidatedIdentifier tag;
+
+        @Comment("Multiplier applied to base XP when the broken block has this tag.")
+        public ValidatedDouble multiplier;
+
+        public TierBonus() {
+            this(Identifier.fromNamespaceAndPath("minecraft", "needs_stone_tool"), 1.0);
+        }
+
+        public TierBonus(Identifier tag, double multiplier) {
+            this.tag = new ValidatedIdentifier(tag);
+            this.multiplier = new ValidatedDouble(multiplier, 1000.0, 0.0);
+        }
+    }
+
+    /** XP from completing villager trades. */
+    public static class Speech extends Skill {
+        @Comment("XP per completed trade. 'x' = the merchant XP value of the trade (vanilla novice = 2, master = 30). Set 'x' to 1 to award flat XP regardless of tier.")
+        public ValidatedExpression xpPerTradeXp = new ValidatedExpression("2 * x", Set.of('x'));
+    }
+
+    /** XP from tilling, planting, and harvesting fully-grown crops. */
+    public static class Farming extends Skill {
+        @Comment("XP per block tilled with a hoe (dirt/grass/path -> farmland, etc.).")
+        public ValidatedDouble xpPerTill = new ValidatedDouble(1.0, 1_000.0, 0.0);
+
+        @Comment("XP per crop/seed planted by the player. Only counts seed-style placements (BushBlock and crop-tagged blocks); generic block placement does not award XP.")
+        public ValidatedDouble xpPerPlant = new ValidatedDouble(2.0, 1_000.0, 0.0);
+
+        @Comment("XP per harvested crop. Awarded only when the broken block is fully grown — partial-growth breaks give nothing, so misclicks aren't free XP.")
+        public ValidatedDouble xpPerHarvest = new ValidatedDouble(5.0, 1_000.0, 0.0);
+    }
+
+    /** XP from enchanting tables, grindstone disenchants, and anvil combines. */
+    public static class Enchanting extends Skill {
+        @Comment("XP per successful enchanting-table use. 'c' = level cost of the chosen slot (1-30). The cost itself encodes both slot index and bookshelf count via vanilla's getEnchantmentCost formula, so it's the single power signal.")
+        public ValidatedExpression xpPerTableEnchant = new ValidatedExpression("3 * c", Set.of('c'));
+
+        @Comment("XP per grindstone disenchant. 'x' = experience the grindstone awards from removed enchantments. Set to 0 to disable grindstone XP.")
+        public ValidatedExpression xpPerGrindstone = new ValidatedExpression("0.5 * x", Set.of('x'));
+
+        @Comment("XP per anvil result taken. 'c' = level cost of the operation (anvil's level-cost number). Includes repair, rename, and combine — pack can split via cost thresholds in the formula.")
+        public ValidatedExpression xpPerAnvil = new ValidatedExpression("c", Set.of('c'));
+    }
+
+    /** XP from crafting; tier multipliers stack on top of the base for recognized tools/armor. */
+    public static class Smithing extends Skill {
+        @Comment("Base XP per crafted item. Awarded on every craft (vanilla or smithing-table) regardless of recipe; tier multipliers stack on top for tools/armor.")
+        public ValidatedDouble baseXp = new ValidatedDouble(1.0, 100_000.0, 0.0);
+
+        @Comment("Multiplier applied to base XP when the result is a unit/stack of N items. 'n' = stack size at the time of taking. Default keeps stack-output recipes from out-pacing single-item ones.")
+        public ValidatedExpression stackMultiplier = new ValidatedExpression("max(1, sqrt(n))", Set.of('n'));
+
+        @Comment("Multiplier for wood-tier tools.")
+        public ValidatedDouble woodMultiplier = new ValidatedDouble(1.0, 1000.0, 0.0);
+
+        @Comment("Multiplier for stone-tier tools.")
+        public ValidatedDouble stoneMultiplier = new ValidatedDouble(1.5, 1000.0, 0.0);
+
+        @Comment("Multiplier for copper-tier tools.")
+        public ValidatedDouble copperMultiplier = new ValidatedDouble(2.0, 1000.0, 0.0);
+
+        @Comment("Multiplier for gold-tier tools.")
+        public ValidatedDouble goldMultiplier = new ValidatedDouble(2.0, 1000.0, 0.0);
+
+        @Comment("Multiplier for iron-tier tools and armor.")
+        public ValidatedDouble ironMultiplier = new ValidatedDouble(3.0, 1000.0, 0.0);
+
+        @Comment("Multiplier for diamond-tier tools and armor.")
+        public ValidatedDouble diamondMultiplier = new ValidatedDouble(5.0, 1000.0, 0.0);
+
+        @Comment("Multiplier for netherite-tier tools and armor.")
+        public ValidatedDouble netheriteMultiplier = new ValidatedDouble(8.0, 1000.0, 0.0);
+    }
+
+    /** XP from fishing. Vanilla's fishing event/mixin doesn't expose which loot table fired,
+     *  so each catch is classified by config — items not in either list fall through to junk. */
+    public static class Fishing extends Skill {
+        @Comment("XP per fish-class catch (cod, salmon, etc.). Items matching #minecraft:fishes by default.")
+        public ValidatedDouble fishXp = new ValidatedDouble(5.0, 100_000.0, 0.0);
+
+        @Comment("XP per treasure catch (saddles, name tags, enchanted books, ...). Items matching the vanilla treasure loot table by default.")
+        public ValidatedDouble treasureXp = new ValidatedDouble(20.0, 100_000.0, 0.0);
+
+        @Comment("XP for any catch that isn't classified as fish or treasure (rotten flesh, sticks, lily pads, ...). Set to 0 to disable junk XP entirely.")
+        public ValidatedDouble junkXp = new ValidatedDouble(1.0, 100_000.0, 0.0);
+
+        @Comment("Items or tags classified as 'fish'. Tag entries take a leading '#' (e.g. '#minecraft:fishes'); item ids stand alone (e.g. 'mymod:exotic_carp'). Default is the vanilla #minecraft:fishes tag.")
+        public ValidatedList<String> fishItems = new ValidatedString("").toList(List.of(
+                "#minecraft:fishes"
+        ));
+
+        @Comment("Items or tags classified as 'treasure'. Same '#tag'/'item' rule as fishItems. Default mirrors the vanilla gameplay/fishing/treasure loot table outputs.")
+        public ValidatedList<String> treasureItems = new ValidatedString("").toList(List.of(
+                "minecraft:bow",
+                "minecraft:enchanted_book",
+                "minecraft:fishing_rod",
+                "minecraft:name_tag",
+                "minecraft:nautilus_shell",
+                "minecraft:saddle"
+        ));
     }
 }

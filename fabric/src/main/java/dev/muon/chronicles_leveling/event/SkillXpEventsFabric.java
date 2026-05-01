@@ -1,16 +1,16 @@
 package dev.muon.chronicles_leveling.event;
 
 import dev.muon.chronicles_leveling.skill.xp.DamageXpRouter;
+import dev.muon.chronicles_leveling.skill.xp.FarmingXpHandler;
+import dev.muon.chronicles_leveling.skill.xp.MiningXpHandler;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
+import net.minecraft.server.level.ServerPlayer;
 
 /**
- * Fabric-side skill-XP routing. Damage routes through Fabric's
- * {@code AFTER_DAMAGE} (post-shield, pre-armor — see {@link DamageXpRouter}'s
- * comments for the cross-loader timing trade-off).
- *
- * <p>Per-jump acrobatics XP and spawner-origin marking are mixin-driven on
- * Fabric (see {@code PlayerJumpMixin}, {@code SpawnerOriginMixin}) because
- * Fabric ships no equivalent event for either; nothing to wire here for them.
+ * Fabric-side skill-XP routing for events that exist in the Fabric API.
+ * Hooks without a Fabric API event ride mixins instead — see the
+ * {@code dev.muon.chronicles_leveling.mixin} package on this side.
  */
 public final class SkillXpEventsFabric {
 
@@ -20,5 +20,11 @@ public final class SkillXpEventsFabric {
         ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, baseDamageTaken, damageTaken, blocked) ->
                 DamageXpRouter.onDamage(entity, source, baseDamageTaken)
         );
+
+        PlayerBlockBreakEvents.AFTER.register((level, player, pos, state, blockEntity) -> {
+            if (!(player instanceof ServerPlayer serverPlayer)) return;
+            MiningXpHandler.onBlockBreak(serverPlayer, state, serverPlayer.getMainHandItem());
+            FarmingXpHandler.onBlockBreak(serverPlayer, state);
+        });
     }
 }
