@@ -464,7 +464,8 @@ public class LevelUpScreen extends Screen {
         if (isHovered(mouseX, mouseY, hoverX0, y, hoverX1 - hoverX0, ROW_CONTENT_H)) {
             if (instance != null && mouseX >= valueLeft) {
                 List<Component> breakdown = AttributeLineRenderer.valueBreakdown(
-                        instance.getAttribute(), instance.getBaseValue(), instance.getModifiers(), Optional.empty());
+                        instance.getAttribute(), instance.getValue(), instance.getBaseValue(),
+                        instance.getModifiers(), Optional.empty());
                 if (!breakdown.isEmpty()) {
                     graphics.setComponentTooltipForNextFrame(font, breakdown, mouseX, mouseY);
                 }

@@ -5,6 +5,7 @@ import dev.muon.combat_attributes.attribute.DiminishingAttribute;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 
@@ -47,27 +48,47 @@ public final class AttributeLineRenderer {
     private AttributeLineRenderer() {}
 
     /**
-     * Build the standard value-hover breakdown: one base line (omitted when zero)
-     * followed by one line per modifier (zero-amount filtered, sorted by
-     * {@link #MODIFIER_ORDER}). Each line goes through the loader-aware formatter
-     * so DT / NeoForge-native / vanilla all reach the right outcome.
+     * Build the standard value-hover breakdown.
+     *
+     * <p>When the attribute has any non-zero modifiers, the layout mirrors the
+     * shift-expanded NeoForge / Dynamic-Tooltips merged section: a gold "total"
+     * header (the actual diminished value the player sees in the row) followed
+     * by the green base line and each modifier indented under a {@code  ┇ }
+     * gray prefix. With no modifiers, a single green base line is emitted.
+     *
+     * <p>Percent attributes diverge from the loader convention: NeoForge / DT
+     * leave their base line at the raw decimal because their merged-base path
+     * only triggers for non-percent attributes (attack damage / speed / reach).
+     * Our value column already renders percent attributes scaled, so we scale
+     * both the gold total and green base to keep the tooltip consistent with
+     * the row above it. The per-modifier child lines flow through
+     * {@link #modifierComponent} unchanged — those already percent-scale
+     * natively.
      *
      * <p>If the attribute uses Combat Attributes' diminishing-stacking path, a
-     * trailing gray line summarising the per-source soft cap is appended so players
-     * can see the ceiling without reading the config.
+     * trailing gray line summarising the per-source soft cap is appended so
+     * players can see the ceiling without reading the config.
      */
-    public static List<Component> valueBreakdown(Holder<Attribute> holder, double baseValue,
+    public static List<Component> valueBreakdown(Holder<Attribute> holder, double totalValue, double baseValue,
                                                  Collection<AttributeModifier> modifiers,
                                                  Optional<Double> percentScale) {
-        List<Component> lines = new ArrayList<>();
-        if (baseValue != 0) {
-            lines.add(baseValueComponent(holder, baseValue));
-        }
         List<AttributeModifier> sorted = new ArrayList<>(modifiers);
+        sorted.removeIf(m -> m.amount() == 0);
         sorted.sort(MODIFIER_ORDER);
-        for (AttributeModifier modifier : sorted) {
-            if (modifier.amount() == 0) continue;
-            lines.add(modifierComponent(holder, modifier));
+
+        List<Component> lines = new ArrayList<>();
+        if (sorted.isEmpty()) {
+            if (baseValue != 0) {
+                lines.add(baseValueComponent(holder, baseValue, percentScale));
+            }
+        } else {
+            lines.add(totalValueComponent(holder, totalValue, percentScale));
+            if (baseValue != 0) {
+                lines.add(indent(baseValueComponent(holder, baseValue, percentScale)));
+            }
+            for (AttributeModifier modifier : sorted) {
+                lines.add(indent(modifierComponent(holder, modifier)));
+            }
         }
         lines.addAll(diminishingNotice(holder, percentScale));
         return lines;
@@ -78,9 +99,41 @@ public final class AttributeLineRenderer {
                 .orElseGet(() -> vanillaModifierFallback(holder.value(), modifier));
     }
 
-    public static Component baseValueComponent(Holder<Attribute> holder, double value) {
+    public static Component baseValueComponent(Holder<Attribute> holder, double value, Optional<Double> percentScale) {
+        if (percentScale.isPresent()) {
+            return percentEqualsComponent(holder, value, percentScale.get(), ChatFormatting.DARK_GREEN);
+        }
         return Services.PLATFORM.baseValueComponent(holder, value)
                 .orElseGet(() -> vanillaBaseValueFallback(holder.value(), value));
+    }
+
+    /**
+     * Gold "total" header used above an indented modifier list. NeoForge and DT
+     * both build the same {@code attribute.modifier.equals.0} translatable for
+     * their merged base line, just colored gold instead of dark green; we either
+     * do the same recolor or build a percent-aware equivalent when scaling.
+     */
+    public static Component totalValueComponent(Holder<Attribute> holder, double value, Optional<Double> percentScale) {
+        if (percentScale.isPresent()) {
+            return percentEqualsComponent(holder, value, percentScale.get(), ChatFormatting.GOLD);
+        }
+        Component base = Services.PLATFORM.baseValueComponent(holder, value)
+                .orElseGet(() -> vanillaBaseValueFallback(holder.value(), value));
+        // Loader formatters bake DARK_GREEN into the returned component; GOLD is a color
+        // format so applyFormats overwrites the color while preserving any other flags.
+        return base.copy().withStyle(ChatFormatting.GOLD);
+    }
+
+    private static Component percentEqualsComponent(Holder<Attribute> holder, double value, double scale, ChatFormatting color) {
+        return Component.translatable("attribute.modifier.equals.0",
+                        FORMAT.format(value * scale) + "%",
+                        Component.translatable(holder.value().getDescriptionId()))
+                .withStyle(color);
+    }
+
+    /** Matches NeoForge / DT's expanded-list prefix exactly (U+2507 between two spaces). */
+    private static MutableComponent indent(Component line) {
+        return Component.literal(" ┇ ").withStyle(ChatFormatting.GRAY).append(line);
     }
 
     private static Component vanillaBaseValueFallback(Attribute attribute, double value) {

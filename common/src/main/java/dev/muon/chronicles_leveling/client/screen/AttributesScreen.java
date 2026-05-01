@@ -332,7 +332,7 @@ public class AttributesScreen extends Screen {
                 int valueLeft = valueRightX - valueScreenW;
                 if (mouseX >= valueLeft) {
                     graphics.setComponentTooltipForNextFrame(font,
-                            AttributeLineRenderer.valueBreakdown(row.attribute(), row.baseValue(), row.modifiers(), row.percentScale()),
+                            AttributeLineRenderer.valueBreakdown(row.attribute(), row.value(), row.baseValue(), row.modifiers(), row.percentScale()),
                             mouseX, mouseY);
                 } else {
                     descriptionFor(row.id()).ifPresent(desc ->
