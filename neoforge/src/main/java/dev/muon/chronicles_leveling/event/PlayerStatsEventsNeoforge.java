@@ -13,7 +13,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
 /**
  * NeoForge-side player lifecycle hooks for stat allocation. Mirrors
- * {@link PlayerStatsEventsFabric}; skill-XP routing lives in
+ * {@link PlayerStatsEventsNeoforge}; skill-XP routing lives in
  * {@link SkillXpEventsNeoforge}.
  *
  * <p>Listens on the GAME bus (vs. MOD bus) since these are per-player events
