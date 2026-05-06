@@ -17,8 +17,12 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
  *
  * <p>Sync setup follows the platform layer's contract:
  * <ul>
- *   <li>{@link #PLAYER_LEVEL} / {@link #PLAYER_SKILLS} — synced to the owning
- *       client only ({@link AttachmentSyncPredicate#targetOnly()}).</li>
+ *   <li>{@link #PLAYER_LEVEL} — synced to every tracking client
+ *       ({@link AttachmentSyncPredicate#all()}) so other players can render
+ *       level-aware HUD elements (nameplates, tab list, etc.).</li>
+ *   <li>{@link #PLAYER_SKILLS} — synced to the owning client only
+ *       ({@link AttachmentSyncPredicate#targetOnly()}); per-skill stats are
+ *       private to the player.</li>
  *   <li>{@link #BREWING_STATION} / {@link #SPAWNER_ORIGIN} — persistent only;
  *       server-side XP gates that don't need to round-trip.</li>
  * </ul>
@@ -30,7 +34,8 @@ public final class FabricAttachments {
             builder -> builder
                     .initializer(() -> PlayerLevelData.DEFAULT)
                     .persistent(PlayerLevelData.CODEC)
-                    .syncWith(PlayerLevelData.STREAM_CODEC, AttachmentSyncPredicate.targetOnly())
+                    .copyOnDeath()
+                    .syncWith(PlayerLevelData.STREAM_CODEC, AttachmentSyncPredicate.all())
     );
 
     public static final AttachmentType<PlayerSkillData> PLAYER_SKILLS = AttachmentRegistry.create(
@@ -38,6 +43,7 @@ public final class FabricAttachments {
             builder -> builder
                     .initializer(() -> PlayerSkillData.DEFAULT)
                     .persistent(PlayerSkillData.CODEC)
+                    .copyOnDeath()
                     .syncWith(PlayerSkillData.STREAM_CODEC.cast(), AttachmentSyncPredicate.targetOnly())
     );
 
@@ -53,6 +59,7 @@ public final class FabricAttachments {
             builder -> builder
                     .initializer(() -> Boolean.FALSE)
                     .persistent(Codec.BOOL)
+                    .copyOnDeath()
     );
 
     private FabricAttachments() {}
