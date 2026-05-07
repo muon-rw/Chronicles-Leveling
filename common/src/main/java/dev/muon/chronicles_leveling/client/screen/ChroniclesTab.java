@@ -26,7 +26,7 @@ public enum ChroniclesTab {
     }),
     LEVELS("levels", LevelUpScreen.class, ChroniclesTextures.ICON_LEVELS, LevelUpScreen::new),
     ATTRIBUTES("attributes", AttributesScreen.class, ChroniclesTextures.ICON_COMBAT, AttributesScreen::new),
-    SKILLS("skills", SkillsScreen.class, ChroniclesTextures.ICON_BLANK, SkillsScreen::new);
+    SKILLS("skills", SkillsScreen.class, ChroniclesTextures.ICON_PROFESSIONS, SkillsScreen::new);
 
     private final String key;
     private final Class<? extends Screen> screenClass;

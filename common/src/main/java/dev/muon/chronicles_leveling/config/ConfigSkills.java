@@ -39,7 +39,7 @@ public class ConfigSkills extends Config {
         super(Identifier.fromNamespaceAndPath(ChroniclesLeveling.MOD_ID, "skills"));
     }
 
-    private static final String DEFAULT_CURVE = "100 + 25 * (l - 1)^1.5";
+    private static final String DEFAULT_CURVE = "55 + 0.8 * (l - 1)^2.7";
 
     // --- General ---
 
@@ -49,12 +49,15 @@ public class ConfigSkills extends Config {
     @Comment("Multiplier applied to skill XP earned against entities spawned by a mob spawner. 1.0 for no modification; 0.0 disables farming spawners entirely.")
     public ValidatedDouble spawnerMobMultiplier = new ValidatedDouble(0.1, 1.0, 0.0);
 
+    @Comment("Per-hit damage clamp fed into combat XP formulas. Caps a single hit so one absurd source can't instantly max a skill. Raise for high-end modpacks if you'd rather not clamp.")
+    public ValidatedDouble maxDamagePerHit = new ValidatedDouble(10_000.0, 1_000_000.0, 0.0);
+
     // --- Per-skill sections ---
 
     public Weaponry weaponry = new Weaponry();
     public Archery archery = new Archery();
     public Magic magic = new Magic();
-    public Armor armor = new Armor();
+    public Defense defense = new Defense();
     public Acrobatics acrobatics = new Acrobatics();
     public Alchemy alchemy = new Alchemy();
 
@@ -75,7 +78,7 @@ public class ConfigSkills extends Config {
             case Skills.WEAPONRY   -> weaponry;
             case Skills.ARCHERY    -> archery;
             case Skills.MAGIC      -> magic;
-            case Skills.ARMOR      -> armor;
+            case Skills.DEFENSE    -> defense;
             case Skills.ACROBATICS -> acrobatics;
             case Skills.ALCHEMY    -> alchemy;
             case Skills.MINING     -> mining;
@@ -115,7 +118,7 @@ public class ConfigSkills extends Config {
     }
 
     /** XP from damage taken; pre-mitigation so heavy armor doesn't stall the skill. */
-    public static class Armor extends Skill {
+    public static class Defense extends Skill {
         @Comment("XP awarded per hit taken. 'd' = damage amount, pre-mitigation.")
         public ValidatedExpression xpPerDamageTaken = new ValidatedExpression("d", Set.of('d'));
     }

@@ -11,8 +11,8 @@
     "BlockItemMixin",
     "FishingHookMixin",
     "GrindstoneResultSlotMixin",
+    "LivingEntityMixin",
     "PlayerAttributesMixin",
-    "PlayerJumpMixin",
     "ResultSlotMixin",
     "SmithingMenuMixin",
     "SpawnerOriginMixin"

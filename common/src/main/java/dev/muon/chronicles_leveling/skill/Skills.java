@@ -20,7 +20,7 @@ public final class Skills {
     public static final String WEAPONRY   = "weaponry";
     public static final String ARCHERY    = "archery";
     public static final String MAGIC      = "magic";
-    public static final String ARMOR      = "armor";
+    public static final String DEFENSE    = "defense";
     public static final String ACROBATICS = "acrobatics";
     public static final String ALCHEMY    = "alchemy";
 
@@ -32,7 +32,7 @@ public final class Skills {
     public static final String FISHING    = "fishing";
 
     public static final List<String> LEFT_COL = List.of(
-            WEAPONRY, ARCHERY, MAGIC, ARMOR, ACROBATICS, ALCHEMY
+            WEAPONRY, ARCHERY, MAGIC, DEFENSE, ACROBATICS, ALCHEMY
     );
 
     public static final List<String> RIGHT_COL = List.of(
@@ -40,7 +40,7 @@ public final class Skills {
     );
 
     public static final List<String> ALL = List.of(
-            WEAPONRY, ARCHERY, MAGIC, ARMOR, ACROBATICS, ALCHEMY,
+            WEAPONRY, ARCHERY, MAGIC, DEFENSE, ACROBATICS, ALCHEMY,
             MINING, SPEECH, FARMING, ENCHANTING, SMITHING, FISHING
     );
 

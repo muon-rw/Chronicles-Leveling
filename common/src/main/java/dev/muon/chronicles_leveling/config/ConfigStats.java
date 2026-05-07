@@ -61,9 +61,9 @@ public class ConfigStats extends Config {
     public ValidatedInt maxStatLevel = new ValidatedInt(0, 1_000, 0);
 
     @Comment("XP cost to advance from level l to l+1. 'l' = current level. Examples: " +
-            "'50 + 15 * (l - 1)^1.5' (default, playerex-ish), '100 * l' (linear), '50 * l^2' (quadratic).")
+            "'100 + 40 * (l - 1)^1.8' (default, steep), '100 * l' (linear), '50 * l^2' (quadratic).")
     public ValidatedExpression xpCurveExpression =
-            new ValidatedExpression("50 + 15 * (l - 1)^1.5", Set.of('l'));
+            new ValidatedExpression("55 + 0.8 * (l - 1)^2.7", Set.of('l'));
 
     // --- Stat modifier mappings ---
     // One section per stat; FzzyConfig generates a tidy "Stat Modifiers > Strength" tree in the GUI.

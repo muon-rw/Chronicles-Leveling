@@ -4,7 +4,7 @@ import dev.muon.chronicles_leveling.ChroniclesLeveling;
 import net.minecraft.resources.Identifier;
 
 /**
- * Texture identifiers for Chronicles' GUI. The art is reused from PlayerEx, licensed MIT
+ * Texture identifiers for Chronicles' GUI. Some art is reused from PlayerEx, licensed MIT
  *
  * <p>Layout assumptions baked into UV coordinates elsewhere:
  * <ul>
@@ -36,5 +36,6 @@ public final class ChroniclesTextures {
     public static final Identifier ICON_INVENTORY = gui("inventory");
     public static final Identifier ICON_COMBAT = gui("combat");
     public static final Identifier ICON_LEVELS = gui("levels");
+    public static final Identifier ICON_PROFESSIONS = gui("professions");
     public static final Identifier ICON_BLANK = gui("blank");
 }
