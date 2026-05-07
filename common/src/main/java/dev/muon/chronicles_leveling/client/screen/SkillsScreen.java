@@ -4,6 +4,7 @@ import dev.muon.chronicles_leveling.skill.PlayerSkillData;
 import dev.muon.chronicles_leveling.skill.PlayerSkillManager;
 import dev.muon.chronicles_leveling.skill.SkillCurve;
 import dev.muon.chronicles_leveling.skill.Skills;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
@@ -11,6 +12,8 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+
+import java.util.List;
 
 /**
  * "Skills" tab — twelve action-trained skill levels in a 6×2 grid.
@@ -184,11 +187,21 @@ public class SkillsScreen extends Screen {
         int textY = cellY + CELL_NAME_TOP;
 
         // Name (left-aligned, scaled around its top-left anchor).
+        int nameX = cellX0 + CELL_NAME_X;
+        int nameW = (int) Math.ceil(font.width(name) * CELL_TEXT_SCALE);
+        int nameH = (int) Math.ceil(8 * CELL_TEXT_SCALE);
         graphics.pose().pushMatrix();
-        graphics.pose().translate(cellX0 + CELL_NAME_X, textY);
+        graphics.pose().translate(nameX, textY);
         graphics.pose().scale(CELL_TEXT_SCALE, CELL_TEXT_SCALE);
         graphics.text(font, name, 0, 0, COLOR_NAME, false);
         graphics.pose().popMatrix();
+
+        if (mouseX >= nameX && mouseX < nameX + nameW
+                && mouseY >= textY && mouseY < textY + nameH) {
+            Component desc = Component.translatable("chronicles_leveling.skill." + skillId + ".desc")
+                    .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC);
+            graphics.setComponentTooltipForNextFrame(font, List.of(name, desc), mouseX, mouseY);
+        }
 
         // Level (right-aligned, anchored at the cell's right edge so the scaled text
         // grows leftward from there).
