@@ -15,7 +15,7 @@ import java.util.function.Supplier;
  * <p>Each tab carries its own 16×16 icon (from PlayerEx's icon set). Stats
  * uses the {@code combat.png} icon
  *
- * <p>Switching is just opening the target {@link Screen} on the client — no
+ * <p>Switching is just opening the target {@link Screen} on the client; no
  * round-trip needed.
  */
 public enum ChroniclesTab {
@@ -48,7 +48,6 @@ public enum ChroniclesTab {
         return icon;
     }
 
-    /** Whether this tab's screen is the active screen on the client. */
     public boolean isActive(Screen current) {
         return screenClass.isInstance(current);
     }

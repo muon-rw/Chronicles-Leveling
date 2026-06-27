@@ -19,7 +19,7 @@ import net.minecraft.client.renderer.RenderPipelines;
  * <ul>
  *   <li>{@code tab.png} is 256×256 with 28×32 cells in a 4-row grid.
  *       Row 0 = top-row active, row 1 = top-row inactive.
- *       (Rows 2–3 are the bottom-anchored variants — unused here.)</li>
+ *       (Rows 2-3 are the bottom-anchored variants, unused here.)</li>
  *   <li>The bar anchors to {@code (panelLeft, panelTop)} and renders tabs at
  *       {@code y = panelTop - TAB_HEIGHT}, so the bottom of an active tab is
  *       flush with the panel top.</li>

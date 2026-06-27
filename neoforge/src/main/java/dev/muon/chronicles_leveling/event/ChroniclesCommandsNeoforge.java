@@ -7,9 +7,8 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 /**
- * NeoForge command registration. Fabric uses {@code CommandRegistrationCallback}
- * directly from the entrypoint; on NeoForge we hang off the GAME-bus
- * {@link RegisterCommandsEvent}, which fires after the dispatcher exists.
+ * Fabric uses {@code CommandRegistrationCallback} directly from the entrypoint; on NeoForge we hang
+ * off the GAME-bus {@link RegisterCommandsEvent}, which fires after the dispatcher exists.
  */
 @EventBusSubscriber(modid = ChroniclesLeveling.MOD_ID)
 public final class ChroniclesCommandsNeoforge {

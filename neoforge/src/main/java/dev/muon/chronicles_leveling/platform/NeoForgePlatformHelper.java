@@ -4,11 +4,20 @@ import dev.muon.chronicles_leveling.level.PlayerLevelStore;
 import dev.muon.chronicles_leveling.level.PlayerLevelStoreNeoforge;
 import dev.muon.chronicles_leveling.network.NetworkHelper;
 import dev.muon.chronicles_leveling.network.NetworkHelperNeoforge;
+import dev.muon.chronicles_leveling.ChroniclesLevelingNeoforge;
+import dev.muon.chronicles_leveling.event.RegisterSkillContributionsEvent;
 import dev.muon.chronicles_leveling.platform.services.IPlatformHelper;
 import dev.muon.chronicles_leveling.skill.PlayerSkillStore;
 import dev.muon.chronicles_leveling.skill.PlayerSkillStoreNeoforge;
+import dev.muon.chronicles_leveling.skill.SkillContributor;
+import dev.muon.chronicles_leveling.skill.gather.CampfireOwnerStore;
+import dev.muon.chronicles_leveling.skill.gather.CampfireOwnerStoreNeoforge;
+import dev.muon.chronicles_leveling.skill.gather.FurnaceOwnerStore;
+import dev.muon.chronicles_leveling.skill.gather.FurnaceOwnerStoreNeoforge;
 import dev.muon.chronicles_leveling.skill.xp.BrewingStationStore;
 import dev.muon.chronicles_leveling.skill.xp.BrewingStationStoreNeoforge;
+import dev.muon.chronicles_leveling.skill.enchant.TableUsageStore;
+import dev.muon.chronicles_leveling.skill.enchant.TableUsageStoreNeoforge;
 import dev.muon.chronicles_leveling.skill.xp.SpawnerOriginStore;
 import dev.muon.chronicles_leveling.skill.xp.SpawnerOriginStoreNeoforge;
 import net.minecraft.ChatFormatting;
@@ -23,6 +32,8 @@ import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.neoforge.common.PercentageAttribute;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class NeoForgePlatformHelper implements IPlatformHelper {
@@ -30,16 +41,18 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
     private static final PlayerLevelStore LEVEL_STORE = new PlayerLevelStoreNeoforge();
     private static final PlayerSkillStore SKILL_STORE = new PlayerSkillStoreNeoforge();
     private static final BrewingStationStore BREWING_STORE = new BrewingStationStoreNeoforge();
+    private static final CampfireOwnerStore CAMPFIRE_OWNER_STORE = new CampfireOwnerStoreNeoforge();
+    private static final FurnaceOwnerStore FURNACE_OWNER_STORE = new FurnaceOwnerStoreNeoforge();
     private static final SpawnerOriginStore SPAWNER_ORIGIN_STORE = new SpawnerOriginStoreNeoforge();
+    private static final TableUsageStore TABLE_USAGE_STORE = new TableUsageStoreNeoforge();
     private static final NetworkHelper NETWORK_HELPER = new NetworkHelperNeoforge();
 
     /**
-     * Reflective accessor for {@link PercentageAttribute#scaleFactor} so we can
-     * return the actual configured scale instead of assuming 100. The field is
-     * {@code protected final} on a public class — reflection succeeds without
-     * needing an access transformer. Cached in a static so we pay setup cost
-     * once. Null if the field disappears in a future NeoForge release; we fall
-     * back to the standard 100x scale in that case.
+     * Reflective accessor for {@code PercentageAttribute#scaleFactor} so we can return the actual
+     * configured scale instead of assuming 100. The field is {@code protected final} on a public
+     * class, so reflection succeeds without an access transformer. Cached in a static to pay setup
+     * cost once. Null if the field disappears in a future NeoForge release; we fall back to the
+     * standard 100x scale in that case.
      */
     private static final Field SCALE_FACTOR_FIELD = lookupScaleFactorField();
 
@@ -84,13 +97,35 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
     }
 
     @Override
+    public CampfireOwnerStore getCampfireOwnerStore() {
+        return CAMPFIRE_OWNER_STORE;
+    }
+
+    @Override
+    public FurnaceOwnerStore getFurnaceOwnerStore() {
+        return FURNACE_OWNER_STORE;
+    }
+
+    @Override
     public SpawnerOriginStore getSpawnerOriginStore() {
         return SPAWNER_ORIGIN_STORE;
     }
 
     @Override
+    public TableUsageStore getTableUsageStore() {
+        return TABLE_USAGE_STORE;
+    }
+
+    @Override
     public NetworkHelper getNetworkHelper() {
         return NETWORK_HELPER;
+    }
+
+    @Override
+    public List<SkillContributor> collectSkillContributors() {
+        List<SkillContributor> contributors = new ArrayList<>();
+        ChroniclesLevelingNeoforge.modBus().post(new RegisterSkillContributionsEvent(contributors::add));
+        return contributors;
     }
 
     @Override
@@ -102,7 +137,7 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
 
     @Override
     public Optional<Component> baseValueComponent(Holder<Attribute> holder, double value) {
-        // entityBase only matters for the F3+H "advanced" debug breakdown — we render with
+        // entityBase only matters for the F3+H "advanced" debug breakdown; we render with
         // the normal flag, so any value is fine. merged=false: we don't offer the merge UX here.
         // toBaseComponent emits an unstyled component (vanilla relies on the item-tooltip
         // pipeline to colorize); we color it green to match the modifier-list convention.

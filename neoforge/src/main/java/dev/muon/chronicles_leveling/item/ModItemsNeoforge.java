@@ -1,10 +1,12 @@
 package dev.muon.chronicles_leveling.item;
 
 import dev.muon.chronicles_leveling.ChroniclesLeveling;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
+import net.neoforged.neoforge.event.ModifyDefaultComponentsEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -30,10 +32,19 @@ public final class ModItemsNeoforge {
 
     private ModItemsNeoforge() {}
 
-    /** Publish loader-side holders to common. Call after deferred registries fire. */
+    /** Call after deferred registries fire. */
     public static void init() {
         ModItems.LESSER_ORB_OF_REGRET = LESSER_ORB_OF_REGRET;
         ModItems.GREATER_ORB_OF_REGRET = GREATER_ORB_OF_REGRET;
         ModItems.TOME = TOME;
+    }
+
+    public static void onModifyDefaultComponents(ModifyDefaultComponentsEvent event) {
+        if (!StackablePotions.enabled()) {
+            return;
+        }
+        event.modifyMatching(
+                (item, _) -> StackablePotions.isPotion(item),
+                (builder, _, _) -> builder.set(DataComponents.MAX_STACK_SIZE, StackablePotions.maxStack()));
     }
 }

@@ -68,7 +68,7 @@ public record ResetStatPacket(String statId, InteractionHand hand) implements Cu
         PlayerLevelData data = PlayerLevelManager.get(player);
         int refund = data.allocation(statId);
         if (refund <= 0) {
-            // Nothing to refund — don't consume the orb, just drop the request.
+            // Nothing to refund; don't consume the orb, just drop the request.
             return;
         }
 

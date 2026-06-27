@@ -18,7 +18,7 @@ import java.util.function.BooleanSupplier;
  * disabled) come from three rows on the sheet; we don't draw any text.
  *
  * <p>{@code activeCheck} is sampled at render and click time so the screen
- * doesn't have to push state changes back into the widget — it just declares
+ * doesn't have to push state changes back into the widget; it just declares
  * "this button is live when X is true".
  */
 public class PlusButton extends AbstractButton {

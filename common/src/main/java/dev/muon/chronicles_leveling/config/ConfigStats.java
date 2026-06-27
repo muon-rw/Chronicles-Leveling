@@ -21,14 +21,14 @@ import java.util.Set;
 /**
  * Server-authoritative stat-allocation settings synced to clients. Three groups:
  * <ul>
- *   <li><b>Curve</b> — XP-per-level math + how many stat points each level grants.</li>
- *   <li><b>Stat modifiers</b> — per-stat list of "this stat adds X to attribute Y per
+ *   <li><b>Curve</b>: XP-per-level math + how many stat points each level grants.</li>
+ *   <li><b>Stat modifiers</b>: per-stat list of "this stat adds X to attribute Y per
  *       point spent". Edited live; writes go through {@link #getStatModifierSpecs(String)}.</li>
- *   <li><b>Display</b> — defaults DD won't override (fallback nameplate, etc.).</li>
+ *   <li><b>Display</b>: defaults DD won't override (fallback nameplate, etc.).</li>
  * </ul>
  *
  * <p>Defaults give every stat one safe vanilla mapping so a brand-new installation
- * has visible feedback. Pack authors are expected to flesh them out — and to
+ * has visible feedback. Pack authors are expected to flesh them out, and to
  * remap them onto {@code Combat-Attributes} attributes once that mod is on the
  * classpath. Identifiers are stored as strings in the config and parsed at
  * read time so we don't have to register them at config-construction time
@@ -112,29 +112,25 @@ public class ConfigStats extends Config {
             this.specs = new ValidatedAny<>(new StatModifierSpec()).toList(initial);
         }
 
-
         public static StatModifierList defaultFor(String statId) {
             Map<String, List<StatModifierSpec>> defaults = Map.of(
                     ModStats.STRENGTH, List.of(
                             new StatModifierSpec(Identifier.parse("minecraft:attack_damage"), 0.5, AttributeModifier.Operation.ADD_VALUE),
-                            new StatModifierSpec(Identifier.parse("minecraft:block_break_speed"), 0.02, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
+                            new StatModifierSpec(Identifier.parse("combat_attributes:melee_crit_damage"), 0.05, AttributeModifier.Operation.ADD_VALUE),
                             new StatModifierSpec(Identifier.parse("combat_attributes:arrow_velocity"), 0.02, AttributeModifier.Operation.ADD_VALUE),
-                            new StatModifierSpec(Identifier.parse("combat_attributes:ranged_crit_damage"), 0.05, AttributeModifier.Operation.ADD_VALUE),
                             new StatModifierSpec(Identifier.parse("combat_attributes:max_stamina"), 5, AttributeModifier.Operation.ADD_VALUE)
                     ),
                     ModStats.DEXTERITY, List.of(
                             new StatModifierSpec(Identifier.parse("combat_attributes:ranged_damage"), 0.5, AttributeModifier.Operation.ADD_VALUE),
+                            new StatModifierSpec(Identifier.parse("combat_attributes:ranged_crit_damage"), 0.05, AttributeModifier.Operation.ADD_VALUE),
                             new StatModifierSpec(Identifier.parse("minecraft:attack_speed"), 0.02, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
                             new StatModifierSpec(Identifier.parse("combat_attributes:draw_speed"), 0.02, AttributeModifier.Operation.ADD_VALUE),
-                            new StatModifierSpec(Identifier.parse("minecraft:movement_speed"), 0.01, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
-                            new StatModifierSpec(Identifier.parse("combat_attributes:melee_crit_damage"), 0.05, AttributeModifier.Operation.ADD_VALUE),
-                            new StatModifierSpec(Identifier.parse("combat_attributes:stamina_regen"), 0.02, AttributeModifier.Operation.ADD_MULTIPLIED_BASE)
+                            new StatModifierSpec(Identifier.parse("minecraft:movement_speed"), 0.01, AttributeModifier.Operation.ADD_MULTIPLIED_BASE)
                     ),
                     ModStats.CONSTITUTION, List.of(
                             new StatModifierSpec(Identifier.parse("minecraft:max_health"), 1.0, AttributeModifier.Operation.ADD_VALUE),
-                            new StatModifierSpec(Identifier.parse("minecraft:armor"), 0.2, AttributeModifier.Operation.ADD_VALUE),
-                            new StatModifierSpec(Identifier.parse("combat_attributes:magic_defense"), 0.2, AttributeModifier.Operation.ADD_VALUE),
-                            new StatModifierSpec(Identifier.parse("minecraft:armor_toughness"), 0.1, AttributeModifier.Operation.ADD_VALUE),
+                            new StatModifierSpec(Identifier.parse("combat_attributes:health_regen"), 0.1, AttributeModifier.Operation.ADD_VALUE),
+                            new StatModifierSpec(Identifier.parse("combat_attributes:stamina_regen"), 0.1, AttributeModifier.Operation.ADD_VALUE),
                             new StatModifierSpec(Identifier.parse("minecraft:knockback_resistance"), 0.01, AttributeModifier.Operation.ADD_VALUE)
                     ),
                     ModStats.INTELLIGENCE, List.of(

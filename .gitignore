@@ -22,6 +22,9 @@ build
 eclipse
 run
 runs
+.factorypath
+*.factorypath
+docs
 
 # MixinMCP auto-injected rules
 .cursor/rules/minecraft-mod-project.mdc

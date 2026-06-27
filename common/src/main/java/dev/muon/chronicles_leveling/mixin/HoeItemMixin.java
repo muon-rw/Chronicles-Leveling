@@ -1,6 +1,6 @@
 package dev.muon.chronicles_leveling.mixin;
 
-import dev.muon.chronicles_leveling.skill.xp.FarmingXpHandler;
+import dev.muon.chronicles_leveling.skill.xp.HerbalismXpHandler;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.HoeItem;
@@ -14,11 +14,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class HoeItemMixin {
 
     @Inject(method = "useOn", at = @At("RETURN"), remap = false)
-    private void chronicles_leveling$grantFarmingXp(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir) {
+    private void chronicles_leveling$grantHerbalismXp(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir) {
         if (cir.getReturnValue() != InteractionResult.SUCCESS) return;
         if (context.getLevel().isClientSide()) return;
         if (context.getPlayer() instanceof ServerPlayer player) {
-            FarmingXpHandler.onTill(player);
+            HerbalismXpHandler.onTill(player);
         }
     }
 }

@@ -7,9 +7,9 @@ import dev.muon.chronicles_leveling.stat.ModStats;
  * ChroniclesTextures#GUI}. The 256×256 sheet packs two grids:
  *
  * <ul>
- *   <li>Buttons — 11×10 cells in a 3×2 grid at {@code x=204..225, y=0..29}.
+ *   <li>Buttons: 11×10 cells in a 3×2 grid at {@code x=204..225, y=0..29}.
  *       Three rows = idle / hover / disabled states.</li>
- *   <li>Icons — 9×9 cells in a 5×3 grid at {@code x=226..252, y=0..44}.</li>
+ *   <li>Icons: 9×9 cells in a 5×3 grid at {@code x=226..252, y=0..44}.</li>
  * </ul>
  *
  * <p>Cells sit flush with no inter-cell gap; some glyphs (notably the {@code +}

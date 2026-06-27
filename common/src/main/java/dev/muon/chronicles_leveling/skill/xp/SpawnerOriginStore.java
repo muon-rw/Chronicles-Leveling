@@ -5,7 +5,7 @@ import net.minecraft.world.entity.Entity;
 /**
  * Loader-abstracted accessor for the per-entity "spawned by a mob spawner"
  * flag used by the skill XP router's spawner-multiplier path. Backed by the
- * platform attachment system so the flag persists with the entity NBT —
+ * platform attachment system so the flag persists with the entity NBT:
  * a spawner-spawned mob that survives a chunk unload or server restart still
  * counts as spawner-spawned when later killed.
  *

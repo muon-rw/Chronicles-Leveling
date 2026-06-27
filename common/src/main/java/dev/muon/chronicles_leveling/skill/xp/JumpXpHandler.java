@@ -7,7 +7,7 @@ import net.minecraft.server.level.ServerPlayer;
 
 /**
  * Loader-agnostic acrobatics-on-jump XP grant. Both loaders' jump signals feed
- * in here — Fabric via {@code PlayerJumpMixin} (no event ships), NeoForge via
+ * in here: Fabric via {@code PlayerJumpMixin} (no event ships), NeoForge via
  * {@code LivingJumpEvent}.
  */
 public final class JumpXpHandler {

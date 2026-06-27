@@ -20,13 +20,13 @@ import java.util.Optional;
  *
  * <p>Two stages, both driven from {@link #recompute}:
  * <ol>
- *   <li><b>Allocations</b> — for each stat, write a single permanent
+ *   <li><b>Allocations</b>: for each stat, write a single permanent
  *       {@code ADD_VALUE} modifier on the stat attribute itself, with amount =
  *       {@link PlayerLevelData#allocation(String)}. Stable id
  *       {@code chronicles_leveling:allocation/<stat>}. Source of truth lives in
  *       the attachment, not on the attribute base; external sources (rings,
  *       potions, {@code /attribute modifier} commands) layer cleanly on top.</li>
- *   <li><b>Secondary modifiers</b> — for each stat, walk its
+ *   <li><b>Secondary modifiers</b>: for each stat, walk its
  *       {@link StatModifierSpec} list and write one modifier per (stat, target)
  *       pair on the target attribute. Amount scales with the player's <i>total</i>
  *       stat value (post-allocation, post-external), so a +5-Dexterity ring
@@ -35,7 +35,7 @@ import java.util.Optional;
  * </ol>
  *
  * <p>Stable ids let us cleanly remove the previous modifier before re-adding the
- * scaled one — no "ghost stacks" if a config reload changes the amount or the
+ * scaled one; no "ghost stacks" if a config reload changes the amount or the
  * player's allocation drops on respec.
  */
 public final class StatModifierApplier {
@@ -81,7 +81,7 @@ public final class StatModifierApplier {
     private static void recomputeSecondariesForStat(Player player, ModStats.Entry stat) {
         AttributeInstance statInstance = player.getAttribute(ModStats.get(stat.id()));
         if (statInstance == null) return;
-        // Total (allocation + external buffs), not just allocation — equipment-driven
+        // Total (allocation + external buffs), not just allocation; equipment-driven
         // stat boosts should pump downstream attributes too.
         int spent = (int) Math.floor(statInstance.getValue());
 

@@ -17,10 +17,9 @@ import net.minecraft.world.entity.player.Player;
  *   <li>nudge Dynamic-Difficulty to refresh display levels when integrated</li>
  * </ul>
  *
- * <p>Leveling is opt-in: the player spends vanilla XP — the same pool they'd
- * burn on enchanting — by clicking the {@code +} on the screen, which routes
- * to {@link #tryLevelUp}. The mod doesn't bank a separate XP counter; per-skill
- * progress is tracked separately by {@code PlayerSkillManager}.
+ * <p>Leveling is opt-in: the player spends vanilla XP (the same pool they'd burn on enchanting) by
+ * clicking the {@code +} on the screen, which routes to {@link #tryLevelUp}. The mod doesn't bank a
+ * separate XP counter; per-skill progress is tracked separately by {@code PlayerSkillManager}.
  */
 public final class PlayerLevelManager {
 
@@ -60,7 +59,7 @@ public final class PlayerLevelManager {
 
         // Spend the rung cost out of vanilla XP so the player's enchanting pool drops.
         // giveExperiencePoints accepts negative deltas and drains progress + levels in
-        // the right order — the standard XP-update packet syncs the new state to the client.
+        // the right order; the standard XP-update packet syncs the new state to the client.
         player.giveExperiencePoints(-cost);
 
         int pointsPerLevel = Configs.STATS.pointsPerLevel.get();

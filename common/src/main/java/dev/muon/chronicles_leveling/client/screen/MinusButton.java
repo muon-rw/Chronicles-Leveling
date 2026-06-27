@@ -13,7 +13,7 @@ import java.util.function.BooleanSupplier;
  * Sprite-backed {@code -} button. Mirrors {@link PlusButton} but draws from the
  * minus column on the gui.png sheet, and adds a {@code forceHoveredCheck} that
  * lets the screen pin the button into its hovered visual for reasons outside
- * the widget's own bounds — currently used by the orb-of-regret reset flow so
+ * the widget's own bounds; currently used by the orb-of-regret reset flow so
  * the button reflects the row's selection AND the row's mouse-hover, not just
  * its own pixel-rect.
  *

@@ -22,13 +22,9 @@ import org.jetbrains.annotations.NotNull;
 import java.util.function.Consumer;
 
 /**
- * Single-use book that grants 1 character level and 1 unspent stat point per
- * use. No XP cost, no curve, no confirmation — direct admin-style progression
- * the player can stack and chew through whenever they want.
- *
- * <p>Respects {@link ConfigStats#maxLevel}:
- * at or above the cap the use is rejected with an action-bar message and the
- * tome is not consumed.
+ * Single-use book that grants 1 character level and 1 unspent stat point per use. No XP cost, no curve,
+ * no confirmation: direct admin-style progression the player can stack and chew through at will. At or
+ * above {@link ConfigStats#maxLevel} the use is rejected with an action-bar message and not consumed.
  */
 public class TomeItem extends Item {
 

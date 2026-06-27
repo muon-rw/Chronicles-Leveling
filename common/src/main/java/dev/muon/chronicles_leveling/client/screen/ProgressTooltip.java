@@ -11,8 +11,8 @@ public final class ProgressTooltip {
 
     /**
      * Pixels added to each side of a bar's bounding box for hover detection.
-     * The bars are very thin (3–5px), so naked bounds make the tooltip almost
-     * unhittable; padding gives a forgiving 5–7px tall hit zone.
+     * The bars are very thin (3-5px), so naked bounds make the tooltip almost
+     * unhittable; padding gives a forgiving 5-7px tall hit zone.
      */
     public static final int HOVER_PADDING = 1;
 

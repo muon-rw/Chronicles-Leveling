@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * {@code clearWidgets()}, so we re-add the bar each time and don't need to
  * track whether one exists.
  *
- * <p>The {@code extends} clause is purely for the compiler — at runtime the
+ * <p>The {@code extends} clause is purely for the compiler; at runtime the
  * mixin merges into {@link InventoryScreen}'s actual hierarchy, which gives
  * us access to {@code leftPos}/{@code topPos} and the protected
  * {@code addRenderableWidget}.
@@ -29,7 +29,7 @@ public abstract class InventoryScreenMixin extends AbstractContainerScreen<Inven
 
     private InventoryScreenMixin(InventoryMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
-        throw new AssertionError("dummy ctor — never called at runtime");
+        throw new AssertionError("dummy ctor, never called at runtime");
     }
 
     @Inject(method = "init", at = @At("TAIL"), remap = false)

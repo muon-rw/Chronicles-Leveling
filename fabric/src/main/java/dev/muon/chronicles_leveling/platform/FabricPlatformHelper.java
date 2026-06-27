@@ -7,6 +7,13 @@ import dev.muon.chronicles_leveling.network.NetworkHelperFabric;
 import dev.muon.chronicles_leveling.platform.services.IPlatformHelper;
 import dev.muon.chronicles_leveling.skill.PlayerSkillStore;
 import dev.muon.chronicles_leveling.skill.PlayerSkillStoreFabric;
+import dev.muon.chronicles_leveling.skill.SkillContributor;
+import dev.muon.chronicles_leveling.skill.enchant.TableUsageStore;
+import dev.muon.chronicles_leveling.skill.enchant.TableUsageStoreFabric;
+import dev.muon.chronicles_leveling.skill.gather.CampfireOwnerStore;
+import dev.muon.chronicles_leveling.skill.gather.CampfireOwnerStoreFabric;
+import dev.muon.chronicles_leveling.skill.gather.FurnaceOwnerStore;
+import dev.muon.chronicles_leveling.skill.gather.FurnaceOwnerStoreFabric;
 import dev.muon.chronicles_leveling.skill.xp.BrewingStationStore;
 import dev.muon.chronicles_leveling.skill.xp.BrewingStationStoreFabric;
 import dev.muon.chronicles_leveling.skill.xp.SpawnerOriginStore;
@@ -17,6 +24,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 
+import java.util.List;
 import java.util.Optional;
 
 public class FabricPlatformHelper implements IPlatformHelper {
@@ -24,10 +32,13 @@ public class FabricPlatformHelper implements IPlatformHelper {
     private static final PlayerLevelStore LEVEL_STORE = new PlayerLevelStoreFabric();
     private static final PlayerSkillStore SKILL_STORE = new PlayerSkillStoreFabric();
     private static final BrewingStationStore BREWING_STORE = new BrewingStationStoreFabric();
+    private static final CampfireOwnerStore CAMPFIRE_OWNER_STORE = new CampfireOwnerStoreFabric();
+    private static final FurnaceOwnerStore FURNACE_OWNER_STORE = new FurnaceOwnerStoreFabric();
     private static final SpawnerOriginStore SPAWNER_ORIGIN_STORE = new SpawnerOriginStoreFabric();
+    private static final TableUsageStore TABLE_USAGE_STORE = new TableUsageStoreFabric();
     private static final NetworkHelper NETWORK_HELPER = new NetworkHelperFabric();
 
-    // Mod ID has no underscore — matches Combat-Attributes' own check.
+    // Mod ID has no underscore; matches Combat-Attributes' own check.
     private static final String DT_MOD_ID = "dynamictooltips";
     private static final boolean DT_LOADED = FabricLoader.getInstance().isModLoaded(DT_MOD_ID);
 
@@ -62,13 +73,33 @@ public class FabricPlatformHelper implements IPlatformHelper {
     }
 
     @Override
+    public CampfireOwnerStore getCampfireOwnerStore() {
+        return CAMPFIRE_OWNER_STORE;
+    }
+
+    @Override
+    public FurnaceOwnerStore getFurnaceOwnerStore() {
+        return FURNACE_OWNER_STORE;
+    }
+
+    @Override
     public SpawnerOriginStore getSpawnerOriginStore() {
         return SPAWNER_ORIGIN_STORE;
     }
 
     @Override
+    public TableUsageStore getTableUsageStore() {
+        return TABLE_USAGE_STORE;
+    }
+
+    @Override
     public NetworkHelper getNetworkHelper() {
         return NETWORK_HELPER;
+    }
+
+    @Override
+    public List<SkillContributor> collectSkillContributors() {
+        return FabricLoader.getInstance().getEntrypoints("chronicles_leveling:skills", SkillContributor.class);
     }
 
     @Override
@@ -98,8 +129,8 @@ public class FabricPlatformHelper implements IPlatformHelper {
             dev.muon.dynamictooltips.api.DynamicTooltipsAPI.PercentRule rule =
                     dev.muon.dynamictooltips.api.DynamicTooltipsAPI.percentAttributes().get(id);
             if (rule == null) return Optional.empty();
-            double s = rule.scaleFactor();
-            return s > 0 ? Optional.of(s) : Optional.empty();
+            double scaleFactor = rule.scaleFactor();
+            return scaleFactor > 0 ? Optional.of(scaleFactor) : Optional.empty();
         }
 
         static Component baseValueComponent(Attribute attribute, double value) {

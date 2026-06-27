@@ -11,6 +11,11 @@ import dev.muon.chronicles_leveling.config.ConfigStats;
 import dev.muon.chronicles_leveling.config.Configs;
 import dev.muon.chronicles_leveling.level.PlayerLevelData;
 import dev.muon.chronicles_leveling.level.PlayerLevelManager;
+import dev.muon.chronicles_leveling.skill.PlayerSkillData;
+import dev.muon.chronicles_leveling.skill.PlayerSkillManager;
+import dev.muon.chronicles_leveling.skill.SkillModifierApplier;
+import dev.muon.chronicles_leveling.skill.SkillRegistry;
+import dev.muon.chronicles_leveling.skill.perk.SkillDefinition;
 import dev.muon.chronicles_leveling.stat.ModStats;
 import dev.muon.chronicles_leveling.stat.StatModifierApplier;
 import net.minecraft.ChatFormatting;
@@ -23,59 +28,43 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.Permissions;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
- * {@code /chronicles level …} — admin command for inspecting and mutating
- * player leveling state. Permission level 2 (op-only).
+ * {@code /chronicles …} op-only admin command for inspecting and mutating player leveling state.
  *
- * <p>Subcommand tree:
- * <pre>
- *   /chronicles level  get   &lt;targets&gt; [&lt;stat&gt;]
- *   /chronicles level  set   &lt;targets&gt; &lt;amount&gt; [&lt;stat&gt;]
- *   /chronicles level  add   &lt;targets&gt; &lt;delta&gt;  [&lt;stat&gt;]
- *   /chronicles level  reset &lt;targets&gt; [&lt;stat&gt;]
- *   /chronicles points get   &lt;targets&gt;
- *   /chronicles points set   &lt;targets&gt; &lt;amount&gt;
- *   /chronicles points add   &lt;targets&gt; &lt;delta&gt;
- * </pre>
+ * <p>{@code level} and {@code points} are deliberately separate axes: {@code level add} does NOT
+ * implicitly grant unspent points. The natural level-up flow that does grant points lives in
+ * {@link dev.muon.chronicles_leveling.level.PlayerLevelManager#tryLevelUp}; admin commands set state
+ * directly so they stay idempotent and side-effect-free. To simulate N natural level-ups, chain
+ * {@code level add N; points add N*pointsPerLevel}.
  *
- * <p>{@code level} and {@code points} are deliberately separate axes — {@code level add}
- * does <i>not</i> implicitly grant unspent points. The natural level-up flow that
- * does grant points lives in {@link dev.muon.chronicles_leveling.level.PlayerLevelManager#tryLevelUp};
- * admin commands set state directly so they're idempotent and side-effect-free.
- * For "simulate N natural level-ups", chain {@code level add N; points add N*pointsPerLevel}.
+ * <p>Validation is minimal by design. Level clamps to {@code >= 1} (else the screen renders
+ * {@code Lv. 0}); allocations clamp to {@code >= 0}. Level, allocations, and unspent points are
+ * independent in the data model and not cross-validated, matching the convention that admin commands
+ * bypass game-rule limits. {@code maxLevel} / {@code maxStatLevel} still gate the {@code +} buttons in
+ * the screen, so over-allocation via command can't propagate to a player exploit.
  *
- * <p>With {@code &lt;stat&gt;} omitted on the {@code level} verbs the operation
- * targets the player level itself; with {@code &lt;stat&gt;} it targets that
- * stat's allocation.
- *
- * <p><b>Validation policy:</b> minimal. We clamp level to {@code >= 1}
- * (otherwise the screen renders {@code Lv. 0}); allocations clamp to
- * {@code >= 0} via {@link PlayerLevelData#withAllocation}. We deliberately do
- * <i>not</i> cross-validate level vs. allocations vs. unspent points — the
- * three fields are independent in the data model, and admin commands by
- * convention bypass game-rule limits. {@code maxLevel} / {@code maxStatLevel}
- * still gate the {@code +} buttons in the screen, so over-allocation via
- * command can't propagate to a player exploit.
- *
- * <p><b>Reset semantics:</b>
- * <ul>
- *   <li>{@code reset &lt;targets&gt;} — wipe to {@link PlayerLevelData#DEFAULT}
- *       and grant {@link ConfigStats#startingPoints}.
- *       Mirrors first-time login.</li>
- *   <li>{@code reset &lt;targets&gt; &lt;stat&gt;} — refund the stat's current
- *       allocation back into {@code unspentPoints} and clear that allocation.
- *       This is the respec primitive.</li>
- * </ul>
+ * <p>Reset semantics: {@code reset <targets>} wipes to {@link PlayerLevelData#DEFAULT} and grants
+ * {@link ConfigStats#startingPoints}, mirroring first-time login; {@code reset <targets> <stat>}
+ * refunds that stat's allocation into {@code unspentPoints} and clears it (the respec primitive).
  */
 public final class ChroniclesCommands {
 
     private static final SimpleCommandExceptionType UNKNOWN_STAT = new SimpleCommandExceptionType(
             Component.translatable("chronicles_leveling.command.error.unknown_stat"));
+    private static final SimpleCommandExceptionType UNKNOWN_SKILL = new SimpleCommandExceptionType(
+            Component.translatable("chronicles_leveling.command.error.unknown_skill"));
 
     private static final SuggestionProvider<CommandSourceStack> STAT_SUGGESTIONS =
             (ctx, builder) -> SharedSuggestionProvider.suggest(
                     ModStats.ALL.stream().map(ModStats.Entry::id), builder);
+
+    private static final SuggestionProvider<CommandSourceStack> SKILL_SUGGESTIONS =
+            (ctx, builder) -> SharedSuggestionProvider.suggest(
+                    SkillRegistry.all().stream().map(SkillDefinition::id), builder);
 
     private ChroniclesCommands() {}
 
@@ -93,23 +82,23 @@ public final class ChroniclesCommands {
                                 .then(Commands.literal("set")
                                         .then(Commands.argument("targets", EntityArgument.players())
                                                 .then(Commands.argument("amount", IntegerArgumentType.integer(0))
-                                                        .executes(ctx -> setLevel(ctx))
+                                                        .executes(ChroniclesCommands::setLevel)
                                                         .then(Commands.argument("stat", StringArgumentType.word())
                                                                 .suggests(STAT_SUGGESTIONS)
-                                                                .executes(ctx -> setStat(ctx))))))
+                                                                .executes(ChroniclesCommands::setStat)))))
                                 .then(Commands.literal("add")
                                         .then(Commands.argument("targets", EntityArgument.players())
                                                 .then(Commands.argument("delta", IntegerArgumentType.integer())
-                                                        .executes(ctx -> addLevel(ctx))
+                                                        .executes(ChroniclesCommands::addLevel)
                                                         .then(Commands.argument("stat", StringArgumentType.word())
                                                                 .suggests(STAT_SUGGESTIONS)
-                                                                .executes(ctx -> addStat(ctx))))))
+                                                                .executes(ChroniclesCommands::addStat)))))
                                 .then(Commands.literal("reset")
                                         .then(Commands.argument("targets", EntityArgument.players())
-                                                .executes(ctx -> resetAll(ctx))
+                                                .executes(ChroniclesCommands::resetAll)
                                                 .then(Commands.argument("stat", StringArgumentType.word())
                                                         .suggests(STAT_SUGGESTIONS)
-                                                        .executes(ctx -> resetStat(ctx))))))
+                                                        .executes(ChroniclesCommands::resetStat)))))
                         .then(Commands.literal("points")
                                 .then(Commands.literal("get")
                                         .then(Commands.argument("targets", EntityArgument.players())
@@ -122,6 +111,44 @@ public final class ChroniclesCommands {
                                         .then(Commands.argument("targets", EntityArgument.players())
                                                 .then(Commands.argument("delta", IntegerArgumentType.integer())
                                                         .executes(ChroniclesCommands::addPoints)))))
+                        .then(Commands.literal("skill")
+                                .then(Commands.literal("get")
+                                        .then(Commands.argument("targets", EntityArgument.players())
+                                                .executes(ctx -> getSkill(ctx, null))
+                                                .then(Commands.argument("skill", StringArgumentType.word())
+                                                        .suggests(SKILL_SUGGESTIONS)
+                                                        .executes(ctx -> getSkill(ctx, skillArg(ctx))))))
+                                .then(Commands.literal("set")
+                                        .then(Commands.argument("targets", EntityArgument.players())
+                                                .then(Commands.argument("skill", StringArgumentType.word())
+                                                        .suggests(SKILL_SUGGESTIONS)
+                                                        .then(Commands.argument("level", IntegerArgumentType.integer(0))
+                                                                .executes(ChroniclesCommands::setSkillLevel)))))
+                                .then(Commands.literal("add")
+                                        .then(Commands.argument("targets", EntityArgument.players())
+                                                .then(Commands.argument("skill", StringArgumentType.word())
+                                                        .suggests(SKILL_SUGGESTIONS)
+                                                        .then(Commands.argument("delta", IntegerArgumentType.integer())
+                                                                .executes(ChroniclesCommands::addSkillLevel)))))
+                                .then(Commands.literal("xp")
+                                        .then(Commands.argument("targets", EntityArgument.players())
+                                                .then(Commands.argument("skill", StringArgumentType.word())
+                                                        .suggests(SKILL_SUGGESTIONS)
+                                                        .then(Commands.argument("amount", IntegerArgumentType.integer(1))
+                                                                .executes(ChroniclesCommands::grantSkillXp)))))
+                                .then(Commands.literal("reset")
+                                        .then(Commands.argument("targets", EntityArgument.players())
+                                                .executes(ChroniclesCommands::resetAllSkills)
+                                                .then(Commands.argument("skill", StringArgumentType.word())
+                                                        .suggests(SKILL_SUGGESTIONS)
+                                                        .executes(ChroniclesCommands::resetSkill)))))
+                        .then(Commands.literal("cooldowns")
+                                .then(Commands.literal("reset")
+                                        .executes(ctx -> resetCooldowns(ctx,
+                                                List.of(ctx.getSource().getPlayerOrException())))
+                                        .then(Commands.argument("targets", EntityArgument.players())
+                                                .executes(ctx -> resetCooldowns(ctx,
+                                                        EntityArgument.getPlayers(ctx, "targets"))))))
         );
     }
 
@@ -279,6 +306,133 @@ public final class ChroniclesCommands {
             PlayerLevelManager.set(target, data.withUnspentPoints(Math.max(0, data.unspentPoints() + delta)));
         }
         feedback(ctx, "chronicles_leveling.command.points.add", targets.size(), delta);
+        return targets.size();
+    }
+
+    // --- skill -------------------------------------------------------------
+    // Symmetric with the level/points axes, for balance debugging. `set`/`add` move the skill LEVEL
+    // (resetting XP into the level), `xp` banks raw XP through the real curve/level-up path, and `reset`
+    // is the respec primitive (clear perks + refund, keep level/xp). Skill levels are clamped to
+    // [1, maxSkillLevel]; reset recomputes modifiers and drops now-relocked ability bindings.
+
+    private static String skillArg(CommandContext<CommandSourceStack> ctx) {
+        return StringArgumentType.getString(ctx, "skill");
+    }
+
+    private static String requireKnownSkill(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        String skillId = skillArg(ctx);
+        if (SkillRegistry.get(skillId) == null) throw UNKNOWN_SKILL.create();
+        return skillId;
+    }
+
+    private static int clampSkillLevel(int level) {
+        int cap = Configs.SKILLS.maxSkillLevel.get();
+        int clamped = Math.max(1, level);
+        return cap > 0 ? Math.min(clamped, cap) : clamped;
+    }
+
+    private static int getSkill(CommandContext<CommandSourceStack> ctx, String skillId) throws CommandSyntaxException {
+        Collection<ServerPlayer> targets = EntityArgument.getPlayers(ctx, "targets");
+        if (skillId != null && SkillRegistry.get(skillId) == null) throw UNKNOWN_SKILL.create();
+
+        for (ServerPlayer target : targets) {
+            PlayerSkillData data = PlayerSkillManager.get(target);
+            if (skillId == null) {
+                for (SkillDefinition def : SkillRegistry.all()) {
+                    printSkillLine(ctx, target, def, data.get(def.id()));
+                }
+            } else {
+                printSkillLine(ctx, target, SkillRegistry.get(skillId), data.get(skillId));
+            }
+        }
+        return targets.size();
+    }
+
+    private static void printSkillLine(CommandContext<CommandSourceStack> ctx, ServerPlayer target,
+                                       SkillDefinition def, PlayerSkillData.SkillEntry entry) {
+        ctx.getSource().sendSuccess(() -> Component.translatable("chronicles_leveling.command.skill.get",
+                        target.getName(), def.display(), entry.level(), entry.xp(), entry.spentPoints())
+                .copy().withStyle(ChatFormatting.GRAY), false);
+    }
+
+    private static int setSkillLevel(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        Collection<ServerPlayer> targets = EntityArgument.getPlayers(ctx, "targets");
+        String skillId = requireKnownSkill(ctx);
+        int level = clampSkillLevel(IntegerArgumentType.getInteger(ctx, "level"));
+        for (ServerPlayer target : targets) {
+            PlayerSkillData.SkillEntry entry = PlayerSkillManager.getSkill(target, skillId);
+            PlayerSkillManager.setSkill(target, skillId, entry.withLevel(level).withXp(0));
+            SkillModifierApplier.recompute(target);
+        }
+        feedback(ctx, "chronicles_leveling.command.skill.set", targets.size(), skillDisplay(skillId), level);
+        return targets.size();
+    }
+
+    private static int addSkillLevel(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        Collection<ServerPlayer> targets = EntityArgument.getPlayers(ctx, "targets");
+        String skillId = requireKnownSkill(ctx);
+        int delta = IntegerArgumentType.getInteger(ctx, "delta");
+        for (ServerPlayer target : targets) {
+            PlayerSkillData.SkillEntry entry = PlayerSkillManager.getSkill(target, skillId);
+            PlayerSkillManager.setSkill(target, skillId, entry.withLevel(clampSkillLevel(entry.level() + delta)).withXp(0));
+            SkillModifierApplier.recompute(target);
+        }
+        feedback(ctx, "chronicles_leveling.command.skill.add", targets.size(), skillDisplay(skillId), delta);
+        return targets.size();
+    }
+
+    private static int grantSkillXp(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        Collection<ServerPlayer> targets = EntityArgument.getPlayers(ctx, "targets");
+        String skillId = requireKnownSkill(ctx);
+        int amount = IntegerArgumentType.getInteger(ctx, "amount");
+        for (ServerPlayer target : targets) {
+            PlayerSkillManager.grantXp(target, skillId, amount);   // banks XP + rolls level-ups + recomputes
+        }
+        feedback(ctx, "chronicles_leveling.command.skill.xp", targets.size(), skillDisplay(skillId), amount);
+        return targets.size();
+    }
+
+    private static int resetSkill(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        Collection<ServerPlayer> targets = EntityArgument.getPlayers(ctx, "targets");
+        String skillId = requireKnownSkill(ctx);
+        for (ServerPlayer target : targets) {
+            PlayerSkillData.SkillEntry entry = PlayerSkillManager.getSkill(target, skillId);
+            PlayerSkillManager.setSkill(target, skillId,
+                    new PlayerSkillData.SkillEntry(entry.level(), entry.xp(), 0, Map.of()));
+            SkillModifierApplier.recompute(target);
+            PlayerSkillManager.reconcileAbilityBindings(target);   // drop slots/cooldowns for now-relocked abilities
+        }
+        feedback(ctx, "chronicles_leveling.command.skill.reset", targets.size(), skillDisplay(skillId));
+        return targets.size();
+    }
+
+    private static int resetAllSkills(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        Collection<ServerPlayer> targets = EntityArgument.getPlayers(ctx, "targets");
+        for (ServerPlayer target : targets) {
+            PlayerSkillData data = PlayerSkillManager.get(target);
+            Map<String, PlayerSkillData.SkillEntry> cleared = new HashMap<>();
+            data.skills().forEach((id, entry) ->
+                    cleared.put(id, new PlayerSkillData.SkillEntry(entry.level(), entry.xp(), 0, Map.of())));
+            PlayerSkillManager.set(target, new PlayerSkillData(cleared, data.abilityCooldownEnds(), data.abilitySlots()));
+            SkillModifierApplier.recompute(target);
+            PlayerSkillManager.reconcileAbilityBindings(target);
+        }
+        feedback(ctx, "chronicles_leveling.command.skill.reset_all", targets.size());
+        return targets.size();
+    }
+
+    private static Component skillDisplay(String skillId) {
+        SkillDefinition def = SkillRegistry.get(skillId);
+        return def == null ? Component.literal(skillId) : def.display();
+    }
+
+    // --- cooldowns ---------------------------------------------------------
+
+    private static int resetCooldowns(CommandContext<CommandSourceStack> ctx, Collection<ServerPlayer> targets) {
+        for (ServerPlayer target : targets) {
+            PlayerSkillManager.clearAbilityCooldowns(target);
+        }
+        feedback(ctx, "chronicles_leveling.command.cooldowns.reset", targets.size());
         return targets.size();
     }
 

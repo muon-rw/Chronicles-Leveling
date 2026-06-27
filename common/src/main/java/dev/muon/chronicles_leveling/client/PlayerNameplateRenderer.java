@@ -15,7 +15,7 @@ import net.minecraft.world.entity.player.Player;
  * unaffected), so the two never double up regardless of DD's
  * {@code injectLevelIntoPlayers} setting.
  *
- * <p>Wired from a loader-specific event/mixin — see
+ * <p>Wired from a loader-specific event/mixin: see
  * {@code ClientEventsNeoforge#onRenderNameTag} on NeoForge and
  * {@code mixin.EntityRendererMixin} on Fabric.
  */
@@ -27,10 +27,6 @@ public final class PlayerNameplateRenderer {
         return Configs.STATS.injectLevelIntoOwnNameplate.get();
     }
 
-    /**
-     * Returns the original component with a level suffix appended, or the
-     * original unchanged if decoration is disabled. Always safe to call.
-     */
     public static Component decorate(Component original, Player player) {
         if (!shouldDecorate()) return original;
         int level = PlayerLevelManager.getLevel(player);

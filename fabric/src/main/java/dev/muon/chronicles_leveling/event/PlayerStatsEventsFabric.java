@@ -17,13 +17,13 @@ import net.minecraft.server.level.ServerPlayer;
  *   <li>On login, grant the configured starting points if this is a new
  *       profile, then recompute stat modifiers (vanilla persists allocations
  *       in the {@code AttributeInstance} base value, but the secondary
- *       modifiers we drive from them are not persisted — we re-derive on
+ *       modifiers we drive from them are not persisted, so we re-derive on
  *       login + respawn).</li>
  *   <li>On respawn, re-derive secondary modifiers because the new player
  *       starts with a fresh attribute map.</li>
  * </ol>
  *
- * <p>Player-attribute attachment itself is handled by {@code PlayerAttributesMixin}.
+ * <p>Player-attribute attachment itself is handled by {@code PlayerMixinFabric}.
  * Skill-XP routing lives in {@link SkillXpEventsFabric}.
  */
 public final class PlayerStatsEventsFabric {

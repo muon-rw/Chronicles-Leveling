@@ -24,17 +24,15 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 /**
- * Right-click to wipe every stat allocation and refund the lot. Two-step
- * confirmation: the first use arms a 5-second window and shows the refund
- * preview in the action bar; a second use inside that window commits the
- * reset and consumes the orb.
+ * Right-click to wipe every stat allocation and refund the lot. Two-step confirmation: the first use
+ * arms a 5-second window and shows the refund preview in the action bar; a second use inside that
+ * window commits the reset and consumes the orb.
  *
- * <p>Confirmation state lives in a transient server-side {@link #ARMED_UNTIL}
- * map keyed by player UUID — no item-stack data component, no persistence.
- * Logging out / dying / waiting it out clears it. Each player can only have
- * one armed orb at a time (any second use commits, regardless of which orb
- * stack it came from), which is fine — the gesture is "I want to do this
- * irreversible thing twice on purpose," not "this specific stack is primed."
+ * <p>Confirmation state lives in a transient server-side {@link #ARMED_UNTIL} map keyed by player
+ * UUID: no item-stack data component, no persistence. Logging out, dying, or waiting it out clears it.
+ * Each player can only have one armed orb at a time (any second use commits, regardless of which orb
+ * stack it came from). That is fine; the gesture is "I want to do this irreversible thing twice on
+ * purpose," not "this specific stack is primed."
  */
 public class GreaterOrbOfRegretItem extends Item {
 
@@ -73,7 +71,7 @@ public class GreaterOrbOfRegretItem extends Item {
             return InteractionResult.CONSUME;
         }
 
-        // Either not armed or the previous window expired — arm now.
+        // Either not armed or the previous window expired; arm now.
         int totalRefund = totalAllocation(serverPlayer);
         if (totalRefund <= 0) {
             serverPlayer.sendOverlayMessage(

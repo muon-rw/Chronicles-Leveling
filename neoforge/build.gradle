@@ -16,15 +16,38 @@ configurations {
 dependencies {
     implementation("me.fzzyhmstrs:fzzy_config:${fzzy_config}+neoforge")
 
+
     compileOnly(annotationProcessor("com.github.bawnorton.mixinsquared:mixinsquared-common:${mixin_squared_version}"))
     jarJar(implementation("com.github.bawnorton.mixinsquared:mixinsquared-neoforge:${mixin_squared_version}")) {
         version { strictly '[0.3.4,)'; prefer '0.3.7-beta.1' }
     }
 
-    // Dynamic Difficulty
+    // Our suite
     implementation "dev.muon.dynamic_difficulty:dynamic_difficulty-neoforge:${dynamic_difficulty_version}+${minecraft_version}"
     implementation "dev.muon.combat_attributes:combat_attributes-neoforge:${combat_attributes_version}+${minecraft_version}"
     runtimeOnly "dev.muon.dynamic_resource_bars:dynamic_resource_bars-neoforge:${dynamic_resource_bars_version}+${minecraft_version}"
+    runtimeOnly "dev.muon.chronicles_potions_orbs:chronicles_potions_orbs-neoforge:${chronicles_potions_orbs_version}+${minecraft_version}"
+
+    // PAL - skills, later
+    implementation "com.zigythebird.playeranim:PlayerAnimationLibNeo:$pal_version"
+
+    // Apotheosis - Optional
+    compileOnly "dev.shadowsoffire:ApothicAttributes:${minecraft_version}-${apothic_attributes_version}"
+    localRuntime "dev.shadowsoffire:ApothicAttributes:${minecraft_version}-${apothic_attributes_version}"
+    compileOnly "dev.shadowsoffire:ApothicEnchanting:${minecraft_version}-${apothic_enchanting_version}"
+    localRuntime "dev.shadowsoffire:ApothicEnchanting:${minecraft_version}-${apothic_enchanting_version}"
+    compileOnly "dev.shadowsoffire:Placebo:${minecraft_version}-${placebo_version}"
+    localRuntime "dev.shadowsoffire:Placebo:${minecraft_version}-${placebo_version}"
+
+    // JEI - Optional + DevEnv
+    compileOnly "mezz.jei:jei-26.1.2-neoforge:${jei_version}"
+    localRuntime "mezz.jei:jei-26.1.2-neoforge:${jei_version}"
+
+    // Jade
+    localRuntime "curse.maven:jade-324717:8068368"
+
+    // Appleskin
+    localRuntime "curse.maven:appleskin-248787:7854456"
 
 }
 

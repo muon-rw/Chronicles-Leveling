@@ -1,8 +1,10 @@
 package dev.muon.chronicles_leveling.item;
 
 import dev.muon.chronicles_leveling.ChroniclesLeveling;
+import net.fabricmc.fabric.api.item.v1.DefaultItemComponentEvents;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -40,5 +42,11 @@ public final class ModItemsFabric {
         ModItems.LESSER_ORB_OF_REGRET = LESSER_ORB_OF_REGRET;
         ModItems.GREATER_ORB_OF_REGRET = GREATER_ORB_OF_REGRET;
         ModItems.TOME = TOME;
+
+        if (StackablePotions.enabled()) {
+            DefaultItemComponentEvents.MODIFY.register(context ->
+                    context.modify(StackablePotions::isPotion, (builder, _, _) ->
+                            builder.set(DataComponents.MAX_STACK_SIZE, StackablePotions.maxStack())));
+        }
     }
 }

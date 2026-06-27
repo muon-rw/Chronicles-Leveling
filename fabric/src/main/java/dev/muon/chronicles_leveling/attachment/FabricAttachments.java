@@ -4,26 +4,24 @@ import com.mojang.serialization.Codec;
 import dev.muon.chronicles_leveling.ChroniclesLeveling;
 import dev.muon.chronicles_leveling.level.PlayerLevelData;
 import dev.muon.chronicles_leveling.skill.PlayerSkillData;
+import dev.muon.chronicles_leveling.skill.enchant.TableUsageData;
+import dev.muon.chronicles_leveling.skill.gather.CampfireOwnerData;
+import dev.muon.chronicles_leveling.skill.gather.FurnaceOwnerData;
 import dev.muon.chronicles_leveling.skill.xp.BrewingStationData;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 
 /**
- * Single registration hub for every Fabric attachment the mod uses. Adding a
- * new attachment is one entry here plus a thin {@code Store} impl in the
- * relevant domain package; the entrypoint wiring stays one {@link #init()}
- * call.
- *
- * <p>Sync setup follows the platform layer's contract:
+ * Sync setup rationale:
  * <ul>
- *   <li>{@link #PLAYER_LEVEL} — synced to every tracking client
+ *   <li>{@link #PLAYER_LEVEL}: synced to every tracking client
  *       ({@link AttachmentSyncPredicate#all()}) so other players can render
  *       level-aware HUD elements (nameplates, tab list, etc.).</li>
- *   <li>{@link #PLAYER_SKILLS} — synced to the owning client only
+ *   <li>{@link #PLAYER_SKILLS}: synced to the owning client only
  *       ({@link AttachmentSyncPredicate#targetOnly()}); per-skill stats are
  *       private to the player.</li>
- *   <li>{@link #BREWING_STATION} / {@link #SPAWNER_ORIGIN} — persistent only;
+ *   <li>{@link #BREWING_STATION} / {@link #SPAWNER_ORIGIN}: persistent only;
  *       server-side XP gates that don't need to round-trip.</li>
  * </ul>
  */
@@ -54,11 +52,33 @@ public final class FabricAttachments {
                     .persistent(BrewingStationData.CODEC)
     );
 
+    public static final AttachmentType<CampfireOwnerData> CAMPFIRE_OWNER = AttachmentRegistry.create(
+            ChroniclesLeveling.id("campfire_owner"),
+            builder -> builder
+                    .initializer(() -> CampfireOwnerData.DEFAULT)
+                    .persistent(CampfireOwnerData.CODEC)
+    );
+
+    public static final AttachmentType<FurnaceOwnerData> FURNACE_OWNER = AttachmentRegistry.create(
+            ChroniclesLeveling.id("furnace_owner"),
+            builder -> builder
+                    .initializer(() -> FurnaceOwnerData.DEFAULT)
+                    .persistent(FurnaceOwnerData.CODEC)
+    );
+
     public static final AttachmentType<Boolean> SPAWNER_ORIGIN = AttachmentRegistry.create(
             ChroniclesLeveling.id("from_spawner"),
             builder -> builder
                     .initializer(() -> Boolean.FALSE)
                     .persistent(Codec.BOOL)
+                    .copyOnDeath()
+    );
+
+    public static final AttachmentType<TableUsageData> TABLE_USAGE = AttachmentRegistry.create(
+            ChroniclesLeveling.id("table_usage"),
+            builder -> builder
+                    .initializer(() -> TableUsageData.DEFAULT)
+                    .persistent(TableUsageData.CODEC)
                     .copyOnDeath()
     );
 

@@ -23,7 +23,7 @@ public class MixinConfigPluginNeoforge implements IMixinConfigPlugin {
 
     @Override
     public void onLoad(String mixinPackage) {
-        // Earliest hook we own — runs before any @Mod constructor, so sibling
+        // Earliest hook we own; runs before any @Mod constructor, so sibling
         // muon-mods can't read stale toml before we delete it.
         if (!FMLEnvironment.isProduction()) {
             DevConfigWiper.wipe();

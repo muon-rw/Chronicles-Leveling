@@ -15,20 +15,17 @@ import org.jetbrains.annotations.NotNull;
 import java.util.function.Consumer;
 
 /**
- * Right-click in air opens the level-up screen in <i>reset mode</i>: the player
- * picks one stat, hits ENTER, and gets every point spent on that stat refunded
- * into their unspent pool. The orb is consumed only on confirm — ESC / closing
- * the screen / picking a different stat all leave the orb intact.
+ * Right-click in air opens the level-up screen in <i>reset mode</i>: the player picks one stat, hits
+ * ENTER, and gets every point spent on that stat refunded into their unspent pool. The orb is consumed
+ * only on confirm; ESC, closing the screen, or picking a different stat all leave the orb intact.
  *
- * <p>Stacks to 1 by design — these are meant to be a deliberate, costly
- * inventory commitment, not a reservoir of free respecs.
+ * <p>Stacks to 1 by design: a deliberate, costly inventory commitment, not a reservoir of free respecs.
  *
  * <p>The actual mutation is server-side: see
- * {@link dev.muon.chronicles_leveling.network.message.ResetStatPacket}. This
- * class only opens the screen on the client and consumes no input on the
- * server side. The server validates that the player still holds an orb in the
- * declared hand at packet time, so swapping the orb away after right-clicking
- * but before confirming is safely rejected.
+ * {@link dev.muon.chronicles_leveling.network.message.ResetStatPacket}. This class only opens the
+ * screen on the client and consumes no input server-side. The server validates that the player still
+ * holds an orb in the declared hand at packet time, so swapping the orb away after right-clicking but
+ * before confirming is safely rejected.
  */
 public class OrbOfRegretItem extends Item {
 
@@ -42,16 +39,15 @@ public class OrbOfRegretItem extends Item {
         if (level.isClientSide()) {
             openResetScreen(hand);
         }
-        // CONSUME (not SUCCESS) — no swing animation; we're entering a modal flow,
+        // CONSUME (not SUCCESS): no swing animation; we're entering a modal flow,
         // not performing a flashy ack.
         return InteractionResult.CONSUME;
     }
 
     /**
-     * Client-only screen open. Kept as a private static method so loading
-     * {@link OrbOfRegretItem} on a dedicated server doesn't resolve the
-     * client-only {@code LevelUpScreen} symbol — the JVM only verifies this
-     * method when it's first invoked, which only happens on the client.
+     * Client-only screen open. Kept as a private static method so loading {@link OrbOfRegretItem} on a
+     * dedicated server doesn't resolve the client-only {@code LevelUpScreen} symbol; the JVM only
+     * verifies this method when it's first invoked, which only happens on the client.
      */
     private static void openResetScreen(InteractionHand hand) {
         Minecraft.getInstance().setScreen(

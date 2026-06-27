@@ -13,7 +13,7 @@ import net.minecraft.server.level.ServerPlayer;
  * XP for the next rung and, if so, debits XP, raises the level, and credits
  * the configured points-per-level into the unspent pool.
  *
- * <p>No payload — the request is "level me up if you can".
+ * <p>No payload; the request is "level me up if you can".
  */
 public record LevelUpPacket() implements CustomPacketPayload {
 

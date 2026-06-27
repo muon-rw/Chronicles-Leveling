@@ -14,7 +14,7 @@ import java.util.stream.Stream;
  * Dev-only wipe of the per-mod FzzyConfig directories listed in {@link #TARGETS}.
  * Each loader's {@code MixinConfigPlugin.onLoad} guards the call with its own
  * {@code isDevelopmentEnvironment} check and then invokes {@link #wipe()} so
- * the deletion happens before any mod's {@code registerAndLoadConfig} runs —
+ * the deletion happens before any mod's {@code registerAndLoadConfig} runs;
  * otherwise a sibling muon-mod whose entrypoint sorts ahead of ours would
  * already have read the old toml.
  *

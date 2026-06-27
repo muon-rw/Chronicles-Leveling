@@ -8,16 +8,11 @@ import dev.muon.dynamic_difficulty.api.PlayerLevelProvider;
 import net.minecraft.server.level.ServerPlayer;
 
 /**
- * Bridges Chronicles' player level into Dynamic-Difficulty's
- * {@link PlayerLevelProvider} system. We compile against DD's API directly;
- * runtime presence is gated by {@link Services#PLATFORM}'s
- * {@code isModLoaded} check so the integration stays optional even on builds
- * where DD is {@code compileOnly} rather than a hard runtime dep.
- *
- * <p>JVM class loading is lazy: the inner {@link Provider} class isn't loaded
- * until {@link #init()} actually instantiates it, which only happens behind
- * the {@code isModLoaded} gate. So removing DD from the runtime classpath
- * does not produce a {@code NoClassDefFoundError} on Chronicles startup.
+ * Bridges Chronicles' player level into Dynamic-Difficulty's {@link PlayerLevelProvider}. We compile
+ * against DD's API directly; runtime presence is gated by {@code isModLoaded} so the integration stays
+ * optional even on builds where DD is {@code compileOnly}. Because JVM class loading is lazy, the inner
+ * {@link Provider} isn't loaded until {@link #init()} instantiates it behind that gate, so removing DD
+ * from the runtime classpath does not produce a {@code NoClassDefFoundError} on startup.
  */
 public final class DynamicDifficultyCompat {
 
@@ -28,7 +23,7 @@ public final class DynamicDifficultyCompat {
 
     private DynamicDifficultyCompat() {}
 
-    /** One-time setup. Safe to call when DD is absent — it just returns. */
+    /** One-time setup. Safe to call when DD is absent; it just returns. */
     public static void init() {
         if (initialized) return;
         initialized = true;
@@ -43,15 +38,13 @@ public final class DynamicDifficultyCompat {
         ChroniclesLeveling.LOG.info("Registered Chronicles player level provider with Dynamic-Difficulty");
     }
 
-    /** Whether DD is present and our provider was registered. */
     public static boolean isActive() {
         return active;
     }
 
     /**
-     * Asks DD to recompute and resync this player's display level. No-op when
-     * DD isn't loaded; the live attachment sync still propagates the data
-     * Chronicles itself reads.
+     * Asks DD to recompute and resync this player's display level. No-op when DD isn't loaded; the
+     * live attachment sync still propagates the data Chronicles itself reads.
      */
     public static void requestPlayerLevelUpdate(ServerPlayer player) {
         if (!active) return;
@@ -59,9 +52,8 @@ public final class DynamicDifficultyCompat {
     }
 
     /**
-     * Static-nested rather than anonymous so its loading is visibly tied to
-     * the {@code new Provider()} call site in {@link #init()}, not to
-     * enclosing-class load.
+     * Static-nested rather than anonymous so its loading is visibly tied to the {@code new Provider()}
+     * call site in {@link #init()}, not to enclosing-class load.
      */
     private static final class Provider implements PlayerLevelProvider {
         @Override

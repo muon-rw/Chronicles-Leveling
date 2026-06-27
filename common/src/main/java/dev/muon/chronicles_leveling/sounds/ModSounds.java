@@ -4,16 +4,12 @@ import net.minecraft.core.Holder;
 import net.minecraft.sounds.SoundEvent;
 
 /**
- * Central reference for the mod's {@link SoundEvent}s.
- *
- * <p>Holders are populated by loader-specific code (NeoForge: {@code DeferredRegister},
- * Fabric: {@code Registry.registerForHolder}) — registration matters because some
- * sounds (orb confirms, tome use) play <i>server-side</i> via {@code Level#playSound},
- * which looks the event up in {@link net.minecraft.core.registries.BuiltInRegistries#SOUND_EVENT}
- * and silently no-ops if it's not there.
- *
- * <p>Sound files live at {@code assets/chronicles_leveling/sounds/&lt;name&gt;.ogg}
- * and are wired up in {@code assets/chronicles_leveling/sounds.json}.
+ * {@link SoundEvent} holders, populated by loader-specific code (NeoForge: {@code DeferredRegister},
+ * Fabric: {@code Registry.registerForHolder}). Registration matters because some sounds (orb confirms,
+ * tome use) play <i>server-side</i> via {@code Level#playSound}, which looks the event up in
+ * {@link net.minecraft.core.registries.BuiltInRegistries#SOUND_EVENT} and silently no-ops if it's not
+ * there. Sound files live at {@code assets/chronicles_leveling/sounds/&lt;name&gt;.ogg} and are wired up
+ * in {@code assets/chronicles_leveling/sounds.json}.
  */
 public final class ModSounds {
 

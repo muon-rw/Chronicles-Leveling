@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Targets the anonymous result Slot compiled as {@code GrindstoneMenu$4} —
+/** Targets the anonymous result Slot compiled as {@code GrindstoneMenu$4};
  *  same anchor NeoForge's {@code CommonHooks.onGrindstoneTake} patch uses.
  *  If MC reorders the constructor's anonymous bodies, only the {@code targets}
  *  string here needs to follow. */

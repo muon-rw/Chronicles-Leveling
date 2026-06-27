@@ -22,7 +22,7 @@ public final class NetworkHelperNeoforge implements NetworkHelper {
     @Override
     public void sendToServer(Object payload) {
         if (!(payload instanceof CustomPacketPayload p)) return;
-        // C2S lives in the client-only distributor in modern NeoForge — calling it
+        // C2S lives in the client-only distributor in modern NeoForge; calling it
         // from the server would NoClassDefFoundError, so callers must already be
         // on the client (the only place that calls this is the level-up screen).
         net.neoforged.neoforge.client.network.ClientPacketDistributor.sendToServer(p);

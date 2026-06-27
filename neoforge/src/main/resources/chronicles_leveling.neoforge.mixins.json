@@ -4,8 +4,12 @@
   "package": "dev.muon.chronicles_leveling.mixin",
   "plugin": "dev.muon.chronicles_leveling.MixinConfigPluginNeoforge",
   "compatibilityLevel": "JAVA_21",
-  "mixins": [],
+  "mixins": [
+    "AnvilMenuMixin",
+    "compat.apothic_enchanting.ApothEnchantmentMenuMixin"
+  ],
   "client": [
+    "compat.apothic_enchanting.client.ApothEnchantmentScreenMixin"
   ],
   "server": [],
   "injectors": {

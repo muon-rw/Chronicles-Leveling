@@ -32,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 /**
- * "Attributes" tab — categorized read-only display of attributes, grouped into
+ * "Attributes" tab: categorized read-only display of attributes, grouped into
  * Melee / Ranged / Defense / Magic cards. Each card's attribute list is
  * configurable via {@link dev.muon.chronicles_leveling.config.ConfigClient.AttributePages}.
  *
@@ -87,17 +87,21 @@ public class AttributesScreen extends Screen {
      * description id, so user-added attributes still render with a sensible name.
      */
     private static final Map<Identifier, String> LABEL_OVERRIDES = Map.ofEntries(
+            label("minecraft", "attack_damage", "attack_damage"),
             label("minecraft", "armor_toughness", "armor_toughness"),
             label("minecraft", "knockback_resistance", "knockback_resistance"),
             label("minecraft", "block_interaction_range", "block_reach"),
             label("minecraft", "entity_interaction_range", "attack_range"),
             label("combat_attributes", "arrow_velocity", "velocity"),
+            label("combat_attributes", "ranged_damage", "ranged_damage"),
             label("combat_attributes", "melee_crit_chance", "crit_chance"),
             label("combat_attributes", "melee_crit_damage", "crit_damage"),
             label("combat_attributes", "ranged_crit_chance", "crit_chance"),
             label("combat_attributes", "ranged_crit_damage", "crit_damage"),
             label("combat_attributes", "magic_crit_chance", "crit_chance"),
             label("combat_attributes", "magic_crit_damage", "crit_damage"),
+            label("combat_attributes", "magic_defense", "magic_defense"),
+            label("combat_attributes", "health_regen", "health_regen"),
             label("combat_attributes", "max_mana", "max_mana"),
             label("combat_attributes", "mana_regen", "mana_regen"),
             label("combat_attributes", "max_stamina", "max_stamina"),
@@ -105,7 +109,7 @@ public class AttributesScreen extends Screen {
             label("combat_attributes", "experience_gain", "experience_gain")
     );
 
-    /** One log entry per missing-id per JVM session — render fires every frame. */
+    /** One log entry per missing-id per JVM session; render fires every frame. */
     private static final Set<Identifier> LOGGED_MISSING = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     private static final CategoryDef MELEE = new CategoryDef(
@@ -259,7 +263,7 @@ public class AttributesScreen extends Screen {
         // Prefer the player's own live AttributeInstance if it's been touched
         // (e.g. equipment modifiers applied). AttributeMap keys by holder identity,
         // and the holder the modifier was applied with may differ from the one
-        // BuiltInRegistries returns to us — id-matching is the reliable bridge.
+        // BuiltInRegistries returns to us; id-matching is the reliable bridge.
         AttributeInstance instance = findInstanceById(player, id);
         if (instance == null) {
             ResourceKey<Attribute> key = ResourceKey.create(Registries.ATTRIBUTE, id);
@@ -323,7 +327,7 @@ public class AttributesScreen extends Screen {
 
         Component title = Component.translatable(cat.titleKey());
         int titleX = iconX + ChroniclesSprites.ICON_SIZE + HEADER_TEXT_GAP;
-        // 9px icon + 8px text — bias 1px down so text baselines line up with the icon's center.
+        // 9px icon + 8px text: bias 1px down so text baselines line up with the icon's center.
         int titleY = iconY + (ChroniclesSprites.ICON_SIZE - TEXT_HEIGHT) / 2 + 1;
         graphics.text(font, title, titleX, titleY, COLOR_NAME, false);
     }

@@ -2,10 +2,15 @@ package dev.muon.chronicles_leveling;
 
 import dev.muon.chronicles_leveling.attachment.FabricAttachments;
 import dev.muon.chronicles_leveling.command.ChroniclesCommands;
+import dev.muon.chronicles_leveling.component.ModComponentsFabric;
+import dev.muon.chronicles_leveling.event.PlayerSkillEventsFabric;
 import dev.muon.chronicles_leveling.event.PlayerStatsEventsFabric;
 import dev.muon.chronicles_leveling.event.SkillXpEventsFabric;
+import dev.muon.chronicles_leveling.effect.ModEffectsFabric;
 import dev.muon.chronicles_leveling.item.ModItemsFabric;
 import dev.muon.chronicles_leveling.network.NetworkRegistrationFabric;
+import dev.muon.chronicles_leveling.platform.Services;
+import dev.muon.chronicles_leveling.skill.SkillBootstrap;
 import dev.muon.chronicles_leveling.sounds.ModSoundsFabric;
 import dev.muon.chronicles_leveling.stat.ModStatsFabric;
 import net.fabricmc.api.ModInitializer;
@@ -14,7 +19,7 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 /**
  * Fabric mod entrypoint. Order matters here:
  * <ol>
- *   <li>Common {@link ChroniclesLeveling#init()} first — registers configs +
+ *   <li>Common {@link ChroniclesLeveling#init()} first; registers configs +
  *       wires the DD compat shim.</li>
  *   <li>Stat attribute registration before the player-attribute mixin would
  *       run (it does so the first time {@code Player.createAttributes()} is
@@ -34,11 +39,18 @@ public class ChroniclesLevelingFabric implements ModInitializer {
         ModStatsFabric.ensureInitialized();
         FabricAttachments.init();
         ModSoundsFabric.init();
+        ModEffectsFabric.init();
         ModItemsFabric.init();
+        ModComponentsFabric.init();
         NetworkRegistrationFabric.initServer();
+
+        // Stat ids are available; assemble the skill registry (core trees + addon
+        // contributions gathered via the platform helper) and freeze it.
+        SkillBootstrap.registerAndFreeze(Services.PLATFORM.collectSkillContributors());
 
         PlayerStatsEventsFabric.initLifecycle();
         SkillXpEventsFabric.initLifecycle();
+        PlayerSkillEventsFabric.initLifecycle();
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registry, env) ->
                 ChroniclesCommands.register(dispatcher));

@@ -11,7 +11,7 @@ import java.util.Map;
  * {@link ConfigSkills} carries its own EvalEx-style expression; {@code l} is
  * bound to the current skill level when evaluated.
  *
- * <p>Synced — {@code ConfigSkills} is registered as
+ * <p>Synced: {@code ConfigSkills} is registered as
  * {@link me.fzzyhmstrs.fzzy_config.api.RegisterType#BOTH}, so server ops can
  * retune curves without a restart and clients see the right progress bar fill.
  *

@@ -24,12 +24,12 @@ import java.util.Optional;
  *
  * <p>Cascade for both methods:
  * <ol>
- *   <li><b>Platform</b> via {@link Services#PLATFORM} — NeoForge routes through
+ *   <li><b>Platform</b> via {@link Services#PLATFORM}: NeoForge routes through
  *       {@code IAttributeExtension.toComponent} / {@code toBaseComponent}, so
  *       {@code PercentageAttribute} and modded {@code Attribute} subclasses pick
  *       their own format. Fabric routes through Dynamic Tooltips when loaded
  *       (sentiment overrides + percent rules), and returns empty otherwise.</li>
- *   <li><b>Vanilla fallback</b> — the standard {@code attribute.modifier.{plus|take}.{op}}
+ *   <li><b>Vanilla fallback</b>: the standard {@code attribute.modifier.{plus|take}.{op}}
  *       translation keys, with {@code ADD_MULTIPLIED_*} amounts pre-scaled by 100.</li>
  * </ol>
  */
@@ -62,7 +62,7 @@ public final class AttributeLineRenderer {
      * Our value column already renders percent attributes scaled, so we scale
      * both the gold total and green base to keep the tooltip consistent with
      * the row above it. The per-modifier child lines flow through
-     * {@link #modifierComponent} unchanged — those already percent-scale
+     * {@link #modifierComponent} unchanged; those already percent-scale
      * natively.
      *
      * <p>If the attribute uses Combat Attributes' diminishing-stacking path, a
@@ -156,9 +156,9 @@ public final class AttributeLineRenderer {
      * uses to display its current value, so the unit shown in the footer matches the
      * unit in the value column above it. Cap-prefix conventions:
      * <ul>
-     *   <li>SOFT_CAP — additive bonus above base, "{@code +}" prefix.</li>
-     *   <li>PROBABILISTIC — absolute probability, no prefix.</li>
-     *   <li>MULTIPLICATIVE — magnitude of the buff side; for NEGATIVE-sentiment attrs
+     *   <li>SOFT_CAP: additive bonus above base, "{@code +}" prefix.</li>
+     *   <li>PROBABILISTIC: absolute probability, no prefix.</li>
+     *   <li>MULTIPLICATIVE: magnitude of the buff side; for NEGATIVE-sentiment attrs
      *       (e.g. mana_cost) buffs are reductions, so the cap renders with a
      *       "{@code -}" prefix to read as "max savings per source".</li>
      * </ul>
@@ -192,7 +192,7 @@ public final class AttributeLineRenderer {
     /**
      * Probes attribute sentiment via the public {@link Attribute#getStyle} API rather
      * than reflecting on the private {@code sentiment} field. POSITIVE → BLUE on
-     * increase, NEGATIVE → RED on increase, NEUTRAL → GRAY — so {@code RED} on
+     * increase, NEGATIVE → RED on increase, NEUTRAL → GRAY, so {@code RED} on
      * {@code getStyle(true)} uniquely identifies NEGATIVE.
      */
     private static boolean isNegativeSentiment(Attribute attribute) {

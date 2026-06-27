@@ -12,12 +12,10 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
 /**
- * NeoForge-side player lifecycle hooks for stat allocation. Mirrors
- * {@link PlayerStatsEventsNeoforge}; skill-XP routing lives in
- * {@link SkillXpEventsNeoforge}.
+ * Player lifecycle hooks for stat allocation; the skill-keyed twin is
+ * {@link PlayerSkillEventsNeoforge}, skill-XP routing lives in {@link SkillXpEventsNeoforge}.
  *
- * <p>Listens on the GAME bus (vs. MOD bus) since these are per-player events
- * fired during runtime, not during mod init.
+ * <p>Listens on the GAME bus (not the MOD bus) since these are per-player runtime events, not init.
  */
 @EventBusSubscriber(modid = ChroniclesLeveling.MOD_ID)
 public final class PlayerStatsEventsNeoforge {

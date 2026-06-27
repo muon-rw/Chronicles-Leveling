@@ -9,19 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Common entry point for the Chronicles: Leveling mod.
- *
- * <p>Loader entry points (Fabric / NeoForge) call {@link #init()} after their
- * platform helper is bound. Order inside {@code init} matters:
- * <ol>
- *   <li>{@link Configs#register()} first — every other subsystem reads from it.</li>
- *   <li>{@link DynamicDifficultyCompat#init()} second — registers our provider with
- *       DD if DD is present; mod loaders are stable by this point.</li>
- * </ol>
- *
- * <p>Stat attribute registration and network channel registration both live in
- * loader-specific code because their APIs differ; common code only sees the
- * resulting {@link Services#PLATFORM platform helper}.
+ * Common entry point. Order inside {@link #init()} matters: {@link Configs#register()} runs
+ * first because every other subsystem reads from it, then {@link DynamicDifficultyCompat#init()}.
  */
 public class ChroniclesLeveling {
 
@@ -43,14 +32,10 @@ public class ChroniclesLeveling {
     }
 
     /**
-     * Flips a few vanilla attributes that we display to {@code syncable=true} so the
-     * client actually sees their modified values. Vanilla leaves these off the sync
-     * list because gameplay only consults them server-side; the player-facing
-     * Attributes screen needs them on the client.
-     *
-     * <p>This is a global mutation of vanilla state and runs in common init so both
-     * loaders agree. Adding more attributes here is safe — the cost is one extra
-     * field per packet when the value changes.
+     * Flips a few vanilla attributes we display to {@code syncable=true} so the client sees their
+     * modified values. Vanilla leaves these off the sync list because gameplay only consults them
+     * server-side; the player-facing Attributes screen needs them on the client. The cost of adding
+     * more here is one extra field per packet when the value changes.
      */
     private static void forceClientSyncableAttributes() {
         Attributes.KNOCKBACK_RESISTANCE.value().setSyncable(true);

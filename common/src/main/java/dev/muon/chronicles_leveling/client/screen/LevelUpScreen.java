@@ -39,7 +39,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * "Levels" tab — the player's character overview and stat allocation screen.
+ * "Levels" tab: the player's character overview and stat allocation screen.
  *
  * <p>Header: scaled "Levels" title with a divider beneath; the player name on
  * a regular-size line under the divider; "Lv. n" with the level-up {@code +}
@@ -154,7 +154,7 @@ public class LevelUpScreen extends Screen {
 
         if (inResetMode()) {
             // Reset mode is modal: no tab navigation, no plus buttons. Each stat gets a
-            // minus button instead — disabled when there's nothing to refund, and
+            // minus button instead; disabled when there's nothing to refund, and
             // pinned to the hovered visual whenever its row is selected OR its row is
             // under the mouse (so hovering anywhere on the line lights the button up).
             int minusX = leftPos + BUTTON_X_OFFSET;
@@ -224,7 +224,7 @@ public class LevelUpScreen extends Screen {
         if (maxStatLevel <= 0) return true;
         var player = Minecraft.getInstance().player;
         if (player == null) return false;
-        // Mirrors the server check: cap the player's allocation only — external
+        // Mirrors the server check: cap the player's allocation only; external
         // attribute modifiers can push the total higher and shouldn't gate spending.
         return PlayerLevelManager.get(player).allocation(statId) < maxStatLevel;
     }
@@ -411,7 +411,7 @@ public class LevelUpScreen extends Screen {
             drawHorizontalLine(graphics, x0, x1, bottomRowLineY);
         }
 
-        // Vertical edges, top wrap to bottom wrap inclusive — frames the table.
+        // Vertical edges, top wrap to bottom wrap inclusive; frames the table.
         drawVerticalLine(graphics, x0, topRowLineY, bottomRowLineY);
         drawVerticalLine(graphics, x1 - 1, topRowLineY, bottomRowLineY);
     }
@@ -455,7 +455,7 @@ public class LevelUpScreen extends Screen {
             return;
         }
 
-        // Stat name/value text area — excluding the +button column on the left so that
+        // Stat name/value text area, excluding the +button column on the left so that
         // hovering the button shows the button-specific tooltip instead. Mirrors the
         // AttributesScreen split: hovering the value column yields a base + modifier
         // breakdown; hovering the rest yields the per-point "grants" list.
@@ -648,7 +648,7 @@ public class LevelUpScreen extends Screen {
         // Cost expressed in vanilla XP-levels, computed from the actual piecewise curve.
         // Absolute (depends only on `rung`, not the player's current XP bar) so both Spend
         // and Required keep a stable level/xp pair as the player gains or loses vanilla XP.
-        int costInLevels = VanillaXp.getLevelForTotalXp(rung);
+        int costInLevels = VanillaXp.vanillaLevelForTotalXp(rung);
         String costStr = ProgressTooltip.formatAmount(rung);
 
         if (availableXp < rung) {
@@ -727,7 +727,7 @@ public class LevelUpScreen extends Screen {
         Optional<? extends Holder<Attribute>> holder = BuiltInRegistries.ATTRIBUTE.get(
                 ResourceKey.create(Registries.ATTRIBUTE, targetId));
         if (holder.isEmpty()) {
-            // Unregistered (e.g. modded attribute not loaded) — fall back to the raw id so
+            // Unregistered (e.g. modded attribute not loaded); fall back to the raw id so
             // pack authors can still see what the spec points at.
             return Component.literal("? " + targetId);
         }

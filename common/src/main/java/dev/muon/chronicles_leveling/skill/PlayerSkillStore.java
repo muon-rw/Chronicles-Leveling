@@ -7,7 +7,7 @@ import net.minecraft.world.entity.player.Player;
  * in the {@code fabric}/{@code neoforge} modules and back this with the
  * loader's attachment system.
  *
- * <p>Mirrors {@link dev.muon.chronicles_leveling.level.PlayerLevelStore} —
+ * <p>Mirrors {@link dev.muon.chronicles_leveling.level.PlayerLevelStore};
  * persistence + sync are handled by the underlying attachment.
  */
 public interface PlayerSkillStore {

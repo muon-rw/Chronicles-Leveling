@@ -10,10 +10,10 @@ import java.util.function.Supplier;
  *
  * <p>Three configs are registered on mod init:
  * <ul>
- *   <li>{@link #CLIENT} — {@link RegisterType#CLIENT}: local-only preferences.</li>
- *   <li>{@link #STATS}  — {@link RegisterType#BOTH}: stat-allocation curve, modifiers,
+ *   <li>{@link #CLIENT}: {@link RegisterType#CLIENT} local-only preferences.</li>
+ *   <li>{@link #STATS}: {@link RegisterType#BOTH} stat-allocation curve, modifiers,
  *       and display defaults; server-authoritative, synced to clients.</li>
- *   <li>{@link #SKILLS} — {@link RegisterType#BOTH}: per-skill curves and
+ *   <li>{@link #SKILLS}: {@link RegisterType#BOTH} per-skill curves and
  *       XP-gain rules; same sync mode as {@code STATS}.</li>
  * </ul>
  *

@@ -64,6 +64,31 @@ repositories {
         url = 'https://maven.muon.rip/releases/'
         content { includeGroupAndSubgroups 'dev.muon' }
     }
+    // Player Animation Lib
+    maven {
+        name = "RedlanceMinecraft"
+        url = "https://repo.redlance.org/public"
+    }
+
+    // Trinkets Updated
+    maven {
+        name = "Nucleoid"
+        url = 'https://maven.nucleoid.xyz/releases'
+    }
+
+    maven {
+        url "https://maven.shadowsoffire.dev/releases"
+        content {
+            includeGroup "dev.shadowsoffire"
+            includeGroup "snownee.jade"
+        }
+    }
+
+    maven {
+        name = "Curios"
+        url = uri("https://maven.theillusivec4.top/")
+    }
+
     maven {url = 'https://maven.fabricmc.net/'} // Required by Fzzy even in common
 
     // MixinSquared
@@ -81,6 +106,21 @@ repositories {
 // content filter above so this only impacts dev.muon resolution.
 configurations.all {
     resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+    // Player Animation Lib transitively pulls newer gson (2.14.0) and netty (4.2.13.Final), but
+    // Minecraft pins both with {strictly ...} (gson 2.13.2, netty 4.2.7.Final), which can't be
+    // reconciled with a higher require — so resolution fails. Both are API-compatible patch bumps,
+    // so pin everything to Minecraft's versions across every subproject (this convention is applied
+    // to common, fabric, and neoforge via multiloader-loader).
+    resolutionStrategy.eachDependency { details ->
+        if (details.requested.group == 'com.google.code.gson' && details.requested.name == 'gson') {
+            details.useVersion '2.13.2'
+            details.because 'Minecraft pins gson; PlayerAnimationLib would otherwise pull 2.14.0'
+        }
+        if (details.requested.group == 'io.netty') {
+            details.useVersion '4.2.7.Final'
+            details.because 'Minecraft pins netty; PlayerAnimationLib would otherwise pull 4.2.13.Final'
+        }
+    }
 }
 
 sourcesJar {

@@ -19,7 +19,7 @@ public class MixinConfigPluginFabric implements IMixinConfigPlugin {
 
     @Override
     public void onLoad(String mixinPackage) {
-        // Earliest hook we own — runs before any mod's onInitialize, so sibling
+        // Earliest hook we own; runs before any mod's onInitialize, so sibling
         // muon-mods can't read stale toml before we delete it.
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
             DevConfigWiper.wipe();

@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Canonical list of action-trained skills. Fixed at compile time — pack
+ * Canonical list of action-trained skills. Fixed at compile time; pack
  * authors customize each skill via its own file under
  * {@code config/chronicles_leveling/skills/<id>.toml}, but the set of skill
  * ids itself is not configurable.
@@ -26,7 +26,7 @@ public final class Skills {
 
     public static final String MINING     = "mining";
     public static final String SPEECH     = "speech";
-    public static final String FARMING    = "farming";
+    public static final String HERBALISM  = "herbalism";
     public static final String ENCHANTING = "enchanting";
     public static final String SMITHING   = "smithing";
     public static final String FISHING    = "fishing";
@@ -36,12 +36,12 @@ public final class Skills {
     );
 
     public static final List<String> RIGHT_COL = List.of(
-            MINING, SPEECH, FARMING, ENCHANTING, SMITHING, FISHING
+            MINING, SPEECH, HERBALISM, ENCHANTING, SMITHING, FISHING
     );
 
     public static final List<String> ALL = List.of(
             WEAPONRY, ARCHERY, MAGIC, DEFENSE, ACROBATICS, ALCHEMY,
-            MINING, SPEECH, FARMING, ENCHANTING, SMITHING, FISHING
+            MINING, SPEECH, HERBALISM, ENCHANTING, SMITHING, FISHING
     );
 
     private static final Set<String> ID_SET = Set.copyOf(ALL);

@@ -11,7 +11,7 @@ import java.util.Map;
 /**
  * The merchant XP attached to a {@link MerchantOffer} is the closest stable
  * proxy for trade tier (vanilla scales it 2 → 30 across novice → master), and
- * modded merchants pick whatever they want — so any "tier" interpretation
+ * modded merchants pick whatever they want, so any "tier" interpretation
  * belongs in the config formula rather than baked-in here.
  */
 public final class SpeechXpHandler {
@@ -23,5 +23,15 @@ public final class SpeechXpHandler {
         double xp = Configs.SKILLS.speech.xpPerTradeXp.evalSafe(
                 Map.of('x', (double) offer.getXp()), 0.0);
         PlayerSkillManager.grantXp(player, Skills.SPEECH, xp);
+    }
+
+    public static void onTame(ServerPlayer player) {
+        PlayerSkillManager.grantXp(player, Skills.SPEECH, Configs.SKILLS.speech.xpPerTame.get());
+    }
+
+    public static void onBreed(ServerPlayer player) {
+        if (player != null) {
+            PlayerSkillManager.grantXp(player, Skills.SPEECH, Configs.SKILLS.speech.xpPerBreed.get());
+        }
     }
 }

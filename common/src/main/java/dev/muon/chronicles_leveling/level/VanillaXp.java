@@ -5,7 +5,7 @@ import net.minecraft.world.entity.player.Player;
 /**
  * Helpers around the player's vanilla XP economy. Spendable XP is derived from
  * {@code experienceLevel + experienceProgress} because {@link
- * Player#totalExperience} tracks lifetime XP gained — it doesn't decrement when
+ * Player#totalExperience} tracks lifetime XP gained; it doesn't decrement when
  * levels are spent on enchants or anvils (except a strange case where it
  * could get set to 0)
  */
@@ -25,7 +25,7 @@ public final class VanillaXp {
     }
 
     /**
-     * The player's currently-spendable XP — the sum of every level's worth of XP
+     * The player's currently-spendable XP: the sum of every level's worth of XP
      * they've banked plus the partial progress toward the next level. Loop is
      * bounded by {@code experienceLevel} (typically &lt; 100), so closed-form
      * isn't worth the readability cost.
@@ -43,11 +43,11 @@ public final class VanillaXp {
 
     /**
      * The vanilla XP level corresponding to a banked total of {@code xp} spendable
-     * XP — the inverse of {@link #availableExperiencePoints(Player)}. Walks forward through the
+     * XP: the inverse of {@link #availableExperiencePoints(Player)}. Walks forward through the
      * piecewise XP curve until the next rung would overshoot. Used to convert a
      * mod-XP cost into "how many vanilla levels does this represent".
      */
-    public static int getLevelForTotalXp(int xp) {
+    public static int vanillaLevelForTotalXp(int xp) {
         if (xp <= 0) return 0;
         int level = 0;
         long remaining = xp;

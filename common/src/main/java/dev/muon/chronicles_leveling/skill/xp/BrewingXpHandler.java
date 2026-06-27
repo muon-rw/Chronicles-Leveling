@@ -24,7 +24,7 @@ import java.util.Map;
  *
  * <p>Recipe identity is keyed by the output {@link Potion}'s id (e.g.
  * {@code minecraft:strength}) rather than the brewing-recipe id, because
- * vanilla brewing recipes don't have stable ids — they live in
+ * vanilla brewing recipes don't have stable ids; they live in
  * {@code PotionBrewing.Mix} records, not a registry. Output potion ids are
  * stable, registered, and what packs visibly configure.
  */
@@ -32,10 +32,16 @@ public final class BrewingXpHandler {
 
     private BrewingXpHandler() {}
 
-    public static void grantForBrewedPotion(ServerPlayer player, ItemStack stack) {
-        double xp = xpFor(stack);
+    /** XP for a freshly-brewed output stack, computed at brew time and banked on the BE until the potion is taken. */
+    public static int computeXp(ItemStack brewed) {
+        double xp = xpFor(brewed) * brewed.getCount();   // scales with output, so Master Brewer's bonus potion earns XP too
+        return xp <= 0 ? 0 : (int) Math.round(xp);
+    }
+
+    /** Pays out XP banked at brew time to the player who takes the potion (count/identity already baked into the value). */
+    public static void grantStored(ServerPlayer player, int xp) {
         if (xp <= 0) return;
-        PlayerSkillManager.grantXp(player, Skills.ALCHEMY, (int) Math.round(xp));
+        PlayerSkillManager.grantXp(player, Skills.ALCHEMY, xp);
     }
 
     private static double xpFor(ItemStack stack) {

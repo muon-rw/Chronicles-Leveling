@@ -10,24 +10,23 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 
 /**
- * One row of "this stat grants X to attribute Y per point". Configurable via
- * FzzyConfig — pack authors edit these to retune the default mapping or add
- * mappings to {@code Combat-Attributes} attributes once that mod is on the
- * classpath.
+ * One row of "this stat grants X to attribute Y per point". Configurable via FzzyConfig: pack authors
+ * edit these to retune the default mapping or add mappings to {@code Combat-Attributes} attributes once
+ * that mod is on the classpath.
  *
  * <p>Field semantics:
  * <ul>
- *   <li>{@link #targetAttribute} — registry id of the attribute receiving the
+ *   <li>{@link #targetAttribute}: registry id of the attribute receiving the
  *       modifier. Must already be registered (vanilla or modded).</li>
- *   <li>{@link #amountPerPoint} — multiplied by the player's spent stat points
+ *   <li>{@link #amountPerPoint}: multiplied by the player's spent stat points
  *       to produce the modifier amount.</li>
- *   <li>{@link #operation} — vanilla {@link AttributeModifier.Operation}.
+ *   <li>{@link #operation}: vanilla {@link AttributeModifier.Operation}.
  *       {@code ADD_VALUE} adds flat; {@code ADD_MULTIPLIED_BASE/TOTAL} are
  *       fractional, so amount per point of e.g. {@code 0.05} reads as +5%.</li>
  * </ul>
  *
- * <p>Note this is a section, not a top-level config — it's meant to be embedded
- * inside lists keyed per stat in {@link ConfigStats}.
+ * <p>This is a section, not a top-level config; it's meant to be embedded inside lists keyed per stat
+ * in {@link ConfigStats}.
  */
 public class StatModifierSpec implements Walkable {
 

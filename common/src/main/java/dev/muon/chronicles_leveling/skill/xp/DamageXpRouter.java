@@ -20,8 +20,10 @@ import java.util.Map;
 
 /**
  * Loader-agnostic damage XP routing. {@link #onDamageTaken} expects pre-mit
- * amount (callers skip fatal hits); {@link #onDamageDealt} expects truly-final
- * post-mitigation amount. Source classification follows Combat-Attributes:
+ * amount (callers skip fatal, shield-blocked, and totem-saved hits);
+ * {@link #onDamageDealt} expects the post-mitigation, pre-absorption-split
+ * inflicted amount (NeoForge {@code Post#getInflictedDamage()}; the Fabric
+ * seams pass the same value). Source classification follows Combat-Attributes:
  * {@code #c:is_magic} → magic; {@code #minecraft:is_projectile} (and not
  * magic) → archery; otherwise → weaponry.
  */

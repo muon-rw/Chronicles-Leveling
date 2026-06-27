@@ -6,16 +6,14 @@
   "refmap": "${mod_id}.refmap.json",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "AbstractVillagerMixin",
+    "AbstractVillagerMixinFabric",
     "AnvilMenuMixin",
-    "BlockItemMixin",
-    "FishingHookMixin",
+    "BlockMixin",
     "GrindstoneResultSlotMixin",
-    "LivingEntityMixin",
-    "PlayerAttributesMixin",
+    "LivingEntityMixinFabric",
+    "PlayerMixinFabric",
     "ResultSlotMixin",
-    "SmithingMenuMixin",
-    "SpawnerOriginMixin"
+    "MobMixinFabric"
   ],
   "client": [
     "EntityRendererMixin"

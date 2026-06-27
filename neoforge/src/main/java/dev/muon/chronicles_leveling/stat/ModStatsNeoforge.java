@@ -17,17 +17,11 @@ import java.util.List;
 import java.util.function.Supplier;
 
 /**
- * NeoForge-side registration for the six stat attributes from
- * {@link ModStats#ALL}. Pattern matches Combat-Attributes' equivalent.
- *
- * <p>Each entry registers a vanilla {@link RangedAttribute} via
- * {@link DeferredRegister}, then attaches it to every living entity in
- * {@link #attachToLiving} so the stat values follow the entity rather than
- * being PLAYER-only — keeps doors open for "give a mob the strength stat
- * and it benefits from the same modifier specs" experiments down the road.
- *
- * <p>If we want stat attributes to apply only to players, change the loop
- * in {@link #attachToLiving} to {@code event.add(EntityType.PLAYER, holder)}.
+ * Each {@link ModStats#ALL} entry registers a vanilla {@link RangedAttribute} via
+ * {@link DeferredRegister}, then attaches it to the player in {@link #attachToPlayer}. Player-only, matching
+ * the Fabric side ({@code PlayerMixinFabric} adds the stat attributes to {@code Player.createAttributes} only).
+ * A future mob-stat feature ("give a mob the strength stat") would widen the attach to the relevant entity
+ * types on BOTH loaders.
  */
 @EventBusSubscriber(modid = ChroniclesLeveling.MOD_ID)
 public final class ModStatsNeoforge {
@@ -52,7 +46,7 @@ public final class ModStatsNeoforge {
 
     private ModStatsNeoforge() {}
 
-    /** Populates the common holder map after the deferred register has fired. */
+    /** Call after the deferred register has fired. */
     public static void init() {
         for (int i = 0; i < ModStats.ALL.size(); i++) {
             ModStats.put(ModStats.ALL.get(i).id(), HOLDERS.get(i));
@@ -60,8 +54,11 @@ public final class ModStatsNeoforge {
     }
 
     @SubscribeEvent
-    public static void attachToLiving(EntityAttributeModificationEvent event) {
+    public static void attachToPlayer(EntityAttributeModificationEvent event) {
         for (EntityType<? extends LivingEntity> type : event.getTypes()) {
+            if (type != EntityType.PLAYER) {
+                continue;
+            }
             for (DeferredHolder<Attribute, Attribute> holder : HOLDERS) {
                 event.add(type, holder);
             }

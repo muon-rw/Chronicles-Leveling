@@ -8,13 +8,13 @@ import net.minecraft.resources.Identifier;
  *
  * <p>Layout assumptions baked into UV coordinates elsewhere:
  * <ul>
- *   <li>{@link #TAB} / {@link #TAB_DARK} — 256×256, a 4×6 grid of 28×32 tab cells.
+ *   <li>{@link #TAB} / {@link #TAB_DARK}: 256×256, a 4×6 grid of 28×32 tab cells.
  *       Row 0 = top-row active, row 1 = top-row inactive,
  *       row 2 = bottom-row active, row 3 = bottom-row inactive.</li>
- *   <li>{@link #GUI} / {@link #GUI_DARK} — 256×256 inventory-style frame with a
+ *   <li>{@link #GUI} / {@link #GUI_DARK}: 256×256 inventory-style frame with a
  *       transparent center, 176×166 anchored at (0, 0).</li>
- *   <li>{@link #PARCHMENT} — 256×256 paper backdrop blitted under the frame.</li>
- *   <li>{@link #ICON_INVENTORY} etc. — 16×16, blitted at full size onto each
+ *   <li>{@link #PARCHMENT}: 256×256 paper backdrop blitted under the frame.</li>
+ *   <li>{@link #ICON_INVENTORY} etc.: 16×16, blitted at full size onto each
  *       tab face.</li>
  * </ul>
  */
@@ -32,6 +32,9 @@ public final class ChroniclesTextures {
     public static final Identifier GUI = gui("gui");
     public static final Identifier GUI_DARK = gui("gui_dark");
     public static final Identifier PARCHMENT = gui("parchment");
+
+    /** 384×128 forest-clearing backdrop drawn behind a skill tree (pans with the tree, centered on it). */
+    public static final Identifier CLEARING = gui("clearing");
 
     public static final Identifier ICON_INVENTORY = gui("inventory");
     public static final Identifier ICON_COMBAT = gui("combat");

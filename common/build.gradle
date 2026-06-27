@@ -26,13 +26,19 @@ dependencies {
     compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:${mixin_extras_version}"))
 
 
-
     // Fzzy Config
     implementation("me.fzzyhmstrs:fzzy_config:${fzzy_config}")
 
     // Dynamic Difficulty
     implementation "dev.muon.dynamic_difficulty:dynamic_difficulty-common:${dynamic_difficulty_version}+${minecraft_version}"
     implementation "dev.muon.combat_attributes:combat_attributes-common:${combat_attributes_version}+${minecraft_version}"
+
+    // Player Animation Lib
+    api "com.zigythebird.playeranim:PlayerAnimationLibCommon:$pal_version"
+    implementation "com.zigythebird.playeranim:PlayerAnimationLibCommon:$pal_version"
+
+    // JEI - Optional
+    compileOnly "mezz.jei:jei-26.1.2-common:${jei_version}"
 
 }
 

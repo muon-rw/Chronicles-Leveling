@@ -15,7 +15,7 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
  * into "can afford the next mod-level rung" territory.
  *
  * <p>Polled from the client tick. A listener on the XP-change packet would be
- * more event-driven, but vanilla doesn't expose a clean cross-loader hook —
+ * more event-driven, but vanilla doesn't expose a clean cross-loader hook:
  * the {@code /xp} command, enchanting, mob kills, and player respawn all
  * write XP through different paths. Per-tick polling against the synced
  * {@link LocalPlayer} state catches every path with a one-tick worst case.

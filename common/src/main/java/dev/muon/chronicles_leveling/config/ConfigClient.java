@@ -7,6 +7,7 @@ import me.fzzyhmstrs.fzzy_config.config.ConfigSection;
 import me.fzzyhmstrs.fzzy_config.validation.collection.ValidatedList;
 import me.fzzyhmstrs.fzzy_config.validation.minecraft.ValidatedIdentifier;
 import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedBoolean;
+import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedInt;
 import net.minecraft.resources.Identifier;
 
 import java.util.Arrays;
@@ -26,7 +27,25 @@ public class ConfigClient extends Config {
     @Comment("If true, the level-up screen plays a chime + shows a confirmation flash on level-up.")
     public ValidatedBoolean playLevelUpFeedback = new ValidatedBoolean(true);
 
+    public AbilityHud abilityHud = new AbilityHud();
+
     public AttributePages attributePages = new AttributePages();
+
+    /** Placement + size of the in-world ability-slot HUD strip (it sits inline to the right of the hotbar). */
+    public static class AbilityHud extends ConfigSection {
+
+        @Comment("Show the ability-slot HUD strip at all.")
+        public ValidatedBoolean enabled = new ValidatedBoolean(true);
+
+        @Comment("Horizontal gap (px) between the hotbar's right edge and the ability-slot strip.")
+        public ValidatedInt gapFromHotbar = new ValidatedInt(4, 800, -800);
+
+        @Comment("Vertical nudge (px) for the strip; negative moves it up from the hotbar-aligned default.")
+        public ValidatedInt verticalOffset = new ValidatedInt(0, 400, -400);
+
+        @Comment("Size (px) of each ability-slot box.")
+        public ValidatedInt slotSize = new ValidatedInt(20, 64, 8);
+    }
 
     /**
      * Per-category attribute lists for the Attributes screen. Each entry is a
@@ -34,7 +53,7 @@ public class ConfigClient extends Config {
      * logged once per JVM session.
      *
      * <p>Fzzy_config's {@link ValidatedIdentifier} validates the resource-location
-     * format only — not registry membership — because Combat-Attributes IDs
+     * format only, not registry membership, because Combat-Attributes IDs
      * register too late to be resolvable when the config is first deserialized.
      */
     public static class AttributePages extends ConfigSection {
@@ -59,9 +78,9 @@ public class ConfigClient extends Config {
         @Comment("Attributes shown under the Defense category, in order.")
         public ValidatedList<Identifier> defense = list(
                 "minecraft:max_health",
+                "combat_attributes:health_regen",
                 "minecraft:armor",
                 "minecraft:armor_toughness",
-                "minecraft:knockback_resistance",
                 "combat_attributes:magic_defense",
                 "combat_attributes:evasion"
         );

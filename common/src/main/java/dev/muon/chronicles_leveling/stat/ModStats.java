@@ -18,7 +18,7 @@ import java.util.Map;
  *
  * <p>These are deliberately {@code RangedAttribute}s (not the diminishing
  * variant). The values are clamped to a small integer range and are presented
- * as integers everywhere — the intent is "skill points" semantics, not a
+ * as integers everywhere; the intent is "skill points" semantics, not a
  * percent or curve.
  */
 public final class ModStats {

@@ -17,9 +17,9 @@ import java.util.Map;
  * client load.
  *
  * <ul>
- *   <li>{@link #level} — current player level. Starts at 1.</li>
- *   <li>{@link #unspentPoints} — stat points the player has earned but hasn't allocated.</li>
- *   <li>{@link #allocations} — points the player has spent on each stat, keyed by stat id
+ *   <li>{@link #level}: current player level. Starts at 1.</li>
+ *   <li>{@link #unspentPoints}: stat points the player has earned but hasn't allocated.</li>
+ *   <li>{@link #allocations}: points the player has spent on each stat, keyed by stat id
  *       (e.g. {@code "strength" -> 7}). Source of truth for "what did the player allocate";
  *       materialized onto each stat attribute as a single stable-id {@code AttributeModifier}
  *       by {@link dev.muon.chronicles_leveling.stat.StatModifierApplier}. Keeping it here
@@ -27,8 +27,7 @@ import java.util.Map;
  *       refund pool, and a respec is just clearing this map and re-applying.</li>
  * </ul>
  *
- * <p>The XP that funds level-ups is the player's vanilla XP pool — we don't
- * bank a separate counter.
+ * <p>The XP that funds level-ups is the player's vanilla XP pool; we don't bank a separate counter.
  */
 public record PlayerLevelData(int level, int unspentPoints, Map<String, Integer> allocations) {
 

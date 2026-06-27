@@ -13,17 +13,34 @@ dependencies {
     // No more obfuscation on this gamever, so no more `mod` prefix for mod dependencies - no remapping to do!
     implementation("com.terraformersmc:modmenu:${project.modmenu_version}")
 
+    // Required
     implementation("me.fzzyhmstrs:fzzy_config:${fzzy_config}") {
         exclude(group: "me.lucko")
         exclude(group: "com.terraformersmc")
     }
 
+    // Style reference only
     compileOnly "curse.maven:playerex-409221:4608785"
 
+    // Our suite
     implementation "dev.muon:dynamic-tooltips:${dynamic_tooltips_version}+${minecraft_version}"
     implementation "dev.muon.dynamic_difficulty:dynamic_difficulty-fabric:${dynamic_difficulty_version}+${minecraft_version}"
     implementation "dev.muon.combat_attributes:combat_attributes-fabric:${combat_attributes_version}+${minecraft_version}"
     runtimeOnly "dev.muon.dynamic_resource_bars:dynamic_resource_bars-fabric:${dynamic_resource_bars_version}+${minecraft_version}"
+    runtimeOnly "dev.muon.chronicles_potions_orbs:chronicles_potions_orbs-fabric:${chronicles_potions_orbs_version}+${minecraft_version}"
+
+    // PAL - Skills, later
+    implementation "com.zigythebird.playeranim:PlayerAnimationLibFabric:$pal_version"
+
+    // JEI - Optional + DevEnv
+    compileOnly "mezz.jei:jei-26.1.2-fabric:${jei_version}"
+    localRuntime "mezz.jei:jei-26.1.2-fabric:${jei_version}"
+
+    // Jade
+    localRuntime "curse.maven:jade-324717:8048381"
+
+    // Appleskin
+    localRuntime "curse.maven:appleskin-248787:7854450"
 
 }
 

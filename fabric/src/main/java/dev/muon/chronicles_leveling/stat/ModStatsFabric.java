@@ -13,8 +13,8 @@ import net.minecraft.world.entity.ai.attributes.RangedAttribute;
  * <p>Registration runs from {@code <clinit>} so the holder map is populated the
  * first time anyone touches this class. {@link #ensureInitialized()} is a no-op
  * trampoline that exists only to force class loading from callers that need the
- * holders ready before they look them up — most importantly the
- * {@code PlayerAttributesMixin}, which can fire from {@code DefaultAttributes}'s
+ * holders ready before they look them up, most importantly the
+ * {@code PlayerMixinFabric}, which can fire from {@code DefaultAttributes}'s
  * static initializer (during game bootstrap, well before {@code onInitialize})
  * and would otherwise iterate an empty {@code ModStats.HOLDERS}.
  *
@@ -49,7 +49,7 @@ public final class ModStatsFabric {
      * No-op trampoline. Calling it forces this class's {@code <clinit>}, which
      * registers every stat attribute exactly once. Called from {@code
      * ModInitializer.onInitialize} (primary path) and from
-     * {@code PlayerAttributesMixin} (defensive — the mixin can fire from
+     * {@code PlayerMixinFabric} (defensive: the mixin can fire from
      * {@code DefaultAttributes <clinit>} before mod init).
      */
     public static void ensureInitialized() {}
