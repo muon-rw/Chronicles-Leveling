@@ -63,7 +63,7 @@ public final class DefenseSkill {
                 // Mitigation branch.
                 .perk("magic_ward").requires("iron_skin").cost(2).order(10).maxRank(3)
                     .effect(attr(MAGIC_DEFENSE, ADD_VALUE, perLevel(Configs.SKILLS.defense.magicWardPerLevel.get(), Configs.SKILLS.defense.magicWardCap.get())))
-                .perk("pain_tolerance").requires("iron_skin").cost(4).maxRank(2).order(20)
+                .perk("pain_tolerance").requires("iron_skin").cost(3).maxRank(2).order(20)
                     .effectsAtRank(rank -> List.of(grant(MAX_HIT_FRACTION, Configs.SKILLS.defense.painToleranceFractionPerRank.get() * rank)))
                 .perk("last_stand").requires("pain_tolerance").cost(5).order(20)
                     .effect(grant(LAST_STAND, Boolean.TRUE))

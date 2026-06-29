@@ -1036,11 +1036,11 @@ public class SkillsScreen extends Screen {
                                    LaidOutTree.NodeState state, PlayerSkillData.SkillEntry entry) {
         switch (state) {
             case MAXED -> lines.add(Component.translatable("chronicles_leveling.skill.tree.maxed").withStyle(ChatFormatting.GOLD));
-            case AVAILABLE, UNLOCKED -> lines.add(costLine(perk, rank, ChatFormatting.GREEN));
+            case AVAILABLE, UNLOCKED -> lines.add(costLine(perk, rank, def, entry));
             case LOCKED -> {
                 Predicate<String> owned = pre -> entry.rankOf(pre) >= 1;
                 if (perk.prerequisitesMet(owned)) {
-                    lines.add(costLine(perk, rank, ChatFormatting.RED));   // prerequisites met, just unaffordable
+                    lines.add(costLine(perk, rank, def, entry));   // prerequisites met, just unaffordable: red "Required"
                 } else if (perk.requiredPrerequisites() == perk.prerequisites().size()) {
                     // Every prerequisite is required (no choice): one inline "Requires: A, B" line.
                     lines.add(Component.translatable("chronicles_leveling.skill.tree.requires",
@@ -1060,8 +1060,13 @@ public class SkillsScreen extends Screen {
         }
     }
 
-    private static Component costLine(SkillPerk perk, int rank, ChatFormatting color) {
-        return Component.translatable("chronicles_leveling.skill.tree.cost", perk.costOfNextRank(rank)).withStyle(color);
+    /** Green "Cost: N SP" when the next rank is affordable; red "Required: N SP" when the player lacks the points. */
+    private static Component costLine(SkillPerk perk, int rank, SkillDefinition def, PlayerSkillData.SkillEntry entry) {
+        int cost = perk.costOfNextRank(rank);
+        if (entry.availablePoints(def.totalCost()) >= cost) {
+            return Component.translatable("chronicles_leveling.skill.tree.cost", cost).withStyle(ChatFormatting.GREEN);
+        }
+        return Component.translatable("chronicles_leveling.skill.tree.required", cost).withStyle(ChatFormatting.RED);
     }
 
     /** Comma-joined names of a perk's still-unowned prerequisites, for the all-required "Requires: A, B" line. */

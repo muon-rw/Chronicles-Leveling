@@ -78,7 +78,7 @@ public final class AcrobaticsSkill {
                 .ability(new DashAbility())
 
                 // Evasion / stealth branch.
-                .perk("dodge").requires("feather_fall").cost(6).order(20).maxRank(2)
+                .perk("dodge").requires("feather_fall").cost(5).order(20).maxRank(2)
                     .effect(attr(EVASION, ADD_VALUE, flat(Configs.SKILLS.acrobatics.evasionPerRank.get())))
                 .perk("catlike").requires("feather_fall").cost(3).order(30).maxRank(3)
                     .effectsAtRank(rank -> List.of(

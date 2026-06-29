@@ -75,7 +75,7 @@ public final class AlchemySkill {
                 .description(Component.translatable("chronicles_leveling.skill.alchemy.desc"))
 
                 // === Root: the Experimental Elixir active; each rank adds one rolled effect (1..3). ===
-                .perk(EXPERIMENTAL_ELIXIR_PERK).cost(2).maxRank(3)
+                .perk(EXPERIMENTAL_ELIXIR_PERK).cost(1).maxRank(3)
                     .effect(unlocks(ExperimentalElixirAbility.ID))
                 .ability(new ExperimentalElixirAbility())
 

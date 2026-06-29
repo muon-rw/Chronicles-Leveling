@@ -54,7 +54,7 @@ public final class FishingSkill {
                     .effect(grant(LURE_RANGE, Configs.SKILLS.fishing.lureRangeBonus.get()))
 
                 // Loot branch: treasure quality, double catch, pre-enchants.
-                .perk("fortunes_catch").requires("patient_angler").cost(4).maxRank(3)
+                .perk("fortunes_catch").requires("patient_angler").cost(3).maxRank(3)
                     .effectsAtRank(rank -> List.of(
                             grant(TREASURE_BONUS, Configs.SKILLS.fishing.treasureBonusPerRank.get() * rank),
                             attr(LUCK, ADD_VALUE, flat(Configs.SKILLS.fishing.luckBonus.get()))))

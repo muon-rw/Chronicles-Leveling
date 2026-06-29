@@ -75,7 +75,8 @@ public record UnlockSkillNodePacket(String skillId, String perkId) implements Cu
         }
 
         PlayerSkillManager.setSkill(player, packet.skillId(),
-                entry.withPerkRank(packet.perkId(), current + 1, perk::costThroughRank));
+                entry.withPerkRank(packet.perkId(), current + 1,
+                        (id, r) -> { SkillPerk priced = def.perk(id); return priced == null ? 0 : priced.costThroughRank(r); }));
         SkillModifierApplier.recompute(player);
         if (Skills.ENCHANTING.equals(packet.skillId())) {
             WizardsStudyHandler.syncTarget(player);   // surface the table glow as soon as Wizard's Study is unlocked

@@ -63,7 +63,7 @@ public final class ArcherySkill {
                     .effect(attr(ACCURACY, ADD_VALUE, flat(Configs.SKILLS.archery.accuracyBonus.get())))
 
                 // Trick-shot branch: arrows that bounce, pierce, and crowd-control.
-                .perk("ricochet").requires("far_shot").cost(4).maxRank(3).order(40)
+                .perk("ricochet").requires("far_shot").cost(3).maxRank(3).order(40)
                     .effectsAtRank(rank -> List.of(grant(RICOCHET_COUNT, Configs.SKILLS.archery.ricochetBouncesPerRank.get() * rank)))
                 .perk("piercing_shot").requires("far_shot").cost(4).order(50)
                     .effect(grant(PIERCING_SHOT, Boolean.TRUE))

@@ -398,6 +398,7 @@
 
   "chronicles_leveling.skill.tree.rank": "Rank %1$s / %2$s",
   "chronicles_leveling.skill.tree.cost": "Cost: %1$s SP",
+  "chronicles_leveling.skill.tree.required": "Required: %1$s SP",
   "chronicles_leveling.skill.tree.requires": "Requires: %1$s",
   "chronicles_leveling.skill.tree.requires_count": "Requires at least %1$s more of:",
   "chronicles_leveling.skill.tree.maxed": "Maxed",

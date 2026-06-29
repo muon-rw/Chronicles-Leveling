@@ -9,7 +9,7 @@ import net.minecraft.network.codec.StreamCodec;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.IntUnaryOperator;
+import java.util.function.ToIntBiFunction;
 
 /**
  * Per-player skill state: every skill the player has progressed in (keyed by
@@ -206,18 +206,20 @@ public record PlayerSkillData(
         /**
          * Sets a perk's rank ({@code rank <= 0} removes it) and recomputes
          * {@link #spentPoints} from the resulting map via {@code costThroughRank}
-         * (perkId-agnostic: rank → <em>cumulative</em> point cost to reach that rank),
+         * (priced per perk by its own curve: rank → <em>cumulative</em> point cost to reach that rank),
          * so the spent total can never drift from the perks actually held, even if a
          * perk's cost is retuned or a forged packet slips through.
          */
-        public SkillEntry withPerkRank(String perkId, int rank, IntUnaryOperator costThroughRank) {
+        public SkillEntry withPerkRank(String perkId, int rank, ToIntBiFunction<String, Integer> costThroughRank) {
             Map<String, Integer> next = new HashMap<>(perkRanks);
             if (rank <= 0) {
                 next.remove(perkId);
             } else {
                 next.put(perkId, rank);
             }
-            int spent = next.values().stream().mapToInt(costThroughRank::applyAsInt).sum();
+            int spent = next.entrySet().stream()
+                    .mapToInt(e -> costThroughRank.applyAsInt(e.getKey(), e.getValue()))
+                    .sum();
             return new SkillEntry(this.level, this.xp, spent, next);
         }
 

@@ -73,7 +73,7 @@ public final class EnchantingSkill {
                 // Grindstone.
                 .perk("transcribe").requires("prodigy").cost(1).maxRank(3).order(40)
                     .effectsAtRank(rank -> List.of(grant(TRANSCRIBE_TIER, (double) rank)))
-                .perk("experimenter").requires("transcribe").cost(4).maxRank(2).order(45)
+                .perk("experimenter").requires("transcribe").cost(3).maxRank(2).order(45)
                     .effectsAtRank(rank -> List.of(grant(EXPERIMENTER_TIER, (double) rank)))
 
                 // [Active] Essence Channeller drains XP to repair gear; rank widens the scope (held, worn, all).
