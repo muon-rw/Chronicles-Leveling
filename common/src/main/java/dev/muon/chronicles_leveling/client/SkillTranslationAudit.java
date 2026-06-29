@@ -11,22 +11,15 @@ import net.minecraft.network.chat.contents.TranslatableContents;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class SkillTranslationAudit {
 
     private SkillTranslationAudit() {}
 
-    private static final AtomicBoolean DONE = new AtomicBoolean(false);
-
-    public static void runOnce() {
-        if (!Services.PLATFORM.isDevelopmentEnvironment() || !SkillRegistry.isFrozen()) {
+    public static void run() {
+        if (!SkillRegistry.isFrozen()) {
             return;
         }
-        if (!DONE.compareAndSet(false, true)) {
-            return;
-        }
-
         List<String> missing = new ArrayList<>();
         for (SkillDefinition def : SkillRegistry.all()) {
             checkComponentKey(missing, "skill '" + def.id() + "' name", def.display());
@@ -39,10 +32,15 @@ public final class SkillTranslationAudit {
         }
 
         if (missing.isEmpty()) {
-            ChroniclesLeveling.LOG.info("Skill translation audit (dev): all skill + perk lang keys present.");
+            ChroniclesLeveling.LOG.info("Skill translation audit: all skill + perk lang keys present.");
+            return;
+        }
+        String summary = "Skill translation audit found " + missing.size() + " missing lang key(s):\n  "
+                + String.join("\n  ", missing);
+        if (Services.PLATFORM.isDevelopmentEnvironment()) {
+            ChroniclesLeveling.LOG.error(summary);   // dev: loud, fail-fast
         } else {
-            ChroniclesLeveling.LOG.error("Skill translation audit (dev) found {} missing lang key(s):\n  {}",
-                    missing.size(), String.join("\n  ", missing));
+            ChroniclesLeveling.LOG.warn(summary);    // production: warn only
         }
     }
 

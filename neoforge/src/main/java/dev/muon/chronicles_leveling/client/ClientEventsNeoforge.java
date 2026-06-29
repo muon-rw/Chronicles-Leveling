@@ -7,10 +7,13 @@ import dev.muon.chronicles_leveling.skill.enchant.WizardsStudyHandler;
 import dev.muon.chronicles_leveling.skill.gather.GardenersInfusionHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.AddClientReloadListenersEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
@@ -48,11 +51,22 @@ public final class ClientEventsNeoforge {
     }
 
     @SubscribeEvent
+    public static void onAddClientReloadListeners(AddClientReloadListenersEvent event) {
+        // Audit skill/perk/ability assets each time client resources finish (re)loading.
+        Identifier id = ChroniclesLeveling.id("skill_asset_audit");
+        event.addListener(id, (ResourceManagerReloadListener) manager -> {
+            SkillTranslationAudit.run();
+            SkillSpriteAudit.run(manager);
+        });
+        // Sort after every vanilla listener so the language reload (I18n) has populated first.
+        event.addDependency(event.getNameLookup().apply(event.getLastVanillaListener()), id);
+    }
+
+    @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
         ChroniclesKeybinds.tick();
         XpAffordabilityNotifier.tick();
         VeinSightScanner.tick();
-        SkillTranslationAudit.runOnce();
     }
 
     @SubscribeEvent

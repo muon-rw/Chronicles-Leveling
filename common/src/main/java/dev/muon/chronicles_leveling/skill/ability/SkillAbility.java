@@ -19,6 +19,11 @@ public interface SkillAbility {
 
     Identifier id();
 
+    /** HUD/tooltip icon: {@code textures/gui/ability/<name>.png}, derived from {@link #id()}. */
+    default Identifier icon() {
+        return Identifier.fromNamespaceAndPath(id().getNamespace(), "textures/gui/" + id().getPath() + ".png");
+    }
+
     /** The skill this ability belongs to (a {@code Skills} id). */
     String owningSkill();
 

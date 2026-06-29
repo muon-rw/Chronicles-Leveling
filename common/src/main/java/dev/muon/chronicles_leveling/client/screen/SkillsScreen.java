@@ -119,7 +119,6 @@ public class SkillsScreen extends Screen {
     // TREE pop-out: a FIXED page sized to render the full clearing sprite (see TREE_PAGE_* below), trimmed
     // only if it would exceed the screen (which then engages scroll).
     private static final int TREE_PANEL_MARGIN = 24;
-    private static final int COLOR_TREE_PANEL_BG = 0xFFC9BA94;   // parchment-tone fill behind the pop-out
 
     private static final int COLOR_TITLE = 0xFF3F3F3F;
     private static final int COLOR_SEPARATOR = 0xFF8B7355;
@@ -137,20 +136,18 @@ public class SkillsScreen extends Screen {
 
     private static final int EDGE_SHADOW = 0x55000000;
     private static final int EDGE_LOCKED = 0xFF4A4540;
-    private static final int EDGE_REACHABLE = 0xFF8B7355;
+    private static final int EDGE_REACHABLE = 0xFF909090;   // grayscale path to an AVAILABLE node, slightly lightened
     private static final int EDGE_ACTIVE = 0xFFD9A93E;
 
     // Animation (all client-only, driven off Util.getMillis()).
     private static final float HOVER_SCALE = 1.12f;       // hovered node grows this much (applied instantly, no tween)
     private static final float POP_SCALE = 1.25f;         // a just-bought/upgraded node enlarges to this (instant, held briefly)
     private static final long POP_HOLD_MS = 220L;         // ...for this long, then snaps back (no tween)
-    private static final long PULSE_PERIOD_MS = 1400L;    // AVAILABLE-gem breathing period
-    private static final float PULSE_DEPTH = 0.10f;       // ...brightness swing each way around the base
     private static final long BUY_RESEND_MS = 1000L;      // after this, a same-node buy may re-send even if rank hasn't synced
     private static final int TREE_SCROLL_STEP = 20;       // px the tree pans per mouse-wheel notch
     private static final long SLOT_CYCLE_MS = 6000L;      // a slot-cycle session stays armed this long between inputs
 
-    private static final int GEM = 10;
+    private static final int PERK_ICON = 22;   // per-perk node icon: 22×22 centered in the 26px node (2px inside the frame)
     private static final int PIP_SIZE = 3;
     private static final int PIP_GAP = 1;
     private static final int PIP_Y_OFF = SkillTreeLayout.NODE - PIP_SIZE - 2;   // inside the bottom border
@@ -358,8 +355,11 @@ public class SkillsScreen extends Screen {
     public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         super.extractBackground(graphics, mouseX, mouseY, partialTick);
         if (mode == Mode.TREE && !skills.isEmpty()) {
-            // Pop-out: a parchment-tone panel (the canvas itself shows clearing.png); a 1px frame is added in renderFrame.
-            graphics.fill(leftPos, topPos, leftPos + panelW, topPos + panelH, COLOR_TREE_PANEL_BG);
+            // Pop-out: the fixed 404×192 panel sprite, center-cropped when the screen trims the page (clearing.png draws over its slot in renderCanvas).
+            int u = (TREE_PAGE_W - panelW) / 2;
+            int v = (TREE_PAGE_H - panelH) / 2;
+            graphics.blit(RenderPipelines.GUI_TEXTURED, ChroniclesTextures.SKILL_TREE_PANEL,
+                    leftPos, topPos, u, v, panelW, panelH, TREE_PAGE_W, TREE_PAGE_H);
             return;
         }
         graphics.blit(RenderPipelines.GUI_TEXTURED, ChroniclesTextures.PARCHMENT,
@@ -805,9 +805,12 @@ public class SkillsScreen extends Screen {
         int x = node.box().x();
         int y = node.box().y();
         int n = SkillTreeLayout.NODE;
-        NodePalette palette = palette(node.state());
+        SkillPerk perk = node.box().perk();
+        LaidOutTree.NodeState state = node.state();
+        boolean owned = state == LaidOutTree.NodeState.UNLOCKED || state == LaidOutTree.NodeState.MAXED;
+        boolean locked = state == LaidOutTree.NodeState.LOCKED;
 
-        float scale = nodeScale(node.box().perk().id());
+        float scale = nodeScale(perk.id());
         boolean scaled = scale != 1f;
         if (scaled) {   // scale about the node's center for hover-grow + unlock-pop
             float cx = x + n / 2f;
@@ -819,19 +822,22 @@ public class SkillsScreen extends Screen {
         }
 
         graphics.fill(x + 1, y + 1, x + n + 1, y + n + 1, NODE_SHADOW);
-        graphics.fill(x, y, x + n, y + n, palette.bg());
-        int gx = x + (n - GEM) / 2;
-        int gy = y + (n - GEM) / 2;
-        int gem = node.state() == LaidOutTree.NodeState.AVAILABLE ? pulse(palette.gem()) : palette.gem();
-        graphics.fill(gx, gy, gx + GEM, gy + GEM, gem);
-        drawThickOutline(graphics, x, y, n, n, palette.border());
+        // Perk art (desaturated when the node is locked), centered inside the frame.
+        Identifier icon = locked
+                ? ChroniclesTextures.perkLocked(perk.owningSkill(), perk.id())
+                : ChroniclesTextures.perk(perk.owningSkill(), perk.id());
+        graphics.blit(RenderPipelines.GUI_TEXTURED, icon,
+                x + (n - PERK_ICON) / 2, y + (n - PERK_ICON) / 2, 0f, 0f, PERK_ICON, PERK_ICON, PERK_ICON, PERK_ICON);
+        // State frame on top: selected (owned) vs unselected (available/locked).
+        Identifier frame = owned ? ChroniclesTextures.NODE_FRAME_SELECTED : ChroniclesTextures.NODE_FRAME_UNSELECTED;
+        graphics.blit(RenderPipelines.GUI_TEXTURED, frame, x, y, 0f, 0f, n, n, n, n);
 
-        if (node.box().perk().maxRank() > 1) {
-            drawPips(graphics, x, y, node.rank(), node.box().perk().maxRank());
+        if (perk.maxRank() > 1) {
+            drawPips(graphics, x, y, node.rank(), perk.maxRank());
         }
 
         // Unlocked ability node: badge its bound action-bar slot (click cycles it).
-        Identifier ability = abilityOf(node.box().perk());
+        Identifier ability = abilityOf(perk);
         if (ability != null && node.rank() >= 1) {
             drawSlotBadge(graphics, x, y, currentData().slotOf(ability.toString()));
         }
@@ -855,37 +861,6 @@ public class SkillsScreen extends Screen {
         return scale;
     }
 
-    /** Gently breathes an AVAILABLE gem brighter+dimmer to read as "spend me"; scaleRgb clamps the peak. */
-    private int pulse(int argb) {
-        float phase = (Util.getMillis() % PULSE_PERIOD_MS) / (float) PULSE_PERIOD_MS;
-        float factor = 1f + PULSE_DEPTH * (float) Math.sin(phase * 2f * (float) Math.PI);
-        return scaleRgb(argb, factor);
-    }
-
-    /** Multiplies the RGB channels of an ARGB color by {@code factor} (alpha preserved, channels clamped). */
-    private static int scaleRgb(int argb, float factor) {
-        int a = argb >>> 24;
-        int r = Math.min(255, Math.round(((argb >> 16) & 0xFF) * factor));
-        int g = Math.min(255, Math.round(((argb >> 8) & 0xFF) * factor));
-        int b = Math.min(255, Math.round((argb & 0xFF) * factor));
-        return (a << 24) | (r << 16) | (g << 8) | b;
-    }
-
-    private record NodePalette(int bg, int gem, int border) {}
-
-    /**
-     * The bg/gem/border triple for a node state. A {@code switch} (not ordinal-indexed parallel arrays)
-     * so adding or reordering a {@link LaidOutTree.NodeState} is a compile error here, never a silent
-     * color shift across the module boundary.
-     */
-    private static NodePalette palette(LaidOutTree.NodeState state) {
-        return switch (state) {
-            case LOCKED -> new NodePalette(0xFF3C3C3C, 0xFF565656, 0xFF252525);
-            case AVAILABLE -> new NodePalette(0xFF6E5A2A, 0xFFE8B84C, 0xFF8B5A2B);
-            case UNLOCKED -> new NodePalette(0xFF2F5A2F, 0xFF66C766, 0xFF1C3A1C);
-            case MAXED -> new NodePalette(0xFF5E4A12, 0xFFFFD24C, 0xFFC8961E);
-        };
-    }
 
     private static void drawPips(GuiGraphicsExtractor graphics, int nodeX, int nodeY, int rank, int maxRank) {
         int totalW = maxRank * PIP_SIZE + (maxRank - 1) * PIP_GAP;

@@ -141,7 +141,7 @@ public class ConfigStats extends Config {
                             new StatModifierSpec(Identifier.parse("combat_attributes:stamina_cost"), -0.02, AttributeModifier.Operation.ADD_VALUE)
                     ),
                     ModStats.WISDOM, List.of(
-                            new StatModifierSpec(Identifier.parse("combat_attributes:mana_regen"), 0.02, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
+                            new StatModifierSpec(Identifier.parse("combat_attributes:mana_regen"), 0.1, AttributeModifier.Operation.ADD_VALUE),
                             new StatModifierSpec(Identifier.parse("combat_attributes:mana_cost"), -0.01, AttributeModifier.Operation.ADD_VALUE),
                             new StatModifierSpec(Identifier.parse("combat_attributes:experience_gain"), 0.02, AttributeModifier.Operation.ADD_VALUE),
                             new StatModifierSpec(Identifier.parse("combat_attributes:evasion"), 0.01, AttributeModifier.Operation.ADD_VALUE),

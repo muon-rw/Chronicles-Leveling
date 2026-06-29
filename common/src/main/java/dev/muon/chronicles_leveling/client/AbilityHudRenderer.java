@@ -14,6 +14,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
@@ -24,16 +25,17 @@ import java.util.List;
  * Loader-agnostic: NeoForge registers this as a {@code GuiLayer} ({@code RegisterGuiLayersEvent}) and Fabric as a
  * {@code HudElement} ({@code HudElementRegistry}); both have the same {@code (GuiGraphicsExtractor, DeltaTracker)}
  * shape and call {@link #render}. All state is read client-side from the synced skill attachment plus
- * Combat-Attributes; nothing server-authoritative happens here. The icon is a placeholder gem for now; per-ability
- * art is a later asset task.
+ * Combat-Attributes; nothing server-authoritative happens here. Each ability blits its own 18px icon
+ * ({@code textures/gui/ability/<id>.png}) over a tinted gem fallback that only shows if the texture is missing.
  */
 public final class AbilityHudRenderer {
 
     private AbilityHudRenderer() {}
 
-    private static final int GAP = 2;
+    private static final int GAP = 0;   // slots butt together (no gap)
     private static final int HOTBAR_HALF_WIDTH = 91;   // vanilla hotbar is 182 wide, centered
-    private static final int ICON_INSET = 2;           // icon margin inside the box (per side)
+    private static final int ICON_INSET = 1;           // icon margin inside the box (per side); 1px → icon == 18 at the default box, 1:1 with the 18px sprite
+    private static final int ICON_PX = 18;             // per-ability icon source texture size
 
     private static final int COLOR_BOX = 0xC0202020;
     private static final int COLOR_BORDER = 0xFF000000;
@@ -76,7 +78,7 @@ public final class AbilityHudRenderer {
         int icon = Math.max(1, box - 2 * ICON_INSET);
         // Inline to the right of the hotbar, bottom-aligned (with config nudges).
         int x = graphics.guiWidth() / 2 + HOTBAR_HALF_WIDTH + cfg.gapFromHotbar.get();
-        int y = graphics.guiHeight() - box - 1 + cfg.verticalOffset.get();
+        int y = graphics.guiHeight() - box + cfg.verticalOffset.get();   // 1px lower than the committed -box-1 baseline
         // Clamp the strip on-screen so it can't clip off the right edge at high GUI scale / narrow windows.
         int stripWidth = entries.size() * box + (entries.size() - 1) * GAP;
         x = Math.max(1, Math.min(x, graphics.guiWidth() - stripWidth - 1));
@@ -93,7 +95,7 @@ public final class AbilityHudRenderer {
                                    PlayerSkillData data, Entry entry, int x, int y, int box, int icon, long gameTime) {
         SkillAbility ability = entry.ability();
 
-        // Box + 1px border + placeholder icon.
+        // Box + 1px border + tinted gem under the per-ability icon.
         graphics.fill(x, y, x + box, y + box, COLOR_BOX);
         graphics.fill(x, y, x + box, y + 1, COLOR_BORDER);
         graphics.fill(x, y + box - 1, x + box, y + box, COLOR_BORDER);
@@ -101,7 +103,8 @@ public final class AbilityHudRenderer {
         graphics.fill(x + box - 1, y, x + box, y + box, COLOR_BORDER);
         int iconX = x + (box - icon) / 2;
         int iconY = y + (box - icon) / 2;
-        graphics.fill(iconX, iconY, iconX + icon, iconY + icon, COLOR_ICON);
+        graphics.fill(iconX, iconY, iconX + icon, iconY + icon, COLOR_ICON);   // tinted gem fallback (shown only if the icon texture is missing)
+        graphics.blit(RenderPipelines.GUI_TEXTURED, ability.icon(), iconX, iconY, 0f, 0f, icon, icon, ICON_PX, ICON_PX, ICON_PX, ICON_PX);
 
         // Resource-readiness dim (Combat-Attributes; no-op if CA absent or the ability is free).
         if (!canAfford(player, ability.cost())) {

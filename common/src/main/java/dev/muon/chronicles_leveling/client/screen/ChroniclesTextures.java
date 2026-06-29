@@ -36,9 +36,29 @@ public final class ChroniclesTextures {
     /** 384×128 forest-clearing backdrop drawn behind a skill tree (pans with the tree, centered on it). */
     public static final Identifier CLEARING = gui("clearing");
 
+    /** The fixed 404×192 skill-tree pop-out panel (header / 384×128 clearing slot / footer / 10px margins). */
+    public static final Identifier SKILL_TREE_PANEL = gui("skill_tree_panel");
+
+    /** Perk-node frames (26×26, 2px border, 22px transparent center): owned (selected) vs not. */
+    public static final Identifier NODE_FRAME_SELECTED = gui("node_frame_selected");
+    public static final Identifier NODE_FRAME_UNSELECTED = gui("node_frame_unselected");
+
+    /** HUD ability-slot frame (22×22, 2px border, 18px transparent center), blitted scaled to the slot size. */
+    public static final Identifier ABILITY_SLOT_FRAME = gui("ability_slot_frame");
+
     public static final Identifier ICON_INVENTORY = gui("inventory");
     public static final Identifier ICON_COMBAT = gui("combat");
     public static final Identifier ICON_LEVELS = gui("levels");
     public static final Identifier ICON_PROFESSIONS = gui("professions");
     public static final Identifier ICON_BLANK = gui("blank");
+
+    /** A perk node's icon: {@code textures/gui/perk/<skill>/<perk>.png}, keyed by ({@code owningSkill}, {@code perkId}). */
+    public static Identifier perk(String owningSkill, String perkId) {
+        return gui("perk/" + owningSkill + "/" + perkId);
+    }
+
+    /** The desaturated "locked" variant of a perk icon: {@code textures/gui/perk_locked/<skill>/<perk>.png}. */
+    public static Identifier perkLocked(String owningSkill, String perkId) {
+        return gui("perk_locked/" + owningSkill + "/" + perkId);
+    }
 }

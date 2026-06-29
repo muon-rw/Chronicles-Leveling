@@ -44,7 +44,7 @@ public class ConfigClient extends Config {
         public ValidatedInt verticalOffset = new ValidatedInt(0, 400, -400);
 
         @Comment("Size (px) of each ability-slot box.")
-        public ValidatedInt slotSize = new ValidatedInt(20, 64, 8);
+        public ValidatedInt slotSize = new ValidatedInt(22, 64, 8);
     }
 
     /**
