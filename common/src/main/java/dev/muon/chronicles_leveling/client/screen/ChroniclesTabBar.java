@@ -9,6 +9,8 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.sounds.SoundEvents;
 
 /**
  * The horizontal row of three tab buttons (Inventory / Stats / Attributes) that
@@ -107,6 +109,9 @@ public class ChroniclesTabBar implements Renderable, GuiEventListener, Narratabl
         for (int i = 0; i < tabs.length; i++) {
             int tabX = panelLeft + i * TAB_WIDTH;
             if (event.x() >= tabX && event.x() < tabX + TAB_WIDTH) {
+                if (!tabs[i].isActive(Minecraft.getInstance().screen)) {   // silent when re-clicking the open tab
+                    Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+                }
                 tabs[i].open();
                 return true;
             }

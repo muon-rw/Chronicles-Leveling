@@ -7,6 +7,7 @@ import dev.muon.chronicles_leveling.level.PlayerLevelData;
 import dev.muon.chronicles_leveling.level.PlayerLevelManager;
 import dev.muon.chronicles_leveling.level.VanillaXp;
 import dev.muon.chronicles_leveling.network.NetworkDispatcher;
+import dev.muon.chronicles_leveling.sounds.ModSounds;
 import dev.muon.chronicles_leveling.stat.ModStats;
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.muon.chronicles_leveling.stat.StatModifierSpec;
@@ -20,6 +21,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.core.Holder;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -180,6 +182,7 @@ public class LevelUpScreen extends Screen {
         this.levelUpButton = new PlusButton(
                 leftPos, levelUpY,
                 Component.translatable("chronicles_leveling.stat.level"),
+                ModSounds.SP_SPEND,
                 this::canLevelUp,
                 NetworkDispatcher::sendLevelUp);
         addRenderableWidget(this.levelUpButton);
@@ -190,6 +193,7 @@ public class LevelUpScreen extends Screen {
             addRenderableWidget(new PlusButton(
                     statButtonX, rowButtonY(i),
                     Component.translatable("chronicles_leveling.stat." + stat.id()),
+                    SoundEvents.UI_BUTTON_CLICK,
                     () -> canSpendOn(stat.id()),
                     () -> NetworkDispatcher.sendAllocateStat(stat.id())));
         }

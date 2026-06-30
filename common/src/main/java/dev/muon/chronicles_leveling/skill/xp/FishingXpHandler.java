@@ -35,14 +35,8 @@ public final class FishingXpHandler {
     public static void onItemFished(ServerPlayer player, List<ItemStack> drops) {
         if (drops == null || drops.isEmpty()) return;
         ConfigSkills.Fishing cfg = Configs.SKILLS.fishing;
-        EntryMatcher fish = matcher(cfg.fishItems.get(), m -> {
-            cachedFishMatcher = m;
-            cachedFishSource = cfg.fishItems.get();
-        }, cachedFishSource, cachedFishMatcher);
-        EntryMatcher treasure = matcher(cfg.treasureItems.get(), m -> {
-            cachedTreasureMatcher = m;
-            cachedTreasureSource = cfg.treasureItems.get();
-        }, cachedTreasureSource, cachedTreasureMatcher);
+        EntryMatcher fish = fishMatcher();
+        EntryMatcher treasure = treasureMatcher();
 
         double fishXp = cfg.fishXp.get();
         double treasureXp = cfg.treasureXp.get();
@@ -55,6 +49,34 @@ public final class FishingXpHandler {
             else                          total += junkXp;
         }
         PlayerSkillManager.grantXp(player, Skills.FISHING, total);
+    }
+
+    /** True if any drop is junk (matches neither the fish nor treasure config list); the seam Discerning Fisher rerolls against. */
+    public static boolean containsJunk(List<ItemStack> drops) {
+        if (drops == null || drops.isEmpty()) return false;
+        EntryMatcher fish = fishMatcher();
+        EntryMatcher treasure = treasureMatcher();
+        for (ItemStack drop : drops) {
+            if (drop.isEmpty()) continue;
+            if (!treasure.matches(drop) && !fish.matches(drop)) return true;
+        }
+        return false;
+    }
+
+    private static EntryMatcher fishMatcher() {
+        List<? extends String> source = Configs.SKILLS.fishing.fishItems.get();
+        return matcher(source, m -> {
+            cachedFishMatcher = m;
+            cachedFishSource = source;
+        }, cachedFishSource, cachedFishMatcher);
+    }
+
+    private static EntryMatcher treasureMatcher() {
+        List<? extends String> source = Configs.SKILLS.fishing.treasureItems.get();
+        return matcher(source, m -> {
+            cachedTreasureMatcher = m;
+            cachedTreasureSource = source;
+        }, cachedTreasureSource, cachedTreasureMatcher);
     }
 
     private static EntryMatcher matcher(List<? extends String> source,

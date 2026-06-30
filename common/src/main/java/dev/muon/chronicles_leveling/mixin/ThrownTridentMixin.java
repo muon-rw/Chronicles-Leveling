@@ -2,14 +2,18 @@ package dev.muon.chronicles_leveling.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import dev.muon.chronicles_leveling.config.Configs;
 import dev.muon.chronicles_leveling.skill.combat.ArcheryHooks;
 import dev.muon.chronicles_leveling.skill.fishing.FishingHooks;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.arrow.ThrownTrident;
 import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -35,6 +39,28 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = ThrownTrident.class, remap = false)
 public abstract class ThrownTridentMixin {
 
+    @Shadow private boolean dealtDamage;
+
+    // Worthy rank 3: a thrown trident that has hit nothing returns on its own after a delay (also void-proof via EntityMixin).
+    @Inject(method = "tick", at = @At("HEAD"), remap = false)
+    private void chronicles_leveling$worthyAutoReturn(CallbackInfo ci) {
+        ThrownTrident self = (ThrownTrident) (Object) this;
+        if (dealtDamage || !(self.getOwner() instanceof Player player) || !FishingHooks.isTridentAutoReturn(player)) {
+            return;
+        }
+        if (self.tickCount > Configs.SKILLS.fishing.worthyAutoReturnTicks.get()) {
+            dealtDamage = true;                  // satisfies the return gate, the way a stuck/hit trident already returns
+            self.setDeltaMovement(Vec3.ZERO);    // enter the return from rest so the instant snap is clean, not an overshoot
+        }
+    }
+
+    // Worthy rank 3: force the Loyalty>0 return gate even with no Loyalty enchant (the accel hook drives the snap-back).
+    @ModifyVariable(method = "tick", at = @At("STORE"), name = "loyalty", remap = false)
+    private int chronicles_leveling$worthyLoyalty(int loyalty) {
+        Entity owner = ((ThrownTrident) (Object) this).getOwner();
+        return owner instanceof Player player && FishingHooks.isTridentAutoReturn(player) ? Math.max(loyalty, 1) : loyalty;
+    }
+
     @WrapOperation(method = "onHitEntity", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/world/entity/Entity;hurtOrSimulate(Lnet/minecraft/world/damagesource/DamageSource;F)Z"))
     private boolean chronicles_leveling$preserveInvulnerability(Entity target, DamageSource source, float amount, Operation<Boolean> original) {
@@ -48,11 +74,12 @@ public abstract class ThrownTridentMixin {
     private void chronicles_leveling$onHitEntity(EntityHitResult hitResult, CallbackInfo ci) {
         ArcheryHooks.onArrowHit((AbstractArrow) (Object) this, hitResult.getEntity());
         FishingHooks.reelTarget(((AbstractArrow) (Object) this).getOwner(), hitResult.getEntity());
+        FishingHooks.stormGodLightning((ThrownTrident) (Object) this, hitResult.getEntity());
     }
 
-    /** Trident Master: scale the loyalty-return acceleration (the sole double local in {@code tick}). */
-    @ModifyVariable(method = "tick", at = @At("STORE"), ordinal = 0, remap = false)
+    /** Worthy: scale (rank 1) or snap to the owner (rank 2+) the loyalty-return acceleration (the sole double local in {@code tick}). */
+    @ModifyVariable(method = "tick", at = @At("STORE"), name = "accel", remap = false)
     private double chronicles_leveling$tridentReturn(double accel) {
-        return FishingHooks.tridentReturnAccel(((AbstractArrow) (Object) this).getOwner(), accel);
+        return FishingHooks.tridentReturnAccel((ThrownTrident) (Object) this, accel);
     }
 }

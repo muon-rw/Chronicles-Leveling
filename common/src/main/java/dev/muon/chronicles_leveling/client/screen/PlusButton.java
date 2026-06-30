@@ -1,6 +1,5 @@
 package dev.muon.chronicles_leveling.client.screen;
 
-import dev.muon.chronicles_leveling.sounds.ModSounds;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -8,7 +7,9 @@ import net.minecraft.client.input.InputWithModifiers;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.sounds.SoundManager;
+import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvent;
 
 import java.util.function.BooleanSupplier;
 
@@ -25,11 +26,13 @@ public class PlusButton extends AbstractButton {
 
     private final Runnable action;
     private final BooleanSupplier activeCheck;
+    private final Holder<SoundEvent> downSound;
 
-    public PlusButton(int x, int y, Component narration, BooleanSupplier activeCheck, Runnable action) {
+    public PlusButton(int x, int y, Component narration, Holder<SoundEvent> downSound, BooleanSupplier activeCheck, Runnable action) {
         super(x, y, ChroniclesSprites.BUTTON_W, ChroniclesSprites.BUTTON_H, narration);
         this.action = action;
         this.activeCheck = activeCheck;
+        this.downSound = downSound;
     }
 
     @Override
@@ -40,9 +43,8 @@ public class PlusButton extends AbstractButton {
 
     @Override
     public void playDownSound(SoundManager soundManager) {
-        // Stat-point spend cue replaces the generic vanilla button click. Plays on
-        // both the level-up + and the per-stat + buttons since both are PlusButtons.
-        soundManager.play(SimpleSoundInstance.forUI(ModSounds.SP_SPEND.value(), 1.0f));
+        // Per-button down-sound: sp_spend for buying a level, ui.button.click for allocating a stat.
+        soundManager.play(SimpleSoundInstance.forUI(downSound, 1.0f));
     }
 
     @Override

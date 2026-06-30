@@ -2,10 +2,9 @@ package dev.muon.chronicles_leveling.skill.social;
 
 import dev.muon.chronicles_leveling.config.Configs;
 import dev.muon.chronicles_leveling.skill.SkillEffects;
+import dev.muon.chronicles_leveling.skill.SkillEnchantApply;
 import dev.muon.chronicles_leveling.skill.catalog.SpeechSkill;
-import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
@@ -15,14 +14,8 @@ import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.item.trading.MerchantOffer;
-
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Loader-agnostic Speech trade hooks, read by the common villager / merchant mixins. Server-thread only; every
@@ -82,11 +75,7 @@ public final class SpeechTradeHandler {
      * of every enchantment present (never a max-level-1 one like Mending). Plain books are skipped.
      */
     public static void enchantOfferResult(ServerPlayer player, ItemStack result, MerchantOffer offer) {
-        if (result.isEmpty() || result.is(Items.BOOK) || !(player.level() instanceof ServerLevel level)) {
-            return;
-        }
-        boolean enchantedBook = result.is(Items.ENCHANTED_BOOK);
-        if (!enchantedBook && !result.has(DataComponents.ENCHANTABLE)) {
+        if (!(player.level() instanceof ServerLevel level)) {
             return;
         }
         int extra = (int) Math.floor(SkillEffects.get(player, SpeechSkill.ENCHANTED_TRADER));
@@ -97,27 +86,8 @@ public final class SpeechTradeHandler {
         RandomSource random = RandomSource.create(offerSeed(player, offer));
         RegistryAccess registries = level.registryAccess();
         int enchantLevel = Configs.SKILLS.speech.enchantedTraderLevel.get();
-        for (int i = 0; i < extra; i++) {
-            if (enchantedBook) {
-                addRandomBookEnchantment(result, random, enchantLevel, registries);
-            } else {
-                EnchantmentHelper.enchantItem(random, result, enchantLevel, registries, Optional.empty());
-            }
-        }
-        if (boost > 0) {
-            boostEnchantLevels(result, boost);
-        }
-    }
-
-    /** Power Broker: raise every enchantment on the result by {@code boost} levels, skipping max-level-1 enchants (Mending, Silk Touch). */
-    private static void boostEnchantLevels(ItemStack result, int boost) {
-        EnchantmentHelper.updateEnchantments(result, mutable -> {
-            for (Holder<Enchantment> enchantment : List.copyOf(mutable.keySet())) {
-                if (enchantment.value().getMaxLevel() > 1) {
-                    mutable.set(enchantment, mutable.getLevel(enchantment) + boost);
-                }
-            }
-        });
+        SkillEnchantApply.addExtraEnchantments(result, extra, enchantLevel, random, registries);
+        SkillEnchantApply.boostEnchantLevels(result, boost, false);   // Speech intentionally over-levels past the vanilla max
     }
 
     /** Stable per-(player, offer, use count) seed: the previewed result holds steady, but each completed trade rolls fresh. */
@@ -129,16 +99,6 @@ public final class SpeechTradeHandler {
         return seed;
     }
 
-    private static void addRandomBookEnchantment(ItemStack book, RandomSource random, int enchantLevel, RegistryAccess registries) {
-        ItemStack rolled = EnchantmentHelper.enchantItem(random, new ItemStack(Items.BOOK), enchantLevel, registries, Optional.empty());
-        ItemEnchantments rolledEnchants = rolled.get(DataComponents.STORED_ENCHANTMENTS);
-        if (rolledEnchants == null) {
-            return;
-        }
-        for (Holder<Enchantment> enchantment : rolledEnchants.keySet()) {
-            book.enchant(enchantment, rolledEnchants.getLevel(enchantment));
-        }
-    }
 
     /** Master Negotiator: scale the villager profession XP a trade grants by the trader's bonus. */
     public static int boostVillagerXp(Villager villager, int baseXp) {

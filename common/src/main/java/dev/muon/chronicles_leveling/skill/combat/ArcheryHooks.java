@@ -84,7 +84,8 @@ public final class ArcheryHooks {
         }
         var archery = Configs.SKILLS.archery;
         Vec3 dir = target.getEyePosition().subtract(arrow.position()).normalize().scale(archery.ricochetSpeed.get());
-        spawnSecondary(level, arrow, dir, archery.ricochetDamageFraction.get(), budget - 1);
+        double damageFraction = SkillEffects.get(shooter, ArcherySkill.RICOCHET_FRACTION);   // per-rank: carries 40/60/80%
+        spawnSecondary(level, arrow, dir, damageFraction, budget - 1);
     }
 
     /**

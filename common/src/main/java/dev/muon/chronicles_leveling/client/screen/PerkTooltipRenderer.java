@@ -98,6 +98,11 @@ public final class PerkTooltipRenderer {
             return (_, rank, _) -> byRank.applyAsDouble(rank);
         }
 
+        /** A value derived from the player's current skill level (e.g. a chance equal to the level as a percent). */
+        static PerkValueProvider level(IntToDoubleFunction byLevel) {
+            return (_, _, level) -> byLevel.applyAsDouble(level);
+        }
+
         /** Reads a capability's rank-scaled value then maps it into a derived value (e.g. a threshold from a bonus). */
         static PerkValueProvider mapped(SkillCapability<Double> cap, DoubleUnaryOperator fn) {
             PerkValueProvider source = capability(cap);
@@ -216,6 +221,15 @@ public final class PerkTooltipRenderer {
         register(s, "quick_quaff", percent(PerkValueProvider.capability(AlchemySkill.QUICK_QUAFF)));
         register(s, "empowered_splash", percent(PerkValueProvider.capability(AlchemySkill.EMPOWERED_SPLASH)));
         register(s, "iron_stomach", percent(PerkValueProvider.capability(AlchemySkill.IRON_STOMACH)));
+        register(s, "school_restoration", percent(PerkValueProvider.level(level -> Math.min(1.0, level / 100.0))));
+        register(s, "school_negation", percent(PerkValueProvider.level(level -> Math.min(1.0, level / 100.0))));
+    }
+
+    /** Heavy Hitter's bonus damage: the rank's max-health fraction applied to the viewer's current max health. */
+    private static double heavyHitterDamage(SkillPerk perk, int rank, int level) {
+        var player = Minecraft.getInstance().player;
+        double maxHealth = player != null ? player.getMaxHealth() : 20.0;
+        return maxHealth * PerkValueProvider.capability(WeaponrySkill.HEAVY_HITTER).valueAt(perk, rank, level);
     }
 
     private static void bootstrapWeaponry() {
@@ -228,7 +242,8 @@ public final class PerkTooltipRenderer {
                 duration(PerkValueProvider.of(_ -> Configs.SKILLS.weaponry.rendBleedDurationTicks.get())));
         register(s, "quick_blade",
                 percent(PerkValueProvider.capability(WeaponrySkill.QUICK_BLADE)),
-                flat(PerkValueProvider.capability(WeaponrySkill.QUICK_BLADE_MAX_STACKS)));
+                flat(PerkValueProvider.capability(WeaponrySkill.QUICK_BLADE_MAX_STACKS)),
+                duration(PerkValueProvider.of(_ -> Configs.SKILLS.weaponry.quickBladeFlurryResetTicks.get())));
         register(s, "riposte", percent(PerkValueProvider.capability(WeaponrySkill.RIPOSTE_CHANCE)));
         register(s, "piercing_focus", percent(PerkValueProvider.capability(WeaponrySkill.PIERCING_DAMAGE)));
         register(s, "armor_pierce", percent(PerkValueProvider.capability(WeaponrySkill.ARMOR_PIERCE)));
@@ -249,11 +264,14 @@ public final class PerkTooltipRenderer {
                 flat(PerkValueProvider.of(_ -> Configs.SKILLS.weaponry.seismicSlamDamage.get())),
                 flat(PerkValueProvider.of(_ -> Configs.SKILLS.weaponry.seismicSlamRadius.get())),
                 duration(PerkValueProvider.of(_ -> Configs.SKILLS.weaponry.seismicSlamSlowTicks.get())));
-        register(s, "heavy_hitter", percent(PerkValueProvider.capability(WeaponrySkill.HEAVY_HITTER)));
+        register(s, "heavy_hitter",
+                flat(PerkTooltipRenderer::heavyHitterDamage),
+                percent(PerkValueProvider.capability(WeaponrySkill.HEAVY_HITTER)));
         register(s, "bloodthirst", attribute(Identifier.fromNamespaceAndPath("combat_attributes", "lifesteal")));
         register(s, "momentum",
                 percent(PerkValueProvider.capability(WeaponrySkill.MOMENTUM)),
-                flat(PerkValueProvider.capability(WeaponrySkill.MOMENTUM_MAX_STACKS)));
+                flat(PerkValueProvider.capability(WeaponrySkill.MOMENTUM_MAX_STACKS)),
+                duration(PerkValueProvider.of(_ -> Configs.SKILLS.weaponry.momentumResetTicks.get())));
         register(s, "masters_focus",
                 duration(PerkValueProvider.of(_ -> Configs.SKILLS.weaponry.mastersFocusDurationTicks.get())),
                 percent(PerkValueProvider.of(_ -> Configs.SKILLS.weaponry.mastersFocusTrueDamageFraction.get())));
@@ -261,31 +279,45 @@ public final class PerkTooltipRenderer {
 
     private static void bootstrapArchery() {
         String s = Skills.ARCHERY;
-        register(s, "strong_arm", attribute(Identifier.fromNamespaceAndPath("combat_attributes", "arrow_velocity")));
-        register(s, "quick_hands", attribute(Identifier.fromNamespaceAndPath("combat_attributes", "draw_speed")));
-        register(s, "far_shot", percent(PerkValueProvider.capability(ArcherySkill.FAR_SHOT_BONUS)));
+        register(s, "strong_arm",
+                percent(PerkValueProvider.of(_ -> Configs.SKILLS.archery.arrowVelocityPerLevel.get())),
+                percent(PerkValueProvider.of(_ -> Configs.SKILLS.archery.arrowVelocityCap.get())));
+        register(s, "quick_hands",
+                percent(PerkValueProvider.of(_ -> Configs.SKILLS.archery.drawSpeedPerLevel.get())),
+                percent(PerkValueProvider.of(_ -> Configs.SKILLS.archery.drawSpeedCap.get())));
+        register(s, "far_shot",
+                percent(PerkValueProvider.capability(ArcherySkill.FAR_SHOT_BONUS)),
+                flat(PerkValueProvider.of(_ -> Configs.SKILLS.archery.farShotMaxRange.get())));
         register(s, "multishot", flat(PerkValueProvider.capability(ArcherySkill.MULTISHOT_ARROWS)));
         register(s, "bullseye",
                 attribute(Identifier.fromNamespaceAndPath("combat_attributes", "ranged_crit_chance")),
                 attribute(Identifier.fromNamespaceAndPath("combat_attributes", "ranged_crit_damage")));
         register(s, "marksmans_eye", attribute(Identifier.fromNamespaceAndPath("combat_attributes", "accuracy")));
-        register(s, "ricochet", flat(PerkValueProvider.capability(ArcherySkill.RICOCHET_COUNT)));
+        register(s, "ricochet",
+                flat(PerkValueProvider.capability(ArcherySkill.RICOCHET_COUNT)),
+                percent(PerkValueProvider.capability(ArcherySkill.RICOCHET_FRACTION)));
         register(s, "disorient",
                 percent(PerkValueProvider.capability(ArcherySkill.DISORIENT_CHANCE)),
                 duration(PerkValueProvider.of(_ -> Configs.SKILLS.archery.disorientDurationTicks.get())));
         register(s, "pinning_shot",
                 percent(PerkValueProvider.capability(ArcherySkill.PINNING_CHANCE)),
-                duration(PerkValueProvider.of(_ -> Configs.SKILLS.archery.pinningDurationTicks.get())));
+                duration(PerkValueProvider.of(_ -> Configs.SKILLS.archery.pinningDurationTicks.get())),
+                text(PerkTooltipRenderer::pinningSlowness));
     }
 
     private static void bootstrapDefense() {
         String s = Skills.DEFENSE;
-        register(s, "iron_skin", attribute(Identifier.withDefaultNamespace("armor")));
-        register(s, "magic_ward", attribute(Identifier.fromNamespaceAndPath("combat_attributes", "magic_defense")));
+        register(s, "iron_skin",
+                flat(PerkValueProvider.of(rank -> Configs.SKILLS.defense.ironSkinArmorPerLevel.get() * rank)),
+                attribute(Identifier.withDefaultNamespace("armor")));
+        register(s, "magic_ward",
+                flat(PerkValueProvider.of(rank -> Configs.SKILLS.defense.magicWardPerLevel.get() * rank)),
+                attribute(Identifier.fromNamespaceAndPath("combat_attributes", "magic_defense")));
         register(s, "pain_tolerance", percent(PerkValueProvider.capability(DefenseSkill.MAX_HIT_FRACTION)));
         register(s, "last_stand",
                 percent(PerkValueProvider.of(_ -> Configs.SKILLS.defense.lastStandThreshold.get())),
-                duration(PerkValueProvider.of(_ -> Configs.SKILLS.defense.lastStandDurationTicks.get())));
+                duration(PerkValueProvider.of(_ -> Configs.SKILLS.defense.lastStandDurationTicks.get())),
+                duration(PerkValueProvider.of(_ -> Configs.SKILLS.defense.lastStandCooldownTicks.get())));
         register(s, "shield_master",
                 flat(PerkValueProvider.capability(DefenseSkill.WIDE_BLOCK_ARC)),
                 percent(PerkValueProvider.capability(DefenseSkill.SHIELD_BASH_CHANCE)));
@@ -344,18 +376,16 @@ public final class PerkTooltipRenderer {
 
     private static void bootstrapFishing() {
         String s = Skills.FISHING;
-        register(s, "patient_angler",
-                percent(PerkValueProvider.capability(FishingSkill.BITE_SPEED)),
-                flat(PerkValueProvider.capability(FishingSkill.LURE_RANGE)));
+        register(s, "patient_angler", percent(PerkValueProvider.capability(FishingSkill.BITE_SPEED)));
         register(s, "fortunes_catch",
                 attribute(Identifier.withDefaultNamespace("luck")),
                 percent(PerkValueProvider.capability(FishingSkill.TREASURE_BONUS)));
-        register(s, "big_catch", percent(PerkValueProvider.capability(FishingSkill.DOUBLE_CATCH)));
-        register(s, "enchanted_catch", percent(PerkValueProvider.capability(FishingSkill.ENCHANTED_CATCH)));
+        register(s, "big_catch", flat(PerkValueProvider.capability(FishingSkill.MULTI_CATCH_ROLLS)));
+        register(s, "enchanted_catch", flat(PerkValueProvider.capability(FishingSkill.FISHED_EXTRA_ENCHANTS)));
+        register(s, "leviathans_gift", flat(PerkValueProvider.capability(FishingSkill.FISHED_ENCHANT_LEVEL_BOOST)));
         register(s, "harpoon", attribute(Identifier.fromNamespaceAndPath("combat_attributes", "ranged_damage")));
-        register(s, "trident_master",
-                attribute(Identifier.fromNamespaceAndPath("combat_attributes", "arrow_velocity")),
-                percent(PerkValueProvider.capability(FishingSkill.TRIDENT_RETURN_SPEED)));
+        register(s, "worthy", text(PerkTooltipRenderer::worthyBehavior));
+        register(s, "storm_god", text(PerkTooltipRenderer::stormGodBehavior));
     }
 
     private static void bootstrapEnchanting() {
@@ -371,6 +401,7 @@ public final class PerkTooltipRenderer {
                 text(PerkTooltipRenderer::transcribeFate));
         register(s, "experimenter", text(PerkTooltipRenderer::experimenterScope));
         register(s, "essence_channeller", text(PerkTooltipRenderer::essenceChannellerScope));
+        register(s, "unstable_power", percent(PerkValueProvider.level(level -> Math.min(1.0, level / 100.0))));
     }
 
     /** Essence Hoarder's cumulative regen set by rank (translatable), mirroring EssenceHoarderHandler's tiered attributes. */
@@ -420,6 +451,34 @@ public final class PerkTooltipRenderer {
         }
         String duration = number(h.gardenersInfusionEffectDurationMultiplier.get()) + "x";
         return I18n.get("chronicles_leveling.perk.herbalism.gardeners_infusion.rank3", hunger, saturation, duration);
+    }
+
+    /** Worthy's per-rank trident-return behavior (translatable; rank 1 splices in the live return-speed bonus). */
+    private static String worthyBehavior(int rank) {
+        if (rank >= 3) {
+            return I18n.get("chronicles_leveling.perk.fishing.worthy.behavior3");
+        }
+        if (rank == 2) {
+            return I18n.get("chronicles_leveling.perk.fishing.worthy.behavior2");
+        }
+        return I18n.get("chronicles_leveling.perk.fishing.worthy.behavior1",
+                number(Configs.SKILLS.fishing.tridentReturnSpeed.get() * 100.0) + "%");
+    }
+
+    /** Storm God's per-rank Channelling behavior (translatable). */
+    private static String stormGodBehavior(int rank) {
+        return I18n.get("chronicles_leveling.perk.fishing.storm_god.behavior" + Math.max(1, Math.min(3, rank)));
+    }
+
+    /** Pinning Shot's per-rank Slowness tier as a roman numeral, capped by config (mirrors the handler's min(cap, rank-1)). */
+    private static String pinningSlowness(int rank) {
+        int amplifier = Math.min(Configs.SKILLS.archery.pinningAmplifier.get(), Math.max(0, rank - 1));
+        return switch (amplifier) {
+            case 0 -> "I";
+            case 1 -> "II";
+            case 2 -> "III";
+            default -> Integer.toString(amplifier + 1);
+        };
     }
 
     private static void bootstrapSpeech() {

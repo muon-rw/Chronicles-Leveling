@@ -207,8 +207,10 @@ public class ConfigSkills extends Config {
         public ValidatedDouble ricochetRange = new ValidatedDouble(12.0, 64.0, 1.0);
         @Comment("Ricochet: launch speed of the bounced bolt.")
         public ValidatedDouble ricochetSpeed = new ValidatedDouble(1.5, 10.0, 0.1);
-        @Comment("Ricochet: fraction of the source arrow's base damage carried by the bounced bolt.")
-        public ValidatedDouble ricochetDamageFraction = new ValidatedDouble(0.6, 1.0, 0.0);
+        @Comment("Ricochet: rank-1 fraction of the prior shot's damage a bounced bolt carries (compounds per hop).")
+        public ValidatedDouble ricochetFractionBase = new ValidatedDouble(0.40, 1.0, 0.0);
+        @Comment("Ricochet: extra carried fraction added per rank above 1 (0.20 -> carries 40% / 60% / 80%).")
+        public ValidatedDouble ricochetFractionPerRank = new ValidatedDouble(0.20, 1.0, 0.0);
         @Comment("Multishot/Ricochet clones (the spread + bounce bolts; they can't be picked up) despawn this many "
                 + "ground-ticks after they stick, vs. vanilla's 1200 (60s). Only counts while stuck, not in flight; 1200 = vanilla.")
         public ValidatedInt clonedProjectileDespawnTicks = new ValidatedInt(60, 1200, 1);
@@ -216,7 +218,7 @@ public class ConfigSkills extends Config {
         public ValidatedInt disorientDurationTicks = new ValidatedInt(80, 6000, 1);
         @Comment("Pinning: slowness duration in ticks (20 = 1s).")
         public ValidatedInt pinningDurationTicks = new ValidatedInt(60, 6000, 1);
-        @Comment("Pinning: slowness amplifier (0 = Slowness I, 2 = Slowness III).")
+        @Comment("Pinning: max Slowness amplifier; the per-rank tier is min(this, rank-1), so 2 = up to Slowness III at rank 3.")
         public ValidatedInt pinningAmplifier = new ValidatedInt(2, 255, 0);
 
         // --- Perk effect magnitudes (baked into the skill definition at registry-freeze; restart to apply) ---
@@ -239,7 +241,7 @@ public class ConfigSkills extends Config {
         @Comment("Bullseye: ranged crit damage cap.")
         public ValidatedDouble rangedCritDamageCap = new ValidatedDouble(0.5, 100.0, 0.0);
         @Comment("Marksman's Eye: flat accuracy bonus.")
-        public ValidatedDouble accuracyBonus = new ValidatedDouble(0.15, 10.0, 0.0);
+        public ValidatedDouble accuracyBonus = new ValidatedDouble(0.5, 10.0, 0.0);
         @Comment("Disorient: chance (0-1) for a hit to apply blindness + nausea.")
         public ValidatedDouble disorientChance = new ValidatedDouble(0.2, 1.0, 0.0);
         @Comment("Pinning Shot: chance (0-1) for a hit to apply slowness.")
@@ -261,8 +263,8 @@ public class ConfigSkills extends Config {
         @Comment("XP awarded per hit taken. 'd' = damage amount, pre-mitigation.")
         public ValidatedExpression xpPerDamageTaken = new ValidatedExpression("d", Set.of('d'));
 
-        @Comment("Pain Tolerance: a single hit can never be capped below this fraction of max health (sensible floor).")
-        public ValidatedDouble painToleranceFloor = new ValidatedDouble(0.5, 1.0, 0.0);
+        @Comment("Pain Tolerance: the cap can never go below this fraction of max health (a hit can always remove at least this slice).")
+        public ValidatedDouble painToleranceFloor = new ValidatedDouble(0.25, 1.0, 0.0);
 
         @Comment("Last Stand: health fraction at or below which it triggers (0.30 = 30% of max health).")
         public ValidatedDouble lastStandThreshold = new ValidatedDouble(0.30, 1.0, 0.0);
@@ -291,8 +293,8 @@ public class ConfigSkills extends Config {
         public ValidatedDouble magicWardPerLevel = new ValidatedDouble(0.10, 10.0, 0.0);
         @Comment("Magic Ward: magic defense bonus cap (per rank; rank 3 caps at this x3).")
         public ValidatedDouble magicWardCap = new ValidatedDouble(4.0, 100.0, 0.0);
-        @Comment("Pain Tolerance: per-rank fraction of max health a single hit is capped to.")
-        public ValidatedDouble painToleranceFractionPerRank = new ValidatedDouble(0.10, 1.0, 0.0);
+        @Comment("Pain Tolerance: rank-1 cap as a fraction of max health a single hit may remove; divided by rank (0.50 -> 50% / 25%).")
+        public ValidatedDouble painToleranceCapFractionBase = new ValidatedDouble(0.50, 1.0, 0.0);
         @Comment("Shield Master: base block arc in degrees (vanilla is 180).")
         public ValidatedDouble wideBlockArcBaseDegrees = new ValidatedDouble(180.0, 360.0, 0.0);
         @Comment("Shield Master: extra block arc in degrees per rank.")
@@ -328,8 +330,8 @@ public class ConfigSkills extends Config {
         public ValidatedDouble stepHeightBonus = new ValidatedDouble(0.5, 10.0, 0.0);
         @Comment("Dodge: CA dodge chance (0-1) per rank (2 ranks -> 5/10%).")
         public ValidatedDouble evasionPerRank = new ValidatedDouble(0.05, 1.0, 0.0);
-        @Comment("Catlike: bonus sneaking speed per rank (fraction of base; 3 ranks -> 25/50/75%).")
-        public ValidatedDouble sneakingSpeedBonus = new ValidatedDouble(0.25, 10.0, 0.0);
+        @Comment("Catlike: bonus sneaking speed per rank (fraction of base; 3 ranks -> 30/60/90%).")
+        public ValidatedDouble sneakingSpeedBonus = new ValidatedDouble(0.3, 10.0, 0.0);
         @Comment("Catlike: while sneaking, fraction (0-1) per rank that a holder's visibility to targeting mobs shrinks (3 ranks -> 30/60/90%).")
         public ValidatedDouble catlikeDetectionReductionPerRank = new ValidatedDouble(0.30, 1.0, 0.0);
         @Comment("Momentum Vault: movement-speed burst duration (ticks) on a sprint-jump (20 = 1s).")
@@ -735,31 +737,23 @@ public class ConfigSkills extends Config {
         ));
 
         // --- Perk effect magnitudes (baked into the skill definition at registry-freeze; restart to apply) ---
-        @Comment("Patient Angler: bonus bite speed (fraction faster).")
-        public ValidatedDouble biteSpeedBonus = new ValidatedDouble(0.30, 10.0, 0.0);
-        @Comment("Patient Angler: bonus lure range (blocks).")
-        public ValidatedDouble lureRangeBonus = new ValidatedDouble(1.0, 64.0, 0.0);
+        @Comment("Patient Angler: bite-speed fraction faster per rank (rank 1 = 20%, rank 3 = 60% faster bites).")
+        public ValidatedDouble biteSpeedPerRank = new ValidatedDouble(0.20, 1.0, 0.0);
         @Comment("Fortune's Catch: bonus treasure chance (0-1) per rank.")
         public ValidatedDouble treasureBonusPerRank = new ValidatedDouble(0.10, 1.0, 0.0);
         @Comment("Fortune's Catch: flat luck bonus while fishing.")
         public ValidatedDouble luckBonus = new ValidatedDouble(1.0, 100.0, 0.0);
-        @Comment("Big Catch: chance (0-1) to reel a double catch.")
-        public ValidatedDouble doubleCatchChance = new ValidatedDouble(0.20, 1.0, 0.0);
-        @Comment("Enchanted Catch: chance (0-1) for a catch to come pre-enchanted.")
-        public ValidatedDouble enchantedCatchChance = new ValidatedDouble(0.15, 1.0, 0.0);
-        @Comment("Enchanted Catch: enchantment power level applied to a pre-enchanted catch (like a table level).")
-        public ValidatedInt enchantedCatchLevel = new ValidatedInt(25, 100, 1);
-        @Comment("Patient Angler: reference lure-wait ticks the bite-speed fraction reduces (vanilla average wait ~350).")
-        public ValidatedInt biteSpeedReferenceTicks = new ValidatedInt(350, 6000, 1);
-        @Comment("Patient Angler: lure-wait ticks removed per block of lure range.")
-        public ValidatedInt lureRangeTicksPerBlock = new ValidatedInt(20, 600, 0);
+        @Comment("Big Catch: chance (0-1) per rank to reel an extra copy of a caught item, rolled independently each rank.")
+        public ValidatedDouble bigCatchChancePerRoll = new ValidatedDouble(0.50, 1.0, 0.0);
+        @Comment("Enchanted Catch / Leviathan's Gift: enchantment power level for extra enchantments rolled onto fished gear (like a table level).")
+        public ValidatedInt fishedEnchantLevel = new ValidatedInt(20, 100, 1);
         @Comment("Harpoon: velocity strength reeling a trident-struck mob toward you.")
         public ValidatedDouble harpoonReelStrength = new ValidatedDouble(0.6, 10.0, 0.0);
         @Comment("Harpoon: flat bonus ranged damage on the trident/harpoon throw.")
         public ValidatedDouble harpoonRangedDamage = new ValidatedDouble(2.0, 1000.0, 0.0);
-        @Comment("Trident Master: bonus trident return/loyalty speed.")
+        @Comment("Worthy: bonus trident return/loyalty speed at rank 1 (rank 2+ return instantly).")
         public ValidatedDouble tridentReturnSpeed = new ValidatedDouble(0.5, 10.0, 0.0);
-        @Comment("Trident Master: bonus trident throw velocity (fraction of base).")
-        public ValidatedDouble tridentVelocityBonus = new ValidatedDouble(0.15, 10.0, 0.0);
+        @Comment("Worthy: ticks a rank-3 trident that has hit nothing waits before auto-returning to its owner.")
+        public ValidatedInt worthyAutoReturnTicks = new ValidatedInt(100, 6000, 1);
     }
 }

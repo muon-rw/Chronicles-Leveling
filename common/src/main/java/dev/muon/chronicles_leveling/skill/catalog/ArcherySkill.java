@@ -26,12 +26,16 @@ public final class ArcherySkill {
     /** Number of times an arrow ricochets to a nearby target on impact (summed across ranks). On hit it always
      *  fires while {@code > 0}: the rank IS the bounce count, not a chance. */
     public static final SkillCapability<Double> RICOCHET_COUNT = SkillCapability.additive("archery_ricochet_count");
+    /** Per-rank fraction of the prior shot's damage a ricochet hop carries (40/60/80%); only Ricochet grants it. */
+    public static final SkillCapability<Double> RICOCHET_FRACTION = SkillCapability.additive("archery_ricochet_fraction");
     /** Arrows pass through and hit every mob in a line instead of stopping on the first. */
     public static final SkillCapability<Boolean> PIERCING_SHOT = SkillCapability.flag("archery_piercing_shot");
     /** Summed chance a struck mob is disoriented (blindness + nausea). */
     public static final SkillCapability<Double> DISORIENT_CHANCE = SkillCapability.additive("archery_disorient_chance");
     /** Summed chance a struck mob is pinned (rooted/slowed). */
     public static final SkillCapability<Double> PINNING_CHANCE = SkillCapability.additive("archery_pinning_chance");
+    /** Pinning Shot's per-rank Slowness amplifier (rank 1 = amplifier 0 = Slowness I); only Pinning Shot grants it. */
+    public static final SkillCapability<Double> PINNING_AMPLIFIER = SkillCapability.additive("archery_pinning_amplifier");
 
     private static final Identifier ARROW_VELOCITY = Identifier.fromNamespaceAndPath("combat_attributes", "arrow_velocity");
     private static final Identifier DRAW_SPEED = Identifier.fromNamespaceAndPath("combat_attributes", "draw_speed");
@@ -52,7 +56,7 @@ public final class ArcherySkill {
                     .effect(attr(DRAW_SPEED, ADD_VALUE, perLevel(Configs.SKILLS.archery.drawSpeedPerLevel.get(), Configs.SKILLS.archery.drawSpeedCap.get())))
                 .perk("far_shot").requires("strong_arm").cost(4).order(10)
                     .effect(grant(FAR_SHOT_BONUS, Configs.SKILLS.archery.farShotBonus.get()))
-                .perk("multishot").requires("quick_hands").cost(4).maxRank(4).order(20)
+                .perk("multishot").requires("quick_hands").cost(3).maxRank(4).order(20)
                     .effectsAtRank(rank -> List.of(grant(MULTISHOT_ARROWS, Configs.SKILLS.archery.multishotArrowsPerRank.get() * rank)))
 
                 // Precision branch: crit then accuracy.
@@ -64,13 +68,18 @@ public final class ArcherySkill {
 
                 // Trick-shot branch: arrows that bounce, pierce, and crowd-control.
                 .perk("ricochet").requires("far_shot").cost(3).maxRank(3).order(40)
-                    .effectsAtRank(rank -> List.of(grant(RICOCHET_COUNT, Configs.SKILLS.archery.ricochetBouncesPerRank.get() * rank)))
+                    .effectsAtRank(rank -> List.of(
+                            grant(RICOCHET_COUNT, Configs.SKILLS.archery.ricochetBouncesPerRank.get() * rank),
+                            grant(RICOCHET_FRACTION, Configs.SKILLS.archery.ricochetFractionBase.get()
+                                    + Configs.SKILLS.archery.ricochetFractionPerRank.get() * (rank - 1))))
                 .perk("piercing_shot").requires("far_shot").cost(4).order(50)
                     .effect(grant(PIERCING_SHOT, Boolean.TRUE))
-                .perk("disorient").requires("bullseye").cost(4).order(60)
-                    .effect(grant(DISORIENT_CHANCE, Configs.SKILLS.archery.disorientChance.get()))
-                .perk("pinning_shot").requires("quick_hands").cost(4).order(80)
-                    .effect(grant(PINNING_CHANCE, Configs.SKILLS.archery.pinningChance.get()))
+                .perk("disorient").requires("bullseye").cost(2).maxRank(3).order(60)
+                    .effectsAtRank(rank -> List.of(grant(DISORIENT_CHANCE, Configs.SKILLS.archery.disorientChance.get() * rank)))
+                .perk("pinning_shot").requires("quick_hands").cost(2).maxRank(3).order(80)
+                    .effectsAtRank(rank -> List.of(
+                            grant(PINNING_CHANCE, Configs.SKILLS.archery.pinningChance.get() * rank),
+                            grant(PINNING_AMPLIFIER, (double) Math.min(Configs.SKILLS.archery.pinningAmplifier.get(), rank - 1))))
 
                 .build();
     }

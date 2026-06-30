@@ -66,6 +66,7 @@ public final class ClientEventsNeoforge {
     public static void onClientTick(ClientTickEvent.Post event) {
         ChroniclesKeybinds.tick();
         XpAffordabilityNotifier.tick();
+        SkillLevelUpNotifier.tick();
         VeinSightScanner.tick();
     }
 

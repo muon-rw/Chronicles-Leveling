@@ -2,16 +2,15 @@ package dev.muon.chronicles_leveling.skill.fishing;
 
 import dev.muon.chronicles_leveling.config.Configs;
 import dev.muon.chronicles_leveling.skill.SkillEffects;
+import dev.muon.chronicles_leveling.skill.SkillEnchantApply;
 import dev.muon.chronicles_leveling.skill.catalog.FishingSkill;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Loader-agnostic Fishing catch-loot perks, applied to the reeled-in drop list (Fabric: the {@code retrieve}
@@ -44,16 +43,15 @@ public final class FishingCatchHandler {
                 }
             }
         }
-        // Enchanted Catch: chance to enchant a caught enchantable item.
-        double enchant = SkillEffects.get(player, FishingSkill.ENCHANTED_CATCH);
-        if (enchant > 0 && random.nextDouble() < enchant) {
-            for (int i = 0; i < drops.size(); i++) {
-                ItemStack stack = drops.get(i);
-                if (stack.isEnchantable() && !stack.isEnchanted()) {
-                    drops.set(i, EnchantmentHelper.enchantItem(random, stack,
-                            cfg.enchantedCatchLevel.get(), level.registryAccess(), Optional.empty()));
-                    break;
-                }
+        // Enchanted Catch + Leviathan's Gift: enrich any fished-up gear with extra enchantments, then raise every
+        // enchantment's level (clamped to each enchantment's max; max-level-1 enchants like Mending are left as-is).
+        int extraEnchants = (int) Math.floor(SkillEffects.get(player, FishingSkill.FISHED_EXTRA_ENCHANTS));
+        int levelBoost = (int) Math.floor(SkillEffects.get(player, FishingSkill.FISHED_ENCHANT_LEVEL_BOOST));
+        if (extraEnchants > 0 || levelBoost > 0) {
+            int enchantLevel = cfg.fishedEnchantLevel.get();
+            for (ItemStack stack : drops) {
+                SkillEnchantApply.addExtraEnchantments(stack, extraEnchants, enchantLevel, random, level.registryAccess());
+                SkillEnchantApply.boostEnchantLevels(stack, levelBoost, true);
             }
         }
         // Fortune's Catch (treasure): chance to surface a bonus treasure-tier item.
@@ -61,10 +59,15 @@ public final class FishingCatchHandler {
         if (treasure > 0 && random.nextDouble() < treasure) {
             drops.add(new ItemStack(TREASURE_POOL.get(random.nextInt(TREASURE_POOL.size()))));
         }
-        // Big Catch: chance to reel in a copy of one caught item.
-        double doubleCatch = SkillEffects.get(player, FishingSkill.DOUBLE_CATCH);
-        if (doubleCatch > 0 && random.nextDouble() < doubleCatch) {
-            drops.add(drops.get(random.nextInt(baseCatchSize)).copy());
+        // Big Catch: each rank rolls an independent chance to reel in an extra copy of a genuine catch item.
+        int catchRolls = (int) Math.round(SkillEffects.get(player, FishingSkill.MULTI_CATCH_ROLLS));
+        if (catchRolls > 0) {
+            double chance = cfg.bigCatchChancePerRoll.get();
+            for (int i = 0; i < catchRolls; i++) {
+                if (random.nextDouble() < chance) {
+                    drops.add(drops.get(random.nextInt(baseCatchSize)).copy());
+                }
+            }
         }
     }
 

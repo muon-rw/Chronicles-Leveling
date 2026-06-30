@@ -29,8 +29,8 @@ public final class DefenseSkill {
     private DefenseSkill() {}
 
     /**
-     * Fraction of max-health that caps how much any single hit may remove (anti-one-shot).
-     * Summed across ranks; the read site clamps the resulting cap sensibly.
+     * Fraction of max-health that caps how much any single hit may remove (anti-one-shot); lower = stronger.
+     * The read site floors it at {@code defense.painToleranceFloor}.
      */
     public static final SkillCapability<Double> MAX_HIT_FRACTION = SkillCapability.additive("defense_max_hit_fraction");
     /** Immune to knockback and movement-slowing effects while blocking or sneaking. */
@@ -64,7 +64,7 @@ public final class DefenseSkill {
                 .perk("magic_ward").requires("iron_skin").cost(2).order(10).maxRank(3)
                     .effect(attr(MAGIC_DEFENSE, ADD_VALUE, perLevel(Configs.SKILLS.defense.magicWardPerLevel.get(), Configs.SKILLS.defense.magicWardCap.get())))
                 .perk("pain_tolerance").requires("iron_skin").cost(3).maxRank(2).order(20)
-                    .effectsAtRank(rank -> List.of(grant(MAX_HIT_FRACTION, Configs.SKILLS.defense.painToleranceFractionPerRank.get() * rank)))
+                    .effectsAtRank(rank -> List.of(grant(MAX_HIT_FRACTION, Configs.SKILLS.defense.painToleranceCapFractionBase.get() / rank)))
                 .perk("last_stand").requires("pain_tolerance").cost(5).order(20)
                     .effect(grant(LAST_STAND, Boolean.TRUE))
 

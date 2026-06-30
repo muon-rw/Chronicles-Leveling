@@ -19,6 +19,7 @@ import dev.muon.chronicles_leveling.skill.tree.LaidOutTree;
 import dev.muon.chronicles_leveling.skill.tree.LayeredLayout;
 import dev.muon.chronicles_leveling.skill.tree.SkillTreeLayout;
 import dev.muon.chronicles_leveling.skill.tree.TreeGeometry;
+import dev.muon.chronicles_leveling.sounds.ModSounds;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -28,9 +29,11 @@ import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Util;
 import org.lwjgl.glfw.GLFW;
 
@@ -321,6 +324,11 @@ public class SkillsScreen extends Screen {
         }
     }
 
+    /** The generic UI click for a tree-navigation interaction (open/close, reset, slot cycle). */
+    private static void playClick() {
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+    }
+
     /** Drills from the overview grid into a skill's tree (TREE mode): lays the tree out + sizes the pop-out panel. */
     private void openTree(int index) {
         this.selectedIndex = index;
@@ -332,6 +340,7 @@ public class SkillsScreen extends Screen {
 
     /** Returns from a tree to the overview grid (LIST mode). */
     private void backToList() {
+        playClick();
         this.mode = Mode.LIST;
         layoutForMode();
     }
@@ -695,11 +704,20 @@ public class SkillsScreen extends Screen {
     /** Flags a node that just gained a rank (a buy landed) so it briefly enlarges as feedback. */
     private void detectUnlocks(LaidOutTree tree) {
         long now = Util.getMillis();
+        boolean bought = false;
         for (LaidOutTree.NodeView node : tree.nodes()) {
             Integer previous = knownRanks.put(node.box().perk().id(), node.rank());
             if (previous != null && node.rank() > previous) {
                 popStartMs.put(node.box().perk().id(), now);
+                bought = true;
             }
+        }
+        // A confirmed rank buy pops a bubble
+        // The buy that maxes the whole tree plays the level-up jingle instead.
+        if (bought) {
+            boolean allMaxed = tree.nodes().stream().allMatch(n -> n.state() == LaidOutTree.NodeState.MAXED);
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(
+                    allMaxed ? ModSounds.LEVEL_UP.value() : SoundEvents.BUBBLE_POP, 1.0f, 1.0f));
         }
     }
 
@@ -1148,6 +1166,7 @@ public class SkillsScreen extends Screen {
         if (mode == Mode.LIST) {
             int cell = gridCellAt(mx, my);
             if (cell >= 0) {
+                playClick();
                 openTree(cell);
                 return true;
             }
@@ -1170,6 +1189,7 @@ public class SkillsScreen extends Screen {
         }
         if (overRespec(mx, my, entry)) {
             if (entry.spentPoints() > 0) {
+                playClick();
                 if (confirmReset) {
                     NetworkDispatcher.sendRespecSkill(def.id());
                 } else {
@@ -1257,6 +1277,7 @@ public class SkillsScreen extends Screen {
      * that {@code Enter} confirms (see {@link #keyPressed}), so cycling never silently clobbers a binding.
      */
     private void cycleSlot(Identifier ability) {
+        playClick();
         String id = ability.toString();
         long now = Util.getMillis();
         if (!id.equals(slotCycleAbility) || now > slotCycleUntil) {
@@ -1283,6 +1304,7 @@ public class SkillsScreen extends Screen {
 
     /** Commits a pending overwrite (the cursor rests on a slot held by another ability). */
     private void confirmSlotOverwrite() {
+        playClick();
         NetworkDispatcher.sendSetAbilitySlot(slotCycleCursor, Optional.of(Identifier.parse(slotCycleAbility)));
         slotCycleCommitted = slotCycleCursor;
         slotCycleUntil = Util.getMillis() + SLOT_CYCLE_MS;

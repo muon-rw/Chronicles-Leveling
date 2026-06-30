@@ -85,8 +85,8 @@ public final class WeaponrySkill {
                 // === Slashing branch (root): +% damage with swords/axes, applied only when a slashing weapon is held. ===
                 .perk("slashing_focus").cost(1).maxRank(3)
                     .effectsAtRank(rank -> List.of(grant(SLASHING_DAMAGE, Configs.SKILLS.weaponry.slashingDamagePerRank.get() * rank)))
-                .perk("rend").requires("slashing_focus").cost(2).order(10)
-                    .effect(grant(REND_CHANCE, Configs.SKILLS.weaponry.rendChance.get()))
+                .perk("rend").requires("slashing_focus").cost(1).maxRank(3).order(10)
+                    .effectsAtRank(rank -> List.of(grant(REND_CHANCE, Configs.SKILLS.weaponry.rendChance.get() * rank)))
                 .perk("quick_blade").requires("slashing_focus").cost(1).maxRank(3).order(20)
                     .effectsAtRank(rank -> List.of(
                             grant(QUICK_BLADE, Configs.SKILLS.weaponry.quickBladeAttackSpeedPerRank.get() * rank),
@@ -116,7 +116,7 @@ public final class WeaponrySkill {
 
                 // === Each branch's third tier-1 node; with the two finisher-feeders above it, each forms its
                 // branch's 2-of-3 gate (slashing -> riposte, piercing -> executioner, blunt -> heavy_hitter). ===
-                .perk("bloodthirst").requires("slashing_focus").cost(2).order(300)
+                .perk("bloodthirst").requires("slashing_focus").cost(1).order(300)
                     .effect(attr(LIFESTEAL, ADD_VALUE, perLevel(Configs.SKILLS.weaponry.bloodthirstLifestealPerLevel.get(), Configs.SKILLS.weaponry.bloodthirstLifestealCap.get())))
                 .perk("momentum").requires("piercing_focus").cost(2).maxRank(3).order(310)
                     .effectsAtRank(rank -> List.of(

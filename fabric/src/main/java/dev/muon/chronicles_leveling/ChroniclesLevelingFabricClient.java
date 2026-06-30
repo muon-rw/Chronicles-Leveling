@@ -4,6 +4,7 @@ import dev.muon.chronicles_leveling.client.AbilityHudRenderer;
 import dev.muon.chronicles_leveling.client.ChroniclesKeybinds;
 import dev.muon.chronicles_leveling.client.SkillSpriteAudit;
 import dev.muon.chronicles_leveling.client.SkillTranslationAudit;
+import dev.muon.chronicles_leveling.client.SkillLevelUpNotifier;
 import dev.muon.chronicles_leveling.client.XpAffordabilityNotifier;
 import dev.muon.chronicles_leveling.client.mining.VeinSightRenderer;
 import dev.muon.chronicles_leveling.client.mining.VeinSightScanner;
@@ -48,6 +49,7 @@ public class ChroniclesLevelingFabricClient implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             ChroniclesKeybinds.tick();
             XpAffordabilityNotifier.tick();
+            SkillLevelUpNotifier.tick();
             VeinSightScanner.tick();
         });
 

@@ -206,9 +206,9 @@ public final class CombatProcRouter {
     // === Pain Tolerance (incoming cap) ===
 
     /**
-     * Caps a single hit's realised damage to {@code (1 - fraction)} of the victim's max health (the
-     * fraction summed across Pain Tolerance ranks, clamped to {@code defense.painToleranceFloor} so a
-     * hit can always remove a minimum slice). Out-of-world / {@code /kill} sources bypass the cap.
+     * Caps a single hit's realised damage to {@code fraction} of the victim's max health (the Pain Tolerance
+     * cap fraction, lower = stronger, floored at {@code defense.painToleranceFloor} so a hit can always remove
+     * a minimum slice). Out-of-world / {@code /kill} sources bypass the cap.
      */
     public static float capIncoming(ServerPlayer victim, DamageSource source, float amount) {
         if (inProc || amount <= 0f || source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
@@ -219,7 +219,7 @@ public final class CombatProcRouter {
             return amount;
         }
         float cap = (float) (victim.getMaxHealth()
-                * (1.0 - Math.min(fraction, Configs.SKILLS.defense.painToleranceFloor.get())));
+                * Math.max(fraction, Configs.SKILLS.defense.painToleranceFloor.get()));
         return Math.min(amount, cap);
     }
 
@@ -279,8 +279,9 @@ public final class CombatProcRouter {
             }
             double pinning = SkillEffects.get(attacker, ArcherySkill.PINNING_CHANCE);
             if (pinning > 0 && victim.getRandom().nextDouble() < pinning) {
+                int amplifier = (int) Math.round(SkillEffects.get(attacker, ArcherySkill.PINNING_AMPLIFIER));
                 victim.addEffect(new MobEffectInstance(MobEffects.SLOWNESS,
-                        archery.pinningDurationTicks.get(), archery.pinningAmplifier.get()));
+                        archery.pinningDurationTicks.get(), amplifier));
             }
         }
     }

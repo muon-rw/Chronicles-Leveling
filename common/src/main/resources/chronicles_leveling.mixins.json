@@ -21,6 +21,7 @@
     "DamageHandlerMixin",
     "EnchantmentMenuMixin",
     "EnchantmentMixin",
+    "EntityMixin",
     "FishingHookMixin",
     "FungusGrowthMixin",
     "GrindstoneMenuMixin",
@@ -44,6 +45,7 @@
     "ThrownLingeringPotionMixin",
     "ThrownSplashPotionMixin",
     "ThrownTridentMixin",
+    "TridentItemMixin",
     "VegetationBlockMixin",
     "VillagerMixin",
     "WardenMixin"

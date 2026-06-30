@@ -20,6 +20,7 @@ import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.LootTable;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -38,6 +39,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = FishingHook.class, remap = false)
 public abstract class FishingHookMixin {
 
+    @Shadow private int timeUntilLured;
+
+    @Unique
+    private static final int chronicles_leveling$DISCERNING_REROLLS = 8;
+
     @WrapOperation(
             method = "retrieve",
             at = @At(value = "INVOKE",
@@ -49,6 +55,12 @@ public abstract class FishingHookMixin {
         FishingHook self = (FishingHook) (Object) this;
         Player owner = self.getPlayerOwner();
         if (owner instanceof ServerPlayer player) {
+            if (SkillEffects.has(player, FishingSkill.NO_JUNK)) {
+                // Discerning Fisher: reroll the whole catch (junk weight redistributes into fish/treasure) until junk-free.
+                for (int tries = 0; tries < chronicles_leveling$DISCERNING_REROLLS && FishingXpHandler.containsJunk(items); tries++) {
+                    items = original.call(table, params);
+                }
+            }
             FishingXpHandler.onItemFished(player, items);
             FishingCatchHandler.modifyCatch(player, items);
         }
@@ -61,9 +73,14 @@ public abstract class FishingHookMixin {
                     opcode = Opcodes.GETFIELD),
             remap = false)
     private int chronicles_leveling$patientAngler(int lureSpeed) {
-        int bonus = FishingHooks.biteSpeedTicks(((FishingHook) (Object) this).getPlayerOwner());
-        // Keep lureSpeed + bonus below the 100-tick re-roll floor so timeUntilLured always counts down (never stalls).
-        return lureSpeed + Math.min(bonus, Math.max(0, 99 - lureSpeed));
+        double fraction = FishingHooks.biteSpeedFraction(((FishingHook) (Object) this).getPlayerOwner());
+        if (fraction <= 0) {
+            return lureSpeed;
+        }
+        // Cut the just-rolled bite wait by the perk fraction; cap so timeUntilLured still counts down (>= 1 tick).
+        int cut = (int) Math.round(timeUntilLured * fraction);
+        int maxCut = Math.max(0, timeUntilLured - lureSpeed - 1);
+        return lureSpeed + Math.min(cut, maxCut);
     }
 
     @Inject(method = "tick", at = @At("HEAD"), remap = false)
